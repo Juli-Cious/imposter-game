@@ -66,7 +66,7 @@ export class MapBuilder {
                     // Put a floor underneath
                     groundLayer.putTileAt(TILES.FLOOR_MIDDLEMIDDLE, x, y);
                     // Put a Wall-like tile on top (using WALL_TOPMIDDLE for now, or similar)
-                    const doorTile = this.wallLayer.putTileAt(TILES.WALL_TOPMIDDLE, x, y);
+                    this.wallLayer.putTileAt(TILES.WALL_TOPMIDDLE, x, y);
                     // Store coordinate to toggle later
                     this.doorTiles.push({ x, y });
                 }

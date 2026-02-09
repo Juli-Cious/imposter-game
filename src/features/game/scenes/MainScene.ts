@@ -317,7 +317,6 @@ export class MainScene extends Phaser.Scene {
 
     const speed = 160;
     const body = this.player.body as Phaser.Physics.Arcade.Body;
-    const prevVelocity = body.velocity.clone();
 
     // Prevent movement if Editor is open or typing
     const { activeFileId } = useGameStore.getState();
@@ -535,7 +534,6 @@ export class MainScene extends Phaser.Scene {
           // Better: just play 'idle' for now or simple check.
           // Let's assume they are "idle" if we don't know velocity.
           // Actually, let's just make them play their animation based on skin.
-          const bgmVol = useGameStore.getState().bgmVolume; // unused variable but keeps hook consistent if needed later
           // Check online status
           const isOnline = p.isOnline !== false; // Default to true if undefined
           other.setVisible(isOnline);

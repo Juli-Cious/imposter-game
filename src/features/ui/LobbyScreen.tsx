@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useGameStore } from '../../stores/useGameStore';
 import { db } from '../../firebaseConfig';
 import { ref, onValue, update } from 'firebase/database';
-import { FirebaseAdapter } from '../networking/FirebaseAdapter';
 
 export const LobbyScreen = () => {
     const { roomCode, isHost, playerId, network, setGameState, playerSkin, playerTint } = useGameStore();

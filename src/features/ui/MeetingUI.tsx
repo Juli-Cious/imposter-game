@@ -76,7 +76,7 @@ export const MeetingUI = () => {
     // If status is IDLE, we don't show anything
     if (status === 'IDLE') return null;
 
-    const isPresenter = true; // TODO: Check if myId === presenterId
+
 
     // Toggle handling
     if (!isExpanded) {
