@@ -12,7 +12,7 @@ export const LEVEL_1_PROBLEMS: Record<string, CodingChallenge> = {
         name: "SolarOptimizer.py",
         language: "python",
         description: "Calculate the total energy output of two solar arrays (a + b).",
-        content: `def get_total_output(array_a, array_b):\n    return array_a + array_b\n\narray_a = 5\narray_b = 10\n# TODO: Calculate total and print the result\n`,
+        content: `def get_total_output(array_a, array_b):\n    return array_a + array_b\n\narray_a = 5\narray_b = 10\n# TODO: Calculate the total energy output of two solar arrays (a + b).\n# Print the result.\n`,
         expectedOutput: "15",
         testStatus: "PASS"
     },
@@ -20,7 +20,7 @@ export const LEVEL_1_PROBLEMS: Record<string, CodingChallenge> = {
         name: "RecycleSorter.js",
         language: "javascript",
         description: "Program a robotic arm to sort 5 batches of recycled materials (indices 0 to 4).",
-        content: `// Write a loop that prints 0 to 4\n\n`,
+        content: `// TODO: Program a robotic arm to sort 5 batches of recycled materials (indices 0 to 4).\n// Write a loop that prints indices 0 to 4.\n`,
         expectedOutput: "0\n1\n2\n3\n4",
         testStatus: "PASS"
     },
@@ -28,7 +28,7 @@ export const LEVEL_1_PROBLEMS: Record<string, CodingChallenge> = {
         name: "O2Scrubber.cpp",
         language: "cpp",
         description: "Initialize the atmospheric scrubbers by printing the activation code.",
-        content: `#include <iostream>\n\nint main() {\n    // TODO: Output the code: "Oxy-System: ACTIVE"\n    return 0;\n}`,
+        content: `#include <iostream>\n\nint main() {\n    // TODO: Initialize the atmospheric scrubbers by printing the activation code: "Oxy-System: ACTIVE"\n    return 0;\n}`,
         expectedOutput: "Oxy-System: ACTIVE",
         testStatus: "FAIL"
     }

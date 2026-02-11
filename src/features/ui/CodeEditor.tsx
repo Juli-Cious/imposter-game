@@ -94,8 +94,13 @@ export const CodeEditor = () => {
                         <span className="text-white text-sm font-sans px-4 bg-[#1e1e1e] py-1 border-t border-blue-500">
                             {filename}
                         </span>
-                        <span className={`text-xs px-2 py-0.5 rounded ${status === 'PASS' ? 'bg-green-900 text-green-200' : 'bg-yellow-900 text-yellow-200'}`}>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${status === 'PASS' ? 'bg-green-900/50 text-green-300 border-green-700' :
+                            status === 'FAIL' ? 'bg-red-900/50 text-red-300 border-red-700' : 'bg-yellow-900/50 text-yellow-300 border-yellow-700'
+                            }`}>
                             {status}
+                        </span>
+                        <span className="text-gray-400 text-xs ml-4 italic truncate max-w-sm">
+                            {problem?.description}
                         </span>
                     </div>
                     <div className="flex gap-2">
