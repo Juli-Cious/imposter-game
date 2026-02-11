@@ -216,14 +216,17 @@ export class MainScene extends Phaser.Scene {
     if (solarAcademyZone) {
       this.solarAcademyZone = solarAcademyZone;
       this.add.image(this.solarAcademyZone.x, this.solarAcademyZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D').setTint(0xffaa00);
+      this.add.text(this.solarAcademyZone.x, this.solarAcademyZone.y - 35, "☀️", { fontSize: '24px' }).setOrigin(0.5).setDepth(2);
     }
     if (wasteAcademyZone) {
       this.wasteAcademyZone = wasteAcademyZone;
-      this.add.image(this.wasteAcademyZone.x, this.wasteAcademyZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D').setTint(0xffaa00);
+      this.add.image(this.wasteAcademyZone.x, this.wasteAcademyZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D').setTint(0x00ff00);
+      this.add.text(this.wasteAcademyZone.x, this.wasteAcademyZone.y - 35, "♻️", { fontSize: '24px' }).setOrigin(0.5).setDepth(2);
     }
     if (oxygenAcademyZone) {
       this.oxygenAcademyZone = oxygenAcademyZone;
-      this.add.image(this.oxygenAcademyZone.x, this.oxygenAcademyZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D').setTint(0xffaa00);
+      this.add.image(this.oxygenAcademyZone.x, this.oxygenAcademyZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D').setTint(0x00ffff);
+      this.add.text(this.oxygenAcademyZone.x, this.oxygenAcademyZone.y - 35, "🌿", { fontSize: '24px' }).setOrigin(0.5).setDepth(2);
     }
 
     // Meeting Room Table
@@ -439,7 +442,7 @@ export class MainScene extends Phaser.Scene {
       }
     }
     // 2. If we are in an academy zone
-    else if (acadType && this.pendingZoneId !== acadType && useGameStore.getState().terminalType !== 'academy') {
+    else if (acadType && useGameStore.getState().terminalType !== 'academy') {
       if (this.pendingZoneId !== acadType) {
         this.pendingZoneId = acadType;
         this.zoneTimer = 0;
@@ -461,11 +464,19 @@ export class MainScene extends Phaser.Scene {
     }
     // 3. Reset logic
     else {
+      // If we walked out of a zone that was open, close it (optional, maybe keep it open?)
+      // Current design: Close if we walk out of ANY zone
       if (!activeZoneId && !acadType && (this.currentZone || useGameStore.getState().terminalType)) {
         closeTerminal();
         this.currentZone = null;
       }
-      if ((!activeZoneId && !acadType) || activeZoneId === this.currentZone) {
+
+      // Reset progress if we are not in ANY zone or if we are in the zone that is ALREADY active (currentZone)
+      // For Academy, it stays as terminalType === 'academy'.
+      const isAlreadyActive = (activeZoneId && activeZoneId === this.currentZone) ||
+        (acadType && useGameStore.getState().terminalType === 'academy');
+
+      if (!activeZoneId && !acadType || isAlreadyActive) {
         this.zoneTimer = 0;
         this.pendingZoneId = null;
         this.zoneProgressBar.clear();
