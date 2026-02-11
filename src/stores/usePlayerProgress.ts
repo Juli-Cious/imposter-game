@@ -12,8 +12,8 @@ export interface Achievement {
 export interface EnvironmentalImpact {
     co2Prevented: number; // tons
     wasteRecycled: number; // truckloads
-    peopleProt ected: number;
-sdgsContributed: number[];
+    peopleProtected: number;
+    sdgsContributed: number[];
 }
 
 interface PlayerProgress {
