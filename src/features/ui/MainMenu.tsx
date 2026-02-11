@@ -248,6 +248,25 @@ export const MainMenu = () => {
                         </button>
                     </div>
                 </div>
+
+                {/* Technical Badges Footer */}
+                <div className="mt-8 pt-6 border-t border-gray-700">
+                    <p className="text-center text-gray-500 text-xs mb-3 font-semibold tracking-wider">POWERED BY</p>
+                    <div className="flex justify-center gap-4 flex-wrap opacity-70 hover:opacity-100 transition-opacity">
+                        <span className="px-2 py-1 bg-gray-900 rounded border border-gray-600 text-[10px] text-cyan-400 flex items-center gap-1">
+                            ⚛️ React + Vite
+                        </span>
+                        <span className="px-2 py-1 bg-gray-900 rounded border border-gray-600 text-[10px] text-yellow-500 flex items-center gap-1">
+                            🔥 Firebase
+                        </span>
+                        <span className="px-2 py-1 bg-gray-900 rounded border border-gray-600 text-[10px] text-blue-400 flex items-center gap-1">
+                            ✨ Gemini Pro
+                        </span>
+                        <span className="px-2 py-1 bg-gray-900 rounded border border-gray-600 text-[10px] text-purple-400 flex items-center gap-1">
+                            🎮 Phaser 3
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
     );

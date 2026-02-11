@@ -97,7 +97,7 @@ export const PlanetDashboard = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                     {/* CO2 Stat */}
-                    <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+                    <div className="group relative bg-gray-700/50 p-4 rounded-lg border border-gray-600 transition-all hover:bg-gray-700 hover:border-cyan-500">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="text-2xl">☁️</span>
                             <span className="text-gray-400 text-xs font-bold uppercase">CO₂ Prevented</span>
@@ -105,10 +105,17 @@ export const PlanetDashboard = () => {
                         <div className="text-2xl font-mono text-cyan-300">
                             {totalImpact.co2Prevented} <span className="text-sm text-gray-500">tons</span>
                         </div>
+
+                        {/* Tooltip */}
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-black/90 p-3 rounded text-xs text-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 border border-cyan-500/30">
+                            <p className="text-cyan-300 font-bold mb-1">Real World Impact</p>
+                            <p className="text-gray-300">Equivalent to planting <span className="text-white font-bold">{Math.round(totalImpact.co2Prevented * 50)}</span> trees!</p>
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-8 border-transparent border-t-black/90"></div>
+                        </div>
                     </div>
 
                     {/* Trees/Waste Stat */}
-                    <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+                    <div className="group relative bg-gray-700/50 p-4 rounded-lg border border-gray-600 transition-all hover:bg-gray-700 hover:border-green-500">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="text-2xl">♻️</span>
                             <span className="text-gray-400 text-xs font-bold uppercase">Waste Recycled</span>
@@ -116,10 +123,17 @@ export const PlanetDashboard = () => {
                         <div className="text-2xl font-mono text-green-300">
                             {totalImpact.wasteRecycled} <span className="text-sm text-gray-500">loads</span>
                         </div>
+
+                        {/* Tooltip */}
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-black/90 p-3 rounded text-xs text-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 border border-green-500/30">
+                            <p className="text-green-300 font-bold mb-1">Real World Impact</p>
+                            <p className="text-gray-300">Saved <span className="text-white font-bold">{totalImpact.wasteRecycled * 0.5}</span> tons of plastic from the ocean.</p>
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-8 border-transparent border-t-black/90"></div>
+                        </div>
                     </div>
 
                     {/* People protected */}
-                    <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+                    <div className="group relative bg-gray-700/50 p-4 rounded-lg border border-gray-600 transition-all hover:bg-gray-700 hover:border-yellow-500">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="text-2xl">🛡️</span>
                             <span className="text-gray-400 text-xs font-bold uppercase">Protected</span>
@@ -129,6 +143,13 @@ export const PlanetDashboard = () => {
                                 ? `${(totalImpact.peopleProtected / 1000000).toFixed(1)}B`
                                 : totalImpact.peopleProtected}
                             <span className="text-sm text-gray-500"> people</span>
+                        </div>
+
+                        {/* Tooltip */}
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-black/90 p-3 rounded text-xs text-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 border border-yellow-500/30">
+                            <p className="text-yellow-300 font-bold mb-1">Real World Impact</p>
+                            <p className="text-gray-300">You've secured the future for <span className="text-white font-bold">{totalImpact.peopleProtected}</span> AI citizens.</p>
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-8 border-transparent border-t-black/90"></div>
                         </div>
                     </div>
                 </div>

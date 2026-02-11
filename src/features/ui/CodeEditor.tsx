@@ -9,6 +9,8 @@ import { ChallengeAnimation } from './ChallengeAnimation';
 import { SDGBadgeGroup } from './SDGBadge';
 import { MentorChat } from './MentorChat';
 import { usePlayerProgress } from '../../stores/usePlayerProgress';
+import { aiChallengeService } from '../../services/AIChallengeService';
+import { SDGPopup } from './SDGPopup';
 
 export const CodeEditor = () => {
     const { activeFileId, closeTerminal } = useGameStore();
@@ -17,6 +19,13 @@ export const CodeEditor = () => {
     const [output, setOutput] = useState('');
     const [isRunning, setIsRunning] = useState(false);
     const [status, setStatus] = useState<'PENDING' | 'PASS' | 'FAIL'>('PENDING');
+
+    // AI Review State
+    const [aiFeedback, setAiFeedback] = useState<{ rating: number, feedback: string, tip: string } | null>(null);
+    const [isReviewing, setIsReviewing] = useState(false);
+
+    // SDG Popup State
+    const [completedSdg, setCompletedSdg] = useState<number | null>(null);
 
     // Mentor Chat state
     const [showMentorChat, setShowMentorChat] = useState(false);
@@ -77,6 +86,7 @@ export const CodeEditor = () => {
         setIsRunning(true);
         setOutput("Running...");
         setLastError(null); // Clear previous errors
+        setAiFeedback(null); // Clear previous feedback
 
         // Execute against the problem's expected output
         const result = await executeCode(problem.language, code, problem.expectedOutput);
@@ -91,6 +101,27 @@ export const CodeEditor = () => {
         // Track completion in player progress
         if (result.success && activeFileId) {
             completeChallenge(activeFileId);
+
+            // Trigger AI Review
+            if (code.length > 10) { // Only review meaningful code
+                setIsReviewing(true);
+                aiChallengeService.submitForReview(activeFileId, code).then(review => {
+                    if (review.success) {
+                        setAiFeedback({
+                            rating: review.rating,
+                            feedback: review.feedback,
+                            tip: review.tip
+                        });
+                    }
+                    setIsReviewing(false);
+                });
+            }
+
+            // Trigger SDG Popup (Visual Celebration)
+            if (problem.sdgGoals && problem.sdgGoals.length > 0) {
+                setCompletedSdg(problem.sdgGoals[0]); // Just show first one for simplicity
+            }
+
         } else {
             // If failed, checking if it's an error vs just wrong output
             if (result.output.toLowerCase().includes('error')) {
@@ -178,7 +209,7 @@ export const CodeEditor = () => {
 
     return (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-50 p-10">
-            <div className="bg-[#1e1e1e] w-full h-full max-w-6xl border border-gray-600 flex flex-col shadow-2xl">
+            <div className="bg-[#1e1e1e] w-full h-full max-w-6xl border border-gray-600 flex flex-col shadow-2xl relative">
 
                 {/* Header (VS Code Style) */}
                 <div className="bg-[#252526] p-2 flex justify-between items-center border-b border-black">
@@ -261,8 +292,35 @@ export const CodeEditor = () => {
                     </div>
 
                     {/* Animation Panel - Right Side */}
-                    <div className="w-96 flex-shrink-0">
-                        <ChallengeAnimation challengeId={activeFileId || ''} status={status} output={output} />
+                    <div className="w-96 flex-shrink-0 flex flex-col">
+                        <div className="flex-1">
+                            <ChallengeAnimation challengeId={activeFileId || ''} status={status} output={output} />
+                        </div>
+
+                        {/* AI Review Panel (appears after success) */}
+                        {isReviewing && (
+                            <div className="bg-gray-800 p-4 border-t border-gray-700 animate-pulse">
+                                <p className="text-center text-cyan-400 text-sm">🧠 Professor Gaia is viewing your code...</p>
+                            </div>
+                        )}
+                        {aiFeedback && (
+                            <div className="bg-gray-800 p-4 border-t border-gray-700 animate-slide-up">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-xl">🎓</span>
+                                    <h4 className="text-white font-bold text-sm">Code Review</h4>
+                                    <div className="ml-auto flex">
+                                        {[1, 2, 3, 4, 5].map(i => (
+                                            <span key={i} className={i <= aiFeedback.rating ? 'text-yellow-400' : 'text-gray-600'}>★</span>
+                                        ))}
+                                    </div>
+                                </div>
+                                <p className="text-gray-300 text-xs italic mb-2">"{aiFeedback.feedback}"</p>
+                                <div className="bg-blue-900/30 p-2 rounded border border-blue-500/30">
+                                    <p className="text-blue-200 text-[10px] font-bold">💡 PRO TIP:</p>
+                                    <p className="text-blue-100 text-[10px]">{aiFeedback.tip}</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -293,6 +351,16 @@ export const CodeEditor = () => {
                 currentCode={code}
                 initialError={lastError || undefined}
             />
+
+            {/* SDG Achievement Popup */}
+            {completedSdg && problem && (
+                <SDGPopup
+                    sdgId={completedSdg}
+                    title="Goal Progress!"
+                    description={`Great work! Your code for ${problem.name} contributed to this global goal.`}
+                    onClose={() => setCompletedSdg(null)}
+                />
+            )}
         </div>
     );
 };

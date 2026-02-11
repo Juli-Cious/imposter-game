@@ -1,0 +1,154 @@
+.dynamic-level-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.loader-content {
+    text-align: center;
+    padding: 2rem;
+    max-width: 500px;
+}
+
+.gaia-avatar {
+    font-size: 80px;
+    margin-bottom: 1.5rem;
+    position: relative;
+    display: inline-block;
+    animation: float 3s ease-in-out infinite;
+}
+
+.avatar-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(74, 222, 128, 0.3), transparent);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.loader-content h2 {
+    color: #fff;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.loading-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.loading-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #4ade80, #22c55e, #16a34a);
+    animation: progress 2s ease-in-out infinite;
+}
+
+.loading-hint {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+}
+
+.loading-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.step {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.step.active {
+    color: #4ade80;
+    transform: translateX(5px);
+}
+
+/* Error State */
+.error-state .loader-content {
+    background: rgba(239, 68, 68, 0.1);
+    border: 2px solid rgba(239, 68, 68, 0.3);
+    border-radius: 12px;
+    padding: 3rem 2rem;
+}
+
+.error-icon {
+    font-size: 60px;
+    margin-bottom: 1rem;
+}
+
+.error-message {
+    color: #fca5a5;
+    margin-bottom: 1.5rem;
+}
+
+.retry-button {
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(74, 222, 128, 0.3);
+}
+
+/* Animations */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.5;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+}
+
+@keyframes progress {
+    0% {
+        width: 0%;
+    }
+    50% {
+        width: 70%;
+    }
+    100% {
+        width: 100%;
+    }
+}

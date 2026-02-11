@@ -181,4 +181,16 @@ export class FirebaseAdapter implements NetworkService {
     const myRef = this.getRoomRef(`players/${this.playerId}`);
     update(myRef, { skin, tint });
   }
+
+  submitFeedback(rating: number, comment: string): Promise<void> {
+    const feedbackRef = ref(db, 'feedback');
+    const newFeedbackRef = push(feedbackRef);
+    return set(newFeedbackRef, {
+      rating,
+      comment,
+      timestamp: Date.now(),
+      playerId: this.playerId,
+      playerName: this.playerName || 'Anonymous'
+    });
+  }
 }

@@ -3,6 +3,9 @@
  * Uses Google Generative AI (Gemini) for context-aware, conversational assistance
  */
 
+// Debug helper for API key troubleshooting
+import '../utils/debugGoogleAI';
+
 const API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY;
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
@@ -351,7 +354,6 @@ export async function explainError(request: ErrorExplanationRequest): Promise<Er
 
 function buildErrorPrompt(request: ErrorExplanationRequest): string {
     const { code, error, challengeDescription, language } = request;
-
     return `You are Professor Gaia, the friendly AI mentor for a children's coding game.
     
 The student has encountered an error in their ${language || 'code'}.
@@ -372,3 +374,385 @@ Your task:
 5. Use emojis.
 6. Return ONLY the explanation message.`;
 }
+
+// --- Dynamic Sabotage Generation ---
+
+interface SabotageRequest {
+    baseCode: string;
+    level: 'easy' | 'medium' | 'hard';
+    concept: string; // e.g. "loops", "variables", "syntax"
+}
+
+interface SabotageResponse {
+    code: string;
+    sabotageType: string;
+    fixInstructions: string;
+    success: boolean;
+    error?: string;
+}
+
+/**
+ * Generates a "sabotaged" version of code for the Imposter to plant
+ */
+export async function generateSabotage(request: SabotageRequest): Promise<SabotageResponse> {
+    if (!API_KEY) {
+        return {
+            success: false,
+            code: request.baseCode, // Fallback to original
+            sabotageType: 'Network Error',
+            fixInstructions: 'Check API Key',
+            error: 'API Key missing'
+        };
+    }
+
+    try {
+        const prompt = `You are the "glitch" in the system. 
+        Take this working code and introduce a subtle bug (sabotage) based on the concept: "${request.concept}".
+        Difficulty: ${request.level}.
+
+        Working Code:
+        \`\`\`
+        ${request.baseCode}
+        \`\`\`
+
+        Return a JSON object with this structure:
+        {
+            "sabotagedCode": "The full code with the bug inserted",
+            "sabotageType": "Short name of the bug (e.g. Infinite Loop)",
+            "fixInstructions": "One sentence hint on how to fix it"
+        }
+        
+        Ensure the sabotaged code is syntactically valid enough to "run" but fail logic or loop forever, unless the concept is "syntax error".`;
+
+        const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.9, maxOutputTokens: 1000 }
+            })
+        });
+
+        if (!response.ok) throw new Error('Sabotage generation failed');
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        // Clean markdown code blocks if present to get pure JSON
+        const jsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const result = JSON.parse(jsonText);
+
+        return {
+            success: true,
+            code: result.sabotagedCode,
+            sabotageType: result.sabotageType,
+            fixInstructions: result.fixInstructions
+        };
+
+    } catch (error) {
+        console.error('Error generating sabotage:', error);
+        return {
+            success: false,
+            code: request.baseCode,
+            sabotageType: 'Generation Failed',
+            fixInstructions: 'Use standard manual sabotage',
+            error: error instanceof Error ? error.message : 'Unknown error'
+        };
+    }
+}
+
+// --- AI Code Review ---
+
+interface ReviewRequest {
+    code: string;
+    originalChallenge: string;
+    timeTaken?: number;
+}
+
+interface ReviewResponse {
+    rating: number; // 1-5
+    feedback: string; // Encouraging feedback
+    tip: string; // Optimization tip
+    success: boolean;
+}
+
+/**
+ * Reviews a student's solution after they submit
+ */
+export async function reviewCode(request: ReviewRequest): Promise<ReviewResponse> {
+    if (!API_KEY) return { success: false, rating: 0, feedback: '', tip: '' };
+
+    try {
+        const prompt = `You are Professor Gaia. A student just solved this challenge: "${request.originalChallenge}".
+        
+        Their Code:
+        \`\`\`
+        ${request.code}
+        \`\`\`
+
+        Provide a JSON review:
+        {
+            "rating": (integer 1-5 based on efficiency and cleanliness),
+            "feedback": "Encouraging remark exploring what they did well (warm tone)",
+            "tip": "One cool coding tip to make it even better next time"
+        }`;
+
+        const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.7 }
+            })
+        });
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const jsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const result = JSON.parse(jsonText);
+
+        return {
+            success: true,
+            rating: result.rating,
+            feedback: result.feedback,
+            tip: result.tip
+        };
+
+    } catch (e) {
+        return { success: false, rating: 0, feedback: 'Great job!', tip: '' };
+    }
+}
+
+// --- Dynamic Level Generation (Chaos Engine) ---
+
+import type {
+    DynamicLevelRequest,
+    DynamicLevelResponse,
+    DynamicLevel,
+    GreenCoderRequest,
+    GreenCoderResponse,
+    GreenCoderScore
+} from '../types/ai-levels';
+
+/**
+ * Generate a complete coding challenge dynamically using AI
+ * This enables infinite unique levels aligned with SDG themes
+ */
+export async function generateDynamicLevel(request: DynamicLevelRequest): Promise<DynamicLevelResponse> {
+    if (!API_KEY) {
+        return {
+            success: false,
+            error: 'API key not configured. Cannot generate dynamic levels.'
+        };
+    }
+
+    try {
+        const prompt = buildChaosEnginePrompt(request);
+
+        const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.9, // Higher creativity for varied levels
+                    maxOutputTokens: 1500
+                }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Dynamic level generation failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!text) {
+            throw new Error('No response from AI');
+        }
+
+        // Clean markdown code blocks and parse JSON
+        const jsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const level: DynamicLevel = JSON.parse(jsonText);
+
+        // Validate required fields
+        if (!level.level_id || !level.title || !level.initial_code || !level.solution_code) {
+            throw new Error('Invalid level structure from AI');
+        }
+
+        console.log(`[AI] Generated dynamic level: ${level.title} (${level.bug_type})`);
+
+        return {
+            success: true,
+            level
+        };
+
+    } catch (error) {
+        console.error('Error generating dynamic level:', error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
+    }
+}
+
+/**
+ * Build the "Chaos Engine" system prompt for level generation
+ */
+function buildChaosEnginePrompt(request: DynamicLevelRequest): string {
+    const { difficulty, language, theme } = request;
+
+    return `ROLE:
+You are the "Chaos Engine," a game level generator for a coding puzzle game about saving the planet. Your goal is to generate coding challenges that contain ONE specific, solvable logic or syntax error.
+
+INPUT PARAMETERS:
+1. Difficulty: ${difficulty}
+2. Language: ${language}
+3. Theme: ${theme}
+
+INSTRUCTIONS:
+1. Scenario Generation: Create a short, urgent scenario based on the Theme (e.g., "The solar panel alignment algorithm is stuck!").
+2. Code Generation: Write a function that *should* solve the scenario but contains a specific bug based on the Difficulty:
+   - Easy: Syntax error, typo, or wrong operator (e.g., + instead of -).
+   - Medium: Logic error (infinite loop, off-by-one, wrong conditional).
+   - Hard: Performance issue (O(n^2) nested loops), memory leak, or edge case failure.
+3. Solvability: The bug must be fixable by changing 1-3 lines of code.
+4. Output Format: You must output ONLY valid JSON. Do not output markdown code blocks.
+
+JSON STRUCTURE:
+{
+  "level_id": "unique_string",
+  "title": "Short Mission Title",
+  "description": "The narrative description of the problem.",
+  "language": "${language}",
+  "initial_code": "The buggy code string (escape newlines)",
+  "solution_code": "The correct code string",
+  "bug_type": "syntax | logic | performance",
+  "hint": "A subtle clue for the player.",
+  "sdg_impact": "Text explaining how fixing this specific code helps the SDG (e.g., 'Optimizing this loop saves 500kW of server power')."
+}
+
+Generate the level now:`;
+}
+
+/**
+ * Analyze code efficiency and calculate Green Coder Score
+ * Provides Big-O analysis and environmental impact metrics
+ */
+export async function analyzeGreenCode(request: GreenCoderRequest): Promise<GreenCoderResponse> {
+    if (!API_KEY) {
+        return {
+            success: false,
+            error: 'API key not configured. Cannot analyze code.'
+        };
+    }
+
+    try {
+        const prompt = buildGreenCoderPrompt(request);
+
+        const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.6, // Lower temp for consistent analysis
+                    maxOutputTokens: 1200
+                }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Green code analysis failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!text) {
+            throw new Error('No response from AI');
+        }
+
+        // Clean and parse JSON
+        const jsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const score: GreenCoderScore = JSON.parse(jsonText);
+
+        console.log(`[AI] Green Coder Score: ${score.green_coder_score}/100`);
+
+        return {
+            success: true,
+            score
+        };
+
+    } catch (error) {
+        console.error('Error analyzing green code:', error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
+    }
+}
+
+/**
+ * Build the Green Coder analysis prompt
+ */
+function buildGreenCoderPrompt(request: GreenCoderRequest): string {
+    const { player_code, solution_code, challenge_description, language } = request;
+
+    return `ROLE:
+You are Professor Gaia's "Green Code Analyzer," an AI system that evaluates coding efficiency and translates it into environmental impact. You analyze player solutions and calculate their "Green Coder Score" based on algorithmic efficiency.
+
+INPUT:
+Challenge: ${challenge_description}
+Language: ${language}
+
+Optimal Solution:
+\`\`\`${language}
+${solution_code}
+\`\`\`
+
+Player's Solution:
+\`\`\`${language}
+${player_code}
+\`\`\`
+
+INSTRUCTIONS:
+1. Big-O Analysis: Analyze the time complexity of the player's solution
+2. Efficiency Comparison: Compare it to the optimal solution's complexity
+3. Environmental Impact: Calculate the "energy waste" of inefficient code
+4. Green Coder Score: Rate 0-100 based on efficiency (100 = optimal, 0 = extremely wasteful)
+5. Real-World Equivalency: Convert energy metrics to tangible examples
+6. Output Format: Return ONLY valid JSON. Do not use markdown code blocks.
+
+SCORING LOGIC:
+- Same Big-O as optimal solution: 100 points
+- One level worse (e.g., O(n log n) vs O(n)): 75 points
+- Two levels worse (e.g., O(n^2) vs O(n)): 50 points
+- Three+ levels worse or exponential: 25 points or less
+- Bonus/Penalty: Adjust ±10 points for code clarity, edge cases, best practices
+
+ENERGY CALCULATION:
+Estimate CPU cycles saved by using optimal vs. player's algorithm.
+Assume: 1 billion extra operations = 1 watt-hour of energy waste
+Scale based on real-world usage scenarios (e.g., "if run 1 million times per day...")
+
+JSON STRUCTURE:
+{
+  "green_coder_score": 85,
+  "player_complexity": "O(n^2)",
+  "optimal_complexity": "O(n)",
+  "complexity_comparison": "Your solution uses nested loops, which is less efficient than the linear approach.",
+  "energy_impact": {
+    "energy_wasted_kwh": 0.5,
+    "real_world_equivalent": "Running this code 1 million times wastes enough energy to charge 100 smartphones",
+    "sdg_message": "By optimizing this algorithm, we could save 500 kWh per day in data centers worldwide - equivalent to powering 20 homes!"
+  },
+  "feedback": "Great job fixing the bug! Your solution works correctly.",
+  "optimization_tip": "Try using a Set or HashMap to check for duplicates in O(1) time instead of nested loops.",
+  "professor_gaia_message": "Well done, young hero! 🌍 Your code saves the day, but we can make it even greener! ✨"
+}
+
+Analyze the code now:`;
+}
+
