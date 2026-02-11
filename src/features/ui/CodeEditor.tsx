@@ -304,7 +304,7 @@ export const CodeEditor = () => {
                             </div>
                         )}
                         {aiFeedback && (
-                            <div className="bg-gray-800 p-4 border-t border-gray-700 animate-slide-up">
+                            <div className="bg-gray-800 p-4 border-t border-gray-700 animate-slide-up max-h-96 overflow-y-auto">
                                 <div className="flex items-center gap-2 mb-2">
                                     <span className="text-xl">🎓</span>
                                     <h4 className="text-white font-bold text-sm">Code Review</h4>
