@@ -9,6 +9,31 @@ import '../utils/debugGoogleAI';
 const API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY;
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
+// Enhanced debugging for API key issues
+if (!API_KEY) {
+    console.error('🚨 GEMINI API KEY NOT FOUND 🚨');
+    console.error('Environment variable VITE_GOOGLE_AI_API_KEY is not set.');
+    console.error('\n📋 Debugging Checklist:');
+    console.error('1. Local Development:');
+    console.error('   - Create a .env file in the project root');
+    console.error('   - Add: VITE_GOOGLE_AI_API_KEY=your_api_key_here');
+    console.error('   - Restart the dev server');
+    console.error('\n2. Vercel Deployment:');
+    console.error('   - Go to Vercel Dashboard → Project → Settings → Environment Variables');
+    console.error('   - Variable name must be EXACTLY: VITE_GOOGLE_AI_API_KEY (case-sensitive)');
+    console.error('   - Enable for: Production, Preview, and Development');
+    console.error('   - CRITICAL: After adding the variable, REDEPLOY the project!');
+    console.error('\n3. Current Environment Info:');
+    console.error('   - Mode:', import.meta.env.MODE);
+    console.error('   - Base URL:', import.meta.env.BASE_URL);
+    console.error('   - Available env vars starting with VITE_:',
+        Object.keys(import.meta.env).filter(key => key.startsWith('VITE_'))
+    );
+} else {
+    console.log('✅ Gemini API Key loaded successfully');
+    console.log('🔑 Key preview:', API_KEY.substring(0, 10) + '...' + API_KEY.substring(API_KEY.length - 4));
+}
+
 interface HintRequest {
     challengeId: string;
     challengeDescription: string;
@@ -48,10 +73,11 @@ interface ChatResponse {
  */
 export async function getHint(request: HintRequest): Promise<HintResponse> {
     if (!API_KEY) {
+        console.error('❌ getHint() called but API key is missing');
         return {
             success: false,
             hint: '',
-            error: 'API key not configured. Please add VITE_GOOGLE_AI_API_KEY to your .env file.'
+            error: '🔧 Gemini API not configured. Check browser console for setup instructions. If deployed on Vercel, ensure environment variables are set and the project is redeployed.'
         };
     }
 
@@ -102,10 +128,11 @@ export async function getHint(request: HintRequest): Promise<HintResponse> {
  */
 export async function chatWithMentor(request: ChatRequest): Promise<ChatResponse> {
     if (!API_KEY) {
+        console.error('❌ chatWithMentor() called but API key is missing');
         return {
             success: false,
             message: '',
-            error: 'Professor Gaia is currently unavailable (API key not configured).'
+            error: '🌍 Professor Gaia is currently unavailable (API key not configured). Check browser console for debugging steps. If on Vercel: Settings → Environment Variables → Add VITE_GOOGLE_AI_API_KEY → Redeploy.'
         };
     }
 
@@ -300,10 +327,11 @@ interface ErrorExplanationResponse {
  */
 export async function explainError(request: ErrorExplanationRequest): Promise<ErrorExplanationResponse> {
     if (!API_KEY) {
+        console.error('❌ explainError() called but API key is missing');
         return {
             success: false,
             explanation: '',
-            error: 'Professor Gaia is currently unavailable (API key not configured).'
+            error: '🔧 Error explanation unavailable (API key not configured). See console for setup guide.'
         };
     }
 
@@ -540,9 +568,10 @@ import type {
  */
 export async function generateDynamicLevel(request: DynamicLevelRequest): Promise<DynamicLevelResponse> {
     if (!API_KEY) {
+        console.error('❌ generateDynamicLevel() called but API key is missing');
         return {
             success: false,
-            error: 'API key not configured. Cannot generate dynamic levels.'
+            error: '🎮 Cannot generate dynamic levels (API key not configured). Check console for setup instructions.'
         };
     }
 
@@ -642,9 +671,10 @@ Generate the level now:`;
  */
 export async function analyzeGreenCode(request: GreenCoderRequest): Promise<GreenCoderResponse> {
     if (!API_KEY) {
+        console.error('❌ analyzeGreenCode() called but API key is missing');
         return {
             success: false,
-            error: 'API key not configured. Cannot analyze code.'
+            error: '🌱 Green Coder analysis unavailable (API key not configured). Check console for help.'
         };
     }
 
