@@ -59,7 +59,7 @@ export const AcademyUI = () => {
             animation: (
                 <div className="flex flex-col items-center justify-center h-32 bg-teal-900/30 rounded-lg p-4">
                     <div className="bg-black p-2 font-mono text-green-500 rounded border border-green-800 mb-2">
-                        console.log("ACTIVE")
+                        std::cout &lt;&lt; "Oxy-System: ACTIVE" &lt;&lt; std::endl;
                     </div>
                     <div className="flex gap-4">
                         <div className="animate-pulse text-2xl">🫧</div>
