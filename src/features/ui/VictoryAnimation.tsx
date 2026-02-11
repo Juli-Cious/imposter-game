@@ -11,7 +11,12 @@ export const VictoryAnimation = ({ onClose }: VictoryAnimationProps) => {
     const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
     const [showImpactSummary, setShowImpactSummary] = useState(false);
     const [confetti, setConfetti] = useState(false);
-    const { totalImpact, achievements } = usePlayerProgress();
+    const { totalImpact, achievements, markVictorySeen } = usePlayerProgress();
+
+    // Mark as seen on first load
+    useEffect(() => {
+        markVictorySeen();
+    }, [markVictorySeen]);
 
     const currentScene = VICTORY_SCENES[currentSceneIndex];
     const isLastScene = currentSceneIndex === VICTORY_SCENES.length - 1;

@@ -20,6 +20,7 @@ interface PlayerProgress {
     // First-time flags
     hasSeenIntro: boolean;
     hasCompletedTutorial: boolean;
+    hasSeenVictory: boolean;
 
     // Challenge completion
     completedChallenges: string[];
@@ -44,6 +45,7 @@ interface PlayerProgress {
     completeChallenge: (challengeId: string) => void;
     unlockAchievement: (achievement: Achievement) => void;
     addImpact: (impact: Partial<EnvironmentalImpact>) => void;
+    markVictorySeen: () => void;
     resetProgress: () => void;
 
     // Computed getters
@@ -69,6 +71,7 @@ const initialState = {
     },
     currentTutorialStep: 0,
     tutorialCompleted: false,
+    hasSeenVictory: false,
     firstPlayedAt: Date.now(),
     lastPlayedAt: Date.now()
 };
@@ -180,6 +183,11 @@ export const usePlayerProgress = create<PlayerProgress>()(
                 });
             },
 
+            markVictorySeen: () => set({
+                hasSeenVictory: true,
+                lastPlayedAt: Date.now()
+            }),
+
             resetProgress: () => set({
                 ...initialState,
                 firstPlayedAt: Date.now(),
@@ -202,7 +210,7 @@ export const usePlayerProgress = create<PlayerProgress>()(
 
             shouldShowVictory: () => {
                 const state = get();
-                return state.isAllChallengesComplete() && state.hasSeenIntro;
+                return state.isAllChallengesComplete() && state.hasSeenIntro && !state.hasSeenVictory;
             },
 
             getCompletionPercentage: () => {
