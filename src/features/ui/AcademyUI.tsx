@@ -43,7 +43,7 @@ export const AcademyUI = () => {
                         ))}
                     </div>
                     <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-gray-800 px-2 py-1 rounded text-xs font-mono border border-gray-600">
-                        for (let i = 0; i < 5; i++)
+                        {"for (let i = 0; i < 5; i++)"}
                     </div>
                     <div className="absolute bottom-2 right-4 text-3xl animate-bounce">
                         🏗️

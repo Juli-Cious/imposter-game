@@ -192,7 +192,7 @@ export class MainScene extends Phaser.Scene {
     // 2. Build Map
     const mapBuilder = new MapBuilder(this);
     const buildResult = mapBuilder.build();
-    const { walls, dbZone, apiZone, hubZone, meetingZone, doorTiles, spawnPoint } = buildResult;
+    const { walls, dbZone, apiZone, hubZone, meetingZone, solarAcademyZone, wasteAcademyZone, oxygenAcademyZone, doorTiles, spawnPoint } = buildResult;
 
     // We know 'walls' is a TilemapLayer in this context, but TS infers union with StaticGroup
     this.wallLayer = walls as Phaser.Tilemaps.TilemapLayer;
