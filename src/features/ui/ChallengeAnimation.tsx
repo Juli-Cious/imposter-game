@@ -22,16 +22,18 @@ export const ChallengeAnimation = ({ challengeId, isRunning }: ChallengeAnimatio
         useEffect(() => {
             if (!isRunning) return;
 
-            const timer1 = setTimeout(() => setAnimationStep(1), 300);
-            const timer2 = setTimeout(() => setAnimationStep(2), 600);
-            const timer3 = setTimeout(() => setAnimationStep(3), 1000);
-            const timer4 = setTimeout(() => setAnimationStep(4), 1400);
+            const timer1 = setTimeout(() => setAnimationStep(1), 400);
+            const timer2 = setTimeout(() => setAnimationStep(2), 900);
+            const timer3 = setTimeout(() => setAnimationStep(3), 1400);
+            const timer4 = setTimeout(() => setAnimationStep(4), 1900);
+            const timer5 = setTimeout(() => setAnimationStep(5), 2400);
 
             return () => {
                 clearTimeout(timer1);
                 clearTimeout(timer2);
                 clearTimeout(timer3);
                 clearTimeout(timer4);
+                clearTimeout(timer5);
             };
         }, [isRunning]);
 
@@ -42,7 +44,7 @@ export const ChallengeAnimation = ({ challengeId, isRunning }: ChallengeAnimatio
                 </h3>
 
                 <div className="flex items-center gap-6">
-                    {/* First Battery */}
+                    {/* First Battery - appears at step 1 */}
                     <div className={`transition-all duration-500 ${animationStep >= 1 ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}>
                         <div className="relative">
                             <div className="text-6xl animate-pulse">🔋</div>
@@ -52,13 +54,13 @@ export const ChallengeAnimation = ({ challengeId, isRunning }: ChallengeAnimatio
                         </div>
                     </div>
 
-                    {/* Plus Sign */}
+                    {/* Plus Sign - appears at step 2 */}
                     <div className={`text-4xl font-bold text-yellow-400 transition-all duration-500 ${animationStep >= 2 ? 'scale-100 rotate-0' : 'scale-0 rotate-180'}`}>
                         +
                     </div>
 
-                    {/* Second Battery */}
-                    <div className={`transition-all duration-500 ${animationStep >= 2 ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}>
+                    {/* Second Battery - appears at step 3 */}
+                    <div className={`transition-all duration-500 ${animationStep >= 3 ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}>
                         <div className="relative">
                             <div className="text-6xl animate-pulse" style={{ animationDelay: '0.2s' }}>🔋</div>
                             <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-3 py-1 rounded-full font-bold">
@@ -67,19 +69,19 @@ export const ChallengeAnimation = ({ challengeId, isRunning }: ChallengeAnimatio
                         </div>
                     </div>
 
-                    {/* Equals */}
-                    <div className={`text-4xl font-bold text-yellow-400 transition-all duration-500 ${animationStep >= 3 ? 'scale-100' : 'scale-0'}`}>
+                    {/* Equals - appears at step 4 */}
+                    <div className={`text-4xl font-bold text-yellow-400 transition-all duration-500 ${animationStep >= 4 ? 'scale-100' : 'scale-0'}`}>
                         =
                     </div>
 
-                    {/* Result */}
-                    <div className={`transition-all duration-700 ${animationStep >= 4 ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}>
+                    {/* Result - appears at step 5 */}
+                    <div className={`transition-all duration-700 ${animationStep >= 5 ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}>
                         <div className="relative">
                             <div className="text-7xl">⚡</div>
-                            <div className={`absolute -bottom-6 left-1/2 -translate-x-1/2 bg-yellow-500 text-gray-900 px-4 py-1 rounded-full font-black text-xl ${animationStep >= 4 ? 'animate-pulse' : ''}`}>
+                            <div className={`absolute -bottom-6 left-1/2 -translate-x-1/2 bg-yellow-500 text-gray-900 px-4 py-1 rounded-full font-black text-xl ${animationStep >= 5 ? 'animate-pulse' : ''}`}>
                                 15
                             </div>
-                            {animationStep >= 4 && (
+                            {animationStep >= 5 && (
                                 <div className="absolute inset-0 animate-ping">
                                     <div className="text-7xl opacity-50">⚡</div>
                                 </div>
@@ -126,8 +128,8 @@ export const ChallengeAnimation = ({ challengeId, isRunning }: ChallengeAnimatio
                         <div key={index} className="relative">
                             <div
                                 className={`text-5xl transition-all duration-500 ${animationStep > index
-                                        ? 'scale-110 brightness-125'
-                                        : 'scale-100 opacity-40 grayscale'
+                                    ? 'scale-110 brightness-125'
+                                    : 'scale-100 opacity-40 grayscale'
                                     }`}
                             >
                                 ♻️
