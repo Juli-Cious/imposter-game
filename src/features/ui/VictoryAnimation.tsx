@@ -74,14 +74,14 @@ export const VictoryAnimation = ({ onClose }: VictoryAnimationProps) => {
 
     if (showImpactSummary) {
         return (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md">
-                <div className="bg-gradient-to-br from-green-900 via-blue-900 to-purple-900 border-4 border-yellow-500 rounded-2xl p-8 max-w-3xl w-full mx-4 shadow-2xl animate-fadeIn">
+            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 sm:p-6">
+                <div className="bg-gradient-to-br from-green-900 via-blue-900 to-purple-900 border-4 border-yellow-500 rounded-2xl p-6 md:p-8 max-w-3xl w-full max-h-[95vh] overflow-y-auto shadow-2xl animate-fadeIn custom-scrollbar">
                     {/* Header */}
                     <div className="text-center mb-6">
-                        <h1 className="text-5xl font-black text-yellow-400 mb-2 animate-bounce">
+                        <h1 className="text-3xl md:text-5xl font-black text-yellow-400 mb-2 animate-bounce leading-tight">
                             🌍  YOUR ENVIRONMENTAL IMPACT  🌍
                         </h1>
-                        <p className="text-xl text-gray-300">You made a real difference!</p>
+                        <p className="text-lg md:text-xl text-gray-300">You made a real difference!</p>
                     </div>
 
                     {/* Impact Stats */}
@@ -145,16 +145,16 @@ export const VictoryAnimation = ({ onClose }: VictoryAnimationProps) => {
                     </div>
 
                     {/* Achievement */}
-                    <div className="bg-gradient-to-r from-purple-900/60 to-pink-900/60 rounded-xl p-6 border-2 border-yellow-500 mb-6">
+                    <div className="bg-gradient-to-r from-purple-900/60 to-pink-900/60 rounded-xl p-4 md:p-6 border-2 border-yellow-500 mb-6">
                         <div className="text-center">
-                            <div className="text-6xl mb-3">🏆</div>
-                            <h2 className="text-3xl font-black text-yellow-400 mb-2">ACHIEVEMENT UNLOCKED!</h2>
+                            <div className="text-4xl md:text-6xl mb-3">🏆</div>
+                            <h2 className="text-2xl md:text-3xl font-black text-yellow-400 mb-2">ACHIEVEMENT UNLOCKED!</h2>
                             {achievements.find(a => a.id === 'earth-guardian') && (
                                 <>
-                                    <p className="text-2xl font-bold text-white mb-1">
+                                    <p className="text-xl md:text-2xl font-bold text-white mb-1">
                                         {achievements.find(a => a.id === 'earth-guardian')?.icon} Earth's Guardian
                                     </p>
-                                    <p className="text-gray-300">
+                                    <p className="text-sm md:text-base text-gray-300 leading-relaxed">
                                         {achievements.find(a => a.id === 'earth-guardian')?.description}
                                     </p>
                                 </>
@@ -172,16 +172,16 @@ export const VictoryAnimation = ({ onClose }: VictoryAnimationProps) => {
                     </div>
 
                     {/* Buttons */}
-                    <div className="flex gap-3 justify-center">
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center mt-auto">
                         <button
                             onClick={() => window.location.reload()}
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-3 px-8 rounded-lg transition-all shadow-lg"
+                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-3 px-6 md:px-8 rounded-lg transition-all shadow-lg text-base md:text-lg"
                         >
                             🔄 Play Again
                         </button>
                         <button
                             onClick={onClose}
-                            className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 text-white font-bold py-3 px-8 rounded-lg transition-all shadow-lg"
+                            className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 text-white font-bold py-3 px-6 md:px-8 rounded-lg transition-all shadow-lg text-base md:text-lg"
                         >
                             ✨ Continue Exploring
                         </button>
@@ -217,12 +217,22 @@ export const VictoryAnimation = ({ onClose }: VictoryAnimationProps) => {
                     .animate-fall {
                         animation: fall linear forwards;
                     }
-                    @keyframes fadeIn {
-                        from { opacity: 0; transform: scale(0.9); }
-                        to { opacity: 1; transform: scale(1); }
-                    }
                     .animate-fadeIn {
                         animation: fadeIn 0.5s ease-out;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar {
+                        width: 8px;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-track {
+                        background: rgba(0, 0, 0, 0.2);
+                        border-radius: 4px;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-thumb {
+                        background: rgba(255, 255, 0, 0.3);
+                        border-radius: 4px;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                        background: rgba(255, 255, 0, 0.5);
                     }
                 `}</style>
             </div>
@@ -277,9 +287,9 @@ export const VictoryAnimation = ({ onClose }: VictoryAnimationProps) => {
             )}
 
             {/* Content Container */}
-            <div className="relative z-10 max-w-4xl mx-auto px-8 text-center select-none">
+            <div className="relative z-10 max-w-4xl mx-auto px-6 md:px-8 text-center select-none">
                 {/* Visual Elements */}
-                <div className="text-9xl mb-8 animate-bounce">
+                <div className="text-7xl md:text-9xl mb-6 md:mb-8 animate-bounce">
                     {currentScene.visual}
                 </div>
 
