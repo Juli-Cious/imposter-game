@@ -11,6 +11,7 @@ import { MentorChat } from './MentorChat';
 import { usePlayerProgress } from '../../stores/usePlayerProgress';
 import { aiChallengeService } from '../../services/AIChallengeService';
 import { SDGPopup } from './SDGPopup';
+import { CodeReviewModal } from './CodeReviewModal';
 
 export const CodeEditor = () => {
     const { activeFileId, closeTerminal } = useGameStore();
@@ -23,6 +24,7 @@ export const CodeEditor = () => {
     // AI Review State
     const [aiFeedback, setAiFeedback] = useState<{ rating: number, feedback: string, tip: string } | null>(null);
     const [isReviewing, setIsReviewing] = useState(false);
+    const [showReviewModal, setShowReviewModal] = useState(false);
 
     // SDG Popup State
     const [completedSdg, setCompletedSdg] = useState<number | null>(null);
@@ -102,21 +104,6 @@ export const CodeEditor = () => {
         if (result.success && activeFileId) {
             completeChallenge(activeFileId);
 
-            // Trigger AI Review
-            if (code.length > 10) { // Only review meaningful code
-                setIsReviewing(true);
-                aiChallengeService.submitForReview(activeFileId, code).then(review => {
-                    if (review.success) {
-                        setAiFeedback({
-                            rating: review.rating,
-                            feedback: review.feedback,
-                            tip: review.tip
-                        });
-                    }
-                    setIsReviewing(false);
-                });
-            }
-
             // Trigger SDG Popup (Visual Celebration)
             if (problem.sdgGoals && problem.sdgGoals.length > 0) {
                 setCompletedSdg(problem.sdgGoals[0]); // Just show first one for simplicity
@@ -138,6 +125,26 @@ export const CodeEditor = () => {
     // Open Mentor Chat
     const handleOpenMentorChat = () => {
         setShowMentorChat(true);
+    };
+
+    // Request AI Code Review
+    const handleRequestReview = async () => {
+        if (!activeFileId || !problem || code.length < 10) return;
+
+        setIsReviewing(true);
+        setShowReviewModal(true);
+        setAiFeedback(null);
+
+        const review = await aiChallengeService.submitForReview(activeFileId, code);
+
+        if (review.success) {
+            setAiFeedback({
+                rating: review.rating,
+                feedback: review.feedback,
+                tip: review.tip
+            });
+        }
+        setIsReviewing(false);
     };
 
 
@@ -230,6 +237,17 @@ export const CodeEditor = () => {
                     </div>
                     <div className="flex gap-2 items-center">
                         <button
+                            onClick={handleRequestReview}
+                            disabled={isReviewing || status !== 'PASS'}
+                            className={`px-3 py-1 text-xs rounded flex items-center gap-1 transition-colors ${status === 'PASS' && !isReviewing
+                                    ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                                    : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                }`}
+                            title={status !== 'PASS' ? 'Pass the challenge first!' : 'Get AI code review'}
+                        >
+                            {isReviewing ? '⏳ Reviewing...' : '🎓 Get Code Review'}
+                        </button>
+                        <button
                             onClick={handleOpenMentorChat}
                             className="px-3 py-1 text-xs bg-purple-700 hover:bg-purple-600 text-white rounded flex items-center gap-1 transition-colors"
                         >
@@ -297,30 +315,7 @@ export const CodeEditor = () => {
                             <ChallengeAnimation challengeId={activeFileId || ''} status={status} output={output} />
                         </div>
 
-                        {/* AI Review Panel (appears after success) */}
-                        {isReviewing && (
-                            <div className="bg-gray-800 p-4 border-t border-gray-700 animate-pulse">
-                                <p className="text-center text-cyan-400 text-sm">🧠 Professor Gaia is viewing your code...</p>
-                            </div>
-                        )}
-                        {aiFeedback && (
-                            <div className="bg-gray-800 p-4 border-t border-gray-700 animate-slide-up max-h-96 overflow-y-auto">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-xl">🎓</span>
-                                    <h4 className="text-white font-bold text-sm">Code Review</h4>
-                                    <div className="ml-auto flex">
-                                        {[1, 2, 3, 4, 5].map(i => (
-                                            <span key={i} className={i <= aiFeedback.rating ? 'text-yellow-400' : 'text-gray-600'}>★</span>
-                                        ))}
-                                    </div>
-                                </div>
-                                <p className="text-gray-300 text-xs italic mb-2">"{aiFeedback.feedback}"</p>
-                                <div className="bg-blue-900/30 p-2 rounded border border-blue-500/30">
-                                    <p className="text-blue-200 text-[10px] font-bold">💡 PRO TIP:</p>
-                                    <p className="text-blue-100 text-[10px]">{aiFeedback.tip}</p>
-                                </div>
-                            </div>
-                        )}
+                        {/* Removed inline AI Review Panel - now using modal */}
                     </div>
                 </div>
 
@@ -361,6 +356,16 @@ export const CodeEditor = () => {
                     onClose={() => setCompletedSdg(null)}
                 />
             )}
+
+            {/* Code Review Modal */}
+            <CodeReviewModal
+                isOpen={showReviewModal}
+                onClose={() => setShowReviewModal(false)}
+                rating={aiFeedback?.rating || 0}
+                feedback={aiFeedback?.feedback || ''}
+                tip={aiFeedback?.tip || ''}
+                isLoading={isReviewing}
+            />
         </div>
     );
 };
