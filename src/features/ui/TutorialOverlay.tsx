@@ -38,24 +38,6 @@ export const TutorialOverlay = () => {
     const isFirstStep = currentTutorialStep === 0;
     const isLastStep = currentTutorialStep === TUTORIAL_STEPS.length - 1;
 
-    // Position the tooltip based on step.position
-    const getTooltipPosition = () => {
-        switch (step.position) {
-            case 'top':
-                return 'bottom-full mb-4';
-            case 'right':
-                return 'left-full ml-4';
-            case 'bottom':
-                return 'top-full mt-4';
-            case 'left':
-                return 'right-full mr-4';
-            case 'center':
-                return 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2';
-            default:
-                return 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2';
-        }
-    };
-
     const getArrowClass = () => {
         if (!step.arrow) return '';
 

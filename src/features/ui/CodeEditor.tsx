@@ -12,17 +12,14 @@ import { usePlayerProgress } from '../../stores/usePlayerProgress';
 
 export const CodeEditor = () => {
     const { activeFileId, closeTerminal } = useGameStore();
+    const { completeChallenge } = usePlayerProgress();
     const [code, setCode] = useState('');
     const [output, setOutput] = useState('');
     const [isRunning, setIsRunning] = useState(false);
     const [status, setStatus] = useState<'PENDING' | 'PASS' | 'FAIL'>('PENDING');
 
-    // Hint system state
-    const [showHintModal, setShowHintModal] = useState(false);
-    const [currentHint, setCurrentHint] = useState('');
-    const [hintLevel, setHintLevel] = useState<'gentle' | 'specific' | 'solution'>('gentle');
-    const [isLoadingHint, setIsLoadingHint] = useState(false);
-    const [hintError, setHintError] = useState('');
+    // Mentor Chat state
+    const [showMentorChat, setShowMentorChat] = useState(false);
 
     // Get problem definition
     const problem = activeFileId ? LEVEL_1_PROBLEMS[activeFileId] : null;

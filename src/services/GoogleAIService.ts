@@ -193,7 +193,7 @@ Your personality:
  * Build the AI prompt based on difficulty level
  */
 function buildPrompt(request: HintRequest): string {
-    const { challengeId, challengeDescription, currentCode, difficulty } = request;
+    const { challengeDescription, currentCode, difficulty } = request;
 
     const baseContext = `You are Professor Gaia, the friendly AI mentor helping a young hero (age 8-14) save Earth through coding.
 

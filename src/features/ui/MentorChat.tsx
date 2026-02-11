@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { chatWithMentor, ChatMessage, hintRateLimiter } from '../../services/GoogleAIService';
+import { chatWithMentor, type ChatMessage, hintRateLimiter } from '../../services/GoogleAIService';
 
 interface MentorChatProps {
     isOpen: boolean;
