@@ -149,8 +149,8 @@ export const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
                     </p>
                 )}
 
-                {/* Progress Indicator */}
-                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2">
+                {/* Progress Indicator - Hidden */}
+                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2" style={{ display: 'none' }}>
                     {INTRO_SCENES.map((_, index) => (
                         <div
                             key={index}
