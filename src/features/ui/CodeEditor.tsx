@@ -5,6 +5,7 @@ import { ref, onValue, set, update } from 'firebase/database';
 import { executeCode } from '../game/CodeRunner';
 import { LEVEL_1_PROBLEMS } from '../../shared/ProblemData';
 import Editor from '@monaco-editor/react';
+import { ChallengeAnimation } from './ChallengeAnimation';
 
 export const CodeEditor = () => {
     const { activeFileId, closeTerminal } = useGameStore();
@@ -86,7 +87,7 @@ export const CodeEditor = () => {
 
     return (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-50 p-10">
-            <div className="bg-[#1e1e1e] w-full h-full max-w-4xl border border-gray-600 flex flex-col shadow-2xl">
+            <div className="bg-[#1e1e1e] w-full h-full max-w-6xl border border-gray-600 flex flex-col shadow-2xl">
 
                 {/* Header (VS Code Style) */}
                 <div className="bg-[#252526] p-2 flex justify-between items-center border-b border-black">
@@ -115,22 +116,30 @@ export const CodeEditor = () => {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-hidden">
-                    <Editor
-                        key={activeFileId} // Force remount on file change
-                        height="100%"
-                        language={language}
-                        path={`file:///${filename}`} // Absolute path helps Monaco
-                        theme="vs-dark"
-                        value={code}
-                        onChange={handleEditorChange}
-                        options={{
-                            minimap: { enabled: false },
-                            fontSize: 14,
-                            scrollBeyondLastLine: false,
-                            automaticLayout: true,
-                        }}
-                    />
+                <div className="flex-1 overflow-hidden flex">
+                    {/* Code Editor - Left Side */}
+                    <div className="flex-1 min-w-0">
+                        <Editor
+                            key={activeFileId} // Force remount on file change
+                            height="100%"
+                            language={language}
+                            path={`file:///${filename}`} // Absolute path helps Monaco
+                            theme="vs-dark"
+                            value={code}
+                            onChange={handleEditorChange}
+                            options={{
+                                minimap: { enabled: false },
+                                fontSize: 14,
+                                scrollBeyondLastLine: false,
+                                automaticLayout: true,
+                            }}
+                        />
+                    </div>
+
+                    {/* Animation Panel - Right Side */}
+                    <div className="w-96 flex-shrink-0">
+                        <ChallengeAnimation challengeId={activeFileId || ''} isRunning={isRunning} />
+                    </div>
                 </div>
 
                 {/* Output Console */}
