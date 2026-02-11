@@ -7,64 +7,64 @@ export const AcademyUI = () => {
 
     const lessons = {
         solar: {
-            title: "SOLAR POWER ACADEMY",
+            title: "ENERGY ACADEMY",
             tutor: "Professor Doux",
             intro: "Hi! I'm Prof. Doux. Let's learn how to add energy!",
-            concept: "We have two solar panels. To get the TOTAL power, we use the '+' sign. 5 + 10 = 15!",
+            concept: "We have two battery banks. To get the TOTAL charge, we use the '+' sign. 20 + 30 = 50!",
             animation: (
                 <div className="flex items-center justify-around h-32 bg-blue-900/30 rounded-lg p-4">
                     <div className="text-center animate-bounce">
-                        <div className="text-3xl">☀️</div>
-                        <div className="text-yellow-400 font-bold">5</div>
+                        <div className="text-3xl">🪫</div>
+                        <div className="text-yellow-400 font-bold">20</div>
                     </div>
                     <div className="text-2xl font-bold">+</div>
                     <div className="text-center animate-bounce" style={{ animationDelay: '0.2s' }}>
-                        <div className="text-3xl">☀️</div>
-                        <div className="text-yellow-400 font-bold">10</div>
+                        <div className="text-3xl">🪫</div>
+                        <div className="text-yellow-400 font-bold">30</div>
                     </div>
                     <div className="text-2xl font-bold">=</div>
                     <div className="relative animate-pulse">
                         <div className="text-4xl text-green-500">🔋</div>
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-xl">15</div>
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-xl">50</div>
                     </div>
                 </div>
             )
         },
         waste: {
-            title: "RECYCLING ACADEMY",
+            title: "SYSTEMS ACADEMY",
             tutor: "Engineer Mort",
             intro: "Hello! I'm Mort. Let's learn how to repeat things!",
-            concept: "Instead of saying 'Pick up trash' 5 times, we use a LOOP! It tells the robot to repeat the work for us.",
+            concept: "Instead of saying 'Check Sensor' 3 times, we use a LOOP! It tells the machine to repeat the check as many times as we want.",
             animation: (
                 <div className="h-32 bg-green-900/30 rounded-lg p-4 overflow-hidden relative">
                     <div className="flex gap-4 animate-[slide_4s_linear_infinite]">
-                        {['📦', '📄', '🧴', '🥫', '📦'].map((item, i) => (
+                        {['📡', '📡', '📡'].map((item, i) => (
                             <div key={i} className="text-2xl">{item}</div>
                         ))}
                     </div>
                     <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-gray-800 px-2 py-1 rounded text-xs font-mono border border-gray-600">
-                        {"for (let i = 0; i < 5; i++)"}
+                        {"for (let i = 0; i < 3; i++)"}
                     </div>
                     <div className="absolute bottom-2 right-4 text-3xl animate-bounce">
-                        🏗️
+                        🤖
                     </div>
                 </div>
             )
         },
         oxygen: {
-            title: "OXYGEN ACADEMY",
+            title: "COMMUNICATIONS ACADEMY",
             tutor: "Scientist Vita",
             intro: "Greetings! I'm Vita. Let's learn to give orders!",
-            concept: "Computers need exact words. By printing 'Oxy-System: ACTIVE', you tell the machine exactly what to do!",
+            concept: "Computers need exact words. By printing 'INIT: SUCCESS', you tell the system that everything is ready to start!",
             animation: (
                 <div className="flex flex-col items-center justify-center h-32 bg-teal-900/30 rounded-lg p-4">
                     <div className="bg-black p-2 font-mono text-green-500 rounded border border-green-800 mb-2">
-                        std::cout &lt;&lt; "Oxy-System: ACTIVE" &lt;&lt; std::endl;
+                        std::cout &lt;&lt; "INIT: SUCCESS" &lt;&lt; std::endl;
                     </div>
                     <div className="flex gap-4">
-                        <div className="animate-pulse text-2xl">🫧</div>
-                        <div className="animate-bounce text-2xl" style={{ animationDelay: '0.3s' }}>🌿</div>
-                        <div className="animate-pulse text-2xl" style={{ animationDelay: '0.6s' }}>🫧</div>
+                        <div className="animate-pulse text-2xl">📡</div>
+                        <div className="animate-bounce text-2xl" style={{ animationDelay: '0.3s' }}>✅</div>
+                        <div className="animate-pulse text-2xl" style={{ animationDelay: '0.6s' }}>📡</div>
                     </div>
                 </div>
             )
