@@ -15,7 +15,7 @@ export interface StoryScene {
 export const INTRO_SCENES: StoryScene[] = [
     {
         id: 'earth-beautiful',
-        duration: 4000,
+        duration: 2500,
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         visual: '🌍✨🌟',
         text: 'Once upon a time, Planet Earth was a beautiful paradise...',
@@ -24,7 +24,7 @@ export const INTRO_SCENES: StoryScene[] = [
     },
     {
         id: 'crisis-pollution',
-        duration: 5000,
+        duration: 2500,
         background: 'linear-gradient(135deg, #57534e 0%, #292524 100%)',
         visual: '☁️🏭💨😷',
         text: 'But then... dark clouds of pollution began to spread.',
@@ -33,7 +33,7 @@ export const INTRO_SCENES: StoryScene[] = [
     },
     {
         id: 'crisis-energy',
-        duration: 5000,
+        duration: 2500,
         background: 'linear-gradient(135deg, #1c1917 0%, #0c0a09 100%)',
         visual: '🔌💔🌃',
         text: 'Cities ran out of clean energy. Lights went dark.',
@@ -42,7 +42,7 @@ export const INTRO_SCENES: StoryScene[] = [
     },
     {
         id: 'crisis-waste',
-        duration: 5000,
+        duration: 2500,
         background: 'linear-gradient(135deg, #3f3f46 0%, #27272a 100%)',
         visual: '🗑️🌊🐋😢',
         text: 'Mountains of waste filled oceans. Animals suffered.',
@@ -51,7 +51,7 @@ export const INTRO_SCENES: StoryScene[] = [
     },
     {
         id: 'earth-crying',
-        duration: 4000,
+        duration: 2000,
         background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
         visual: '🌍😢💔',
         text: 'Earth cried out for help...',
@@ -60,7 +60,7 @@ export const INTRO_SCENES: StoryScene[] = [
     },
     {
         id: 'guardian-appears',
-        duration: 5000,
+        duration: 2500,
         background: 'linear-gradient(135deg, #1e3a8a 0%, #312e81 100%)',
         visual: '✨🧙‍♀️✨',
         text: 'Then, the Ancient Guardian appeared from the stars...',
@@ -69,7 +69,7 @@ export const INTRO_SCENES: StoryScene[] = [
     },
     {
         id: 'call-to-action',
-        duration: 6000,
+        duration: 2500,
         background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)',
         visual: '🌟👤🌟',
         text: 'She searched the world for someone special...',
@@ -78,7 +78,7 @@ export const INTRO_SCENES: StoryScene[] = [
     },
     {
         id: 'chosen-one',
-        duration: 7000,
+        duration: 3000,
         background: 'linear-gradient(135deg, #f59e0b 0%, #dc2626 100%)',
         visual: '⚡YOU⚡',
         text: 'And she found YOU! You have been CHOSEN!',
@@ -87,7 +87,7 @@ export const INTRO_SCENES: StoryScene[] = [
     },
     {
         id: 'powers-reveal',
-        duration: 8000,
+        duration: 3000,
         background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
         visual: '⚡♻️💨',
         text: 'Three powerful abilities await you...',
@@ -96,7 +96,7 @@ export const INTRO_SCENES: StoryScene[] = [
     },
     {
         id: 'training-needed',
-        duration: 6000,
+        duration: 2500,
         background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
         visual: '📚🚀🎯',
         text: 'But first, you must learn to master your powers!',
@@ -105,7 +105,7 @@ export const INTRO_SCENES: StoryScene[] = [
     },
     {
         id: 'space-station',
-        duration: 7000,
+        duration: 3000,
         background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
         visual: '🛸✨🌟',
         text: 'Welcome to your Space Station training facility!',
@@ -114,7 +114,7 @@ export const INTRO_SCENES: StoryScene[] = [
     },
     {
         id: 'mission-briefing',
-        duration: 8000,
+        duration: 3000,
         background: 'linear-gradient(135deg, #1e40af 0%, #7c3aed 100%)',
         visual: '📚➡️🎯',
         text: 'Visit ACADEMIES to learn. Solve CHALLENGES to save Earth!',
@@ -123,7 +123,7 @@ export const INTRO_SCENES: StoryScene[] = [
     },
     {
         id: 'call-to-adventure',
-        duration: 6000,
+        duration: 3000,
         background: 'linear-gradient(135deg, #dc2626 0%, #f59e0b 100%)',
         visual: '🦸‍♀️🌍💪',
         text: 'Are you ready to become Earth\'s Guardian?',

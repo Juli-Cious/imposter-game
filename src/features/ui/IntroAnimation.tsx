@@ -69,19 +69,47 @@ export const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
                 style={{ background: currentScene.background }}
             />
 
-            {/* Starfield effect */}
-            <div className="absolute inset-0 opacity-30">
-                {[...Array(50)].map((_, i) => (
+            {/* Dynamic Particle Effects */}
+            <div className="absolute inset-0 opacity-40">
+                {/* Floating particles */}
+                {[...Array(80)].map((_, i) => (
                     <div
-                        key={i}
-                        className="absolute w-1 h-1 bg-white rounded-full animate-twinkle"
+                        key={`float-${i}`}
+                        className="absolute rounded-full"
                         style={{
                             left: `${Math.random() * 100}%`,
                             top: `${Math.random() * 100}%`,
+                            width: `${2 + Math.random() * 4}px`,
+                            height: `${2 + Math.random() * 4}px`,
+                            background: `rgba(255, 255, 255, ${0.3 + Math.random() * 0.7})`,
+                            animation: `float ${3 + Math.random() * 4}s ease-in-out infinite`,
                             animationDelay: `${Math.random() * 3}s`
                         }}
                     />
                 ))}
+
+                {/* Explosion particles on scene change */}
+                {[...Array(20)].map((_, i) => (
+                    <div
+                        key={`burst-${i}`}
+                        className="absolute w-2 h-2 rounded-full bg-white"
+                        style={{
+                            left: '50%',
+                            top: '50%',
+                            animation: `burst 0.8s ease-out`,
+                            animationDelay: `${i * 0.02}s`,
+                            transform: `rotate(${i * 18}deg) translateX(${50 + Math.random() * 100}px)`,
+                            opacity: 0
+                        }}
+                    />
+                ))}
+
+                {/* Energy waves */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-40 h-40 rounded-full border-2 border-cyan-400 animate-ping opacity-20"></div>
+                    <div className="w-60 h-60 rounded-full border-2 border-blue-400 animate-ping opacity-15" style={{ animationDelay: '0.5s' }}></div>
+                    <div className="w-80 h-80 rounded-full border-2 border-purple-400 animate-ping opacity-10" style={{ animationDelay: '1s' }}></div>
+                </div>
             </div>
 
             {/* Cinematic letterbox bars */}
@@ -90,13 +118,27 @@ export const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
 
             {/* Content Container */}
             <div className="relative z-10 max-w-4xl mx-auto px-8 text-center">
-                {/* Visual Elements (Emojis) */}
-                <div className={`text-8xl mb-8 ${getAnimationClass()}`}>
+                {/* Visual Elements (Emojis) with enhanced animations */}
+                <div
+                    className={`text-8xl mb-8 ${getAnimationClass()}`}
+                    style={{
+                        animation: `${getAnimationClass().replace('animate-', '')} 1s ease-out, float 3s ease-in-out infinite`,
+                        filter: 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.5))'
+                    }}
+                >
                     {currentScene.visual}
                 </div>
 
-                {/* Main Text */}
-                <h2 className="text-4xl md:text-5xl font-black text-white mb-6 drop-shadow-2xl leading-tight animate-slideUp">
+                {/* Main Text with glitch effect on key scenes */}
+                <h2
+                    className="text-4xl md:text-5xl font-black text-white mb-6 drop-shadow-2xl leading-tight animate-slideUp"
+                    style={{
+                        textShadow: '0 0 20px rgba(255, 255, 255, 0.5), 0 0 40px rgba(96, 165, 250, 0.3)',
+                        animation: currentScene.id === 'chosen-one' || currentScene.id === 'call-to-adventure'
+                            ? 'slideUp 0.8s ease-out, glitchText 0.15s infinite'
+                            : undefined
+                    }}
+                >
                     {currentScene.text}
                 </h2>
 
@@ -113,10 +155,10 @@ export const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
                         <div
                             key={index}
                             className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentSceneIndex
-                                    ? 'bg-white w-8'
-                                    : index < currentSceneIndex
-                                        ? 'bg-white/60'
-                                        : 'bg-white/20'
+                                ? 'bg-white w-8'
+                                : index < currentSceneIndex
+                                    ? 'bg-white/60'
+                                    : 'bg-white/20'
                                 }`}
                         />
                     ))}
@@ -152,20 +194,55 @@ export const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
                     to { opacity: 1; transform: translateY(0); }
                 }
                 @keyframes shake {
-                    0%, 100% { transform: translateX(0); }
-                    25% { transform: translateX(-10px); }
-                    75% { transform: translateX(10px); }
+                    0%, 100% { transform: translateX(0) rotate(0deg); }
+                    25% { transform: translateX(-10px) rotate(-2deg); }
+                    75% { transform: translateX(10px) rotate(2deg); }
                 }
                 @keyframes glow {
-                    0%, 100% { filter: drop-shadow(0 0 20px gold); }
-                    50% { filter: drop-shadow(0 0 40px gold); }
+                    0%, 100% { 
+                        filter: drop-shadow(0 0 20px gold) drop-shadow(0 0 40px rgba(255, 215, 0, 0.5));
+                        transform: scale(1);
+                    }
+                    50% { 
+                        filter: drop-shadow(0 0 60px gold) drop-shadow(0 0 80px rgba(255, 215, 0, 0.8));
+                        transform: scale(1.1);
+                    }
                 }
                 @keyframes twinkle {
-                    0%, 100% { opacity: 0.3; }
-                    50% { opacity: 1; }
+                    0%, 100% { opacity: 0.3; transform: scale(1); }
+                    50% { opacity: 1; transform: scale(1.2); }
+                }
+                @keyframes float {
+                    0%, 100% { transform: translateY(0px); }
+                    50% { transform: translateY(-20px); }
+                }
+                @keyframes burst {
+                    0% { opacity: 1; transform: scale(0); }
+                    50% { opacity: 0.8; }
+                    100% { opacity: 0; transform: scale(1.5); }
+                }
+                @keyframes scaleIn {
+                    0% { 
+                        opacity: 0; 
+                        transform: scale(0.5) rotate(-5deg); 
+                    }
+                    70% { 
+                        transform: scale(1.05) rotate(2deg); 
+                    }
+                    100% { 
+                        opacity: 1; 
+                        transform: scale(1) rotate(0deg); 
+                    }
+                }
+                @keyframes glitchText {
+                    0%, 100% { transform: translate(0); }
+                    20% { transform: translate(-2px, 2px); }
+                    40% { transform: translate(2px, -2px); }
+                    60% { transform: translate(-1px, -1px); }
+                    80% { transform: translate(1px, 1px); }
                 }
                 .animate-fadeIn {
-                    animation: fadeIn 1s ease-out;
+                    animation: fadeIn 1s ease-out, scaleIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
                 }
                 .animate-slideUp {
                     animation: slideUp 0.8s ease-out;
