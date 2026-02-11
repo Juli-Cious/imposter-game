@@ -98,6 +98,11 @@ export class MapBuilder {
         // Meeting Room: Right (Row 12, Col 16 approx)
         const meetingZone = this.createZone(16.5, 12.5, 0xff00ff);
 
+        // Academy Zones (Placed near challenges)
+        const solarAcademyZone = this.createZone(6.5, 2.5, 0xffaa00);
+        const wasteAcademyZone = this.createZone(9.5, 12.5, 0xffaa00);
+        const oxygenAcademyZone = this.createZone(5.5, 21.5, 0xffaa00);
+
         // Spawn Point (Database Room)
         const spawnPoint = { x: 4.5 * TILE_SIZE, y: 2.5 * TILE_SIZE };
 
@@ -109,9 +114,12 @@ export class MapBuilder {
             dbZone,
             apiZone,
             hubZone,
-            meetingZone, // New Zone
+            meetingZone,
+            solarAcademyZone,
+            wasteAcademyZone,
+            oxygenAcademyZone,
             spawnPoint,
-            doorTiles: this.doorTiles // Export door locations
+            doorTiles: this.doorTiles
         };
     }
 

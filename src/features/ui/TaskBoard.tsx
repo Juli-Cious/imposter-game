@@ -37,7 +37,7 @@ export const TaskBoard = () => {
     return (
         <div className="absolute top-4 right-4 w-64 bg-gray-900/90 border border-blue-500 rounded-lg p-4 text-white shadow-xl pointer-events-auto">
             <div className="flex justify-between items-center mb-3 border-b border-gray-700 pb-2">
-                <h3 className="font-bold text-blue-400">MISSION OBJECTIVES</h3>
+                <h3 className="font-bold text-blue-400">ECO-RESTORATION TASKS</h3>
                 <button
                     onClick={() => setIsOpen(false)}
                     className="text-gray-400 hover:text-white px-2 py-1 rounded hover:bg-gray-700"

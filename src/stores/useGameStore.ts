@@ -3,7 +3,8 @@ import type { NetworkService } from '../features/networking/NetworkInterface';
 
 interface GameStore {
     isTerminalOpen: boolean;
-    terminalType: 'hacking' | 'editor' | 'hub' | null;
+    terminalType: 'hacking' | 'editor' | 'hub' | 'academy' | null;
+    academyType: 'solar' | 'waste' | 'oxygen' | null;
     activeFileId: string | null;
     network: NetworkService | null;
     bgmVolume: number; // 0.0 to 1.0
@@ -21,7 +22,8 @@ interface GameStore {
     playerTint: number; // Hex color
 
     openEditor: (fileId: string) => void;
-    openTerminal: (type: 'hacking' | 'editor' | 'hub') => void;
+    openAcademy: (type: 'solar' | 'waste' | 'oxygen') => void;
+    openTerminal: (type: 'hacking' | 'editor' | 'hub' | 'academy') => void;
     closeTerminal: () => void;
     setNetwork: (network: NetworkService) => void;
     setBgmVolume: (volume: number) => void;
@@ -40,6 +42,7 @@ interface GameStore {
 export const useGameStore = create<GameStore>((set) => ({
     isTerminalOpen: false,
     terminalType: null,
+    academyType: null,
     activeFileId: null,
     network: null,
     bgmVolume: 0.5,
@@ -62,15 +65,24 @@ export const useGameStore = create<GameStore>((set) => ({
         activeFileId: fileId
     }),
 
+    openAcademy: (type) => set({
+        isTerminalOpen: true,
+        terminalType: 'academy',
+        academyType: type,
+        activeFileId: null
+    }),
+
     openTerminal: (type) => set({
         isTerminalOpen: true,
         terminalType: type,
+        academyType: null,
         activeFileId: null
     }),
 
     closeTerminal: () => set({
         isTerminalOpen: false,
         terminalType: null,
+        academyType: null,
         activeFileId: null
     }),
 

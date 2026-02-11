@@ -31,6 +31,9 @@ export class MainScene extends Phaser.Scene {
   private zoneTimer: number = 0;
   private pendingZoneId: string | null = null;
   private zoneProgressBar!: Phaser.GameObjects.Graphics;
+  private solarAcademyZone!: Phaser.GameObjects.Rectangle;
+  private wasteAcademyZone!: Phaser.GameObjects.Rectangle;
+  private oxygenAcademyZone!: Phaser.GameObjects.Rectangle;
 
   private meetingButton!: Phaser.GameObjects.Arc;
   private meetingText!: Phaser.GameObjects.Text;
@@ -210,6 +213,19 @@ export class MainScene extends Phaser.Scene {
       this.add.image(hubZone.x, hubZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D');
     }
 
+    if (solarAcademyZone) {
+      this.solarAcademyZone = solarAcademyZone;
+      this.add.image(this.solarAcademyZone.x, this.solarAcademyZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D').setTint(0xffaa00);
+    }
+    if (wasteAcademyZone) {
+      this.wasteAcademyZone = wasteAcademyZone;
+      this.add.image(this.wasteAcademyZone.x, this.wasteAcademyZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D').setTint(0xffaa00);
+    }
+    if (oxygenAcademyZone) {
+      this.oxygenAcademyZone = oxygenAcademyZone;
+      this.add.image(this.oxygenAcademyZone.x, this.oxygenAcademyZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D').setTint(0xffaa00);
+    }
+
     // Meeting Room Table
     if (meetingZone) {
       this.add.image(meetingZone.x, meetingZone.y, 'table').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D');
@@ -382,28 +398,31 @@ export class MainScene extends Phaser.Scene {
     // Player light removed
 
     // Zone Interaction
-    const { openEditor, closeTerminal } = useGameStore.getState();
+    const { openEditor, openAcademy, closeTerminal } = useGameStore.getState();
     const inDbZone = this.physics.overlap(this.player, this.dbZone);
     const inLogicZone = this.physics.overlap(this.player, this.logicZone);
     const inHubZone = this.physics.overlap(this.player, this.hubZone);
+    const inSolarAcademy = this.physics.overlap(this.player, this.solarAcademyZone);
+    const inWasteAcademy = this.physics.overlap(this.player, this.wasteAcademyZone);
+    const inOxygenAcademy = this.physics.overlap(this.player, this.oxygenAcademyZone);
 
     let activeZoneId: string | null = null;
+    let acadType: 'solar' | 'waste' | 'oxygen' | null = null;
+
     if (inDbZone) activeZoneId = 'file_sum';
     else if (inLogicZone) activeZoneId = 'file_loop';
     else if (inHubZone) activeZoneId = 'file_cpp_hello';
+    else if (inSolarAcademy) acadType = 'solar';
+    else if (inWasteAcademy) acadType = 'waste';
+    else if (inOxygenAcademy) acadType = 'oxygen';
 
-    // 1. If we are in a zone, but it's not the "current" (open) one
+    // 1. If we are in a challenge zone
     if (activeZoneId && activeZoneId !== this.currentZone) {
-      // If we were tracking a different zone, reset
       if (this.pendingZoneId !== activeZoneId) {
         this.pendingZoneId = activeZoneId;
         this.zoneTimer = 0;
       }
-
-      // Increment Timer
       this.zoneTimer += delta;
-
-      // Draw Progress Bar
       const progress = Math.min(this.zoneTimer / 700, 1);
       this.zoneProgressBar.clear();
       this.zoneProgressBar.fillStyle(0x000000, 0.5);
@@ -411,7 +430,6 @@ export class MainScene extends Phaser.Scene {
       this.zoneProgressBar.fillStyle(0x00ffff, 1);
       this.zoneProgressBar.fillRect(this.player.x - 20, this.player.y + 20, 40 * progress, 6);
 
-      // Threshold Reached?
       if (this.zoneTimer >= 700) {
         this.currentZone = activeZoneId;
         openEditor(activeZoneId);
@@ -420,16 +438,34 @@ export class MainScene extends Phaser.Scene {
         this.pendingZoneId = null;
       }
     }
-    // 2. If we left the zone or are in the current zone
+    // 2. If we are in an academy zone
+    else if (acadType && this.pendingZoneId !== acadType && useGameStore.getState().terminalType !== 'academy') {
+      if (this.pendingZoneId !== acadType) {
+        this.pendingZoneId = acadType;
+        this.zoneTimer = 0;
+      }
+      this.zoneTimer += delta;
+      const progress = Math.min(this.zoneTimer / 700, 1);
+      this.zoneProgressBar.clear();
+      this.zoneProgressBar.fillStyle(0x000000, 0.5);
+      this.zoneProgressBar.fillRect(this.player.x - 20, this.player.y + 20, 40, 6);
+      this.zoneProgressBar.fillStyle(0xffff00, 1);
+      this.zoneProgressBar.fillRect(this.player.x - 20, this.player.y + 20, 40 * progress, 6);
+
+      if (this.zoneTimer >= 700) {
+        openAcademy(acadType);
+        this.zoneProgressBar.clear();
+        this.zoneTimer = 0;
+        this.pendingZoneId = null;
+      }
+    }
+    // 3. Reset logic
     else {
-      // If we are NOT in the active zone anymore, but we thought we were
-      if (!activeZoneId && this.currentZone) {
+      if (!activeZoneId && !acadType && (this.currentZone || useGameStore.getState().terminalType)) {
         closeTerminal();
         this.currentZone = null;
       }
-
-      // Reset timer if we just ran through or left
-      if (!activeZoneId || activeZoneId === this.currentZone) {
+      if ((!activeZoneId && !acadType) || activeZoneId === this.currentZone) {
         this.zoneTimer = 0;
         this.pendingZoneId = null;
         this.zoneProgressBar.clear();

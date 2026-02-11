@@ -7,6 +7,7 @@ import { LevelManager } from "./features/game/LevelManager";
 import { MeetingUI } from "./features/ui/MeetingUI";
 import { MainMenu } from "./features/ui/MainMenu";
 import { LobbyScreen } from "./features/ui/LobbyScreen";
+import { AcademyUI } from "./features/ui/AcademyUI";
 import "./index.css";
 
 function App() {
@@ -32,9 +33,10 @@ function App() {
           {/* Meeting Overlay (Handles its own visibility) */}
           <MeetingUI />
 
-          {/* The 3 UI Types */}
+          {/* The 4 UI Types */}
           {isTerminalOpen && terminalType === 'editor' && <CodeEditor />}
           {isTerminalOpen && terminalType === 'hub' && <CentralTerminal />}
+          {isTerminalOpen && terminalType === 'academy' && <AcademyUI />}
         </>
       )}
     </div>
