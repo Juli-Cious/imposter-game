@@ -219,17 +219,17 @@ export class MainScene extends Phaser.Scene {
     if (solarAcademyZone) {
       this.solarAcademyZone = solarAcademyZone;
       this.add.image(this.solarAcademyZone.x, this.solarAcademyZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D').setTint(0xffaa00);
-      this.add.text(this.solarAcademyZone.x, this.solarAcademyZone.y - 35, "☀️", { fontSize: '24px' }).setOrigin(0.5).setDepth(2);
+      this.add.text(this.solarAcademyZone.x, this.solarAcademyZone.y - 35, "📚", { fontSize: '24px' }).setOrigin(0.5).setDepth(2);
     }
     if (wasteAcademyZone) {
       this.wasteAcademyZone = wasteAcademyZone;
       this.add.image(this.wasteAcademyZone.x, this.wasteAcademyZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D').setTint(0x00ff00);
-      this.add.text(this.wasteAcademyZone.x, this.wasteAcademyZone.y - 35, "♻️", { fontSize: '24px' }).setOrigin(0.5).setDepth(2);
+      this.add.text(this.wasteAcademyZone.x, this.wasteAcademyZone.y - 35, "📚", { fontSize: '24px' }).setOrigin(0.5).setDepth(2);
     }
     if (oxygenAcademyZone) {
       this.oxygenAcademyZone = oxygenAcademyZone;
       this.add.image(this.oxygenAcademyZone.x, this.oxygenAcademyZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D').setTint(0x00ffff);
-      this.add.text(this.oxygenAcademyZone.x, this.oxygenAcademyZone.y - 35, "🌿", { fontSize: '24px' }).setOrigin(0.5).setDepth(2);
+      this.add.text(this.oxygenAcademyZone.x, this.oxygenAcademyZone.y - 35, "📚", { fontSize: '24px' }).setOrigin(0.5).setDepth(2);
     }
 
     // Meeting Room Table
