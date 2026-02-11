@@ -11,7 +11,13 @@ import { VictoryScreen } from "./features/ui/VictoryScreen";
 import "./index.css";
 
 function App() {
-  const { isTerminalOpen, terminalType, gameState } = useGameStore();
+  const {
+    isTerminalOpen,
+    terminalType,
+    closeTerminal,
+    gameState,
+    gameStatus
+  } = useGameStore();
 
   if (gameState === 'MENU') {
     // Show Role Selection before Lobby if role is not set

@@ -395,9 +395,9 @@ export class MainScene extends Phaser.Scene {
     const inHubZone = this.physics.overlap(this.player, this.hubZone);
     const inSchoolZone = this.physics.overlap(this.player, this.schoolZone);
 
-    if (inDbZone) activeZoneId = 'file_sum';
-    else if (inLogicZone) activeZoneId = 'file_loop';
-    else if (inHubZone) activeZoneId = 'file_cpp_hello';
+    // Simplified zone detection
+    // if (inDbZone) activeZoneId = 'file_sum'; // REMOVED
+
 
     // School isn't a "file", so it needs special handling in openTerminal if we want to reuse the progress bar logic
     // OR we can just check if inSchoolZone -> openTerminal('school') immediately? 

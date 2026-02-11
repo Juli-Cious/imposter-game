@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useGameStore } from '../../stores/useGameStore';
 import { explainConcept } from '../../services/ai';
 
@@ -54,8 +54,8 @@ export const SchoolTerminal = () => {
                                     onClick={() => handleAsk(t)}
                                     disabled={loading}
                                     className={`w-full text-left px-4 py-3 rounded-lg transition-all ${topic === t
-                                            ? 'bg-blue-500 text-white shadow-md'
-                                            : 'bg-white hover:bg-blue-100 text-gray-700 border border-gray-200'
+                                        ? 'bg-blue-500 text-white shadow-md'
+                                        : 'bg-white hover:bg-blue-100 text-gray-700 border border-gray-200'
                                         }`}
                                 >
                                     {t}

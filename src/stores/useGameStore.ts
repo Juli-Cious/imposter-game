@@ -39,7 +39,7 @@ interface GameStore {
     setPlayerSkin: (skin: string) => void;
     setPlayerTint: (tint: number) => void;
     setIsHost: (isHost: boolean) => void;
-    setIsHost: (isHost: boolean) => void;
+    setGameState: (state: 'MENU' | 'LOBBY' | 'GAME') => void;
     setPlayerRole: (role: 'data_scientist' | 'web_activist' | 'systems_engineer') => void;
     setPlayerLanguage: (lang: 'python' | 'javascript' | 'cpp') => void;
     incrementTasksCompleted: () => void;
@@ -99,7 +99,7 @@ export const useGameStore = create<GameStore>((set) => ({
     setPlayerSkin: (skin) => set({ playerSkin: skin }),
     setPlayerTint: (tint) => set({ playerTint: tint }),
     setIsHost: (isHost) => set({ isHost }),
-    setGameState: (gameState) => set({ gameState }),
+    setGameState: (gameState: 'MENU' | 'LOBBY' | 'GAME') => set({ gameState }),
     setPlayerRole: (role) => set({ playerRole: role }),
     setPlayerLanguage: (lang) => set({ playerLanguage: lang }),
     incrementTasksCompleted: () => set((state) => {

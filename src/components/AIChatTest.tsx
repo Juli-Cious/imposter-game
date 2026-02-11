@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { getChatResponse, ChatMessage } from '../services/ai';
+import { useState } from 'react';
+import { getChatResponse } from '../services/ai';
+import type { ChatMessage } from "../services/ai";
 
 const AIChatTest: React.FC = () => {
     const [input, setInput] = useState('');
