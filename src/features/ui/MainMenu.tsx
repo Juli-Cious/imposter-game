@@ -168,6 +168,36 @@ export const MainMenu = () => {
         }
     };
 
+    const handleQuickStart = async () => {
+        const playerName = name.trim() || 'Player';
+        console.log('[QuickStart] Starting single-player game...');
+
+        const code = generateRoomCode();
+
+        // Create Room in Firebase
+        const roomRef = ref(db, `rooms/${code}`);
+        await set(roomRef, {
+            status: 'PLAYING', // Start immediately
+            host: playerName,
+            createdAt: Date.now()
+        });
+
+        // Connect Network
+        const adapter = new FirebaseAdapter();
+        const id = await adapter.connect(code, playerName, undefined, playerSkin, playerTint);
+
+        // Save Session
+        saveSession(id, code, playerName, true, playerSkin || 'doux', playerTint || 0xffffff);
+
+        // Update Store
+        setNetwork(adapter);
+        setPlayerId(id);
+        setPlayerName(playerName);
+        setRoomCode(code);
+        setIsHost(true);
+        setGameState('GAME'); // Go directly to game
+    };
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
             <div className="w-full max-w-md bg-gray-800 p-8 rounded-lg shadow-xl">
@@ -217,6 +247,20 @@ export const MainMenu = () => {
                     </div>
 
                     <div className="border-t border-gray-700 pt-6">
+                        <button
+                            onClick={handleQuickStart}
+                            className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-lg font-bold text-lg transition-all transform hover:scale-[1.02] shadow-lg mb-6 flex items-center justify-center gap-2"
+                        >
+                            <span className="text-2xl">🎮</span>
+                            QUICK START (Single Player)
+                        </button>
+
+                        <div className="flex items-center justify-between gap-4 mb-4">
+                            <div className="h-px bg-gray-700 flex-1"></div>
+                            <span className="text-gray-500 text-xs">MULTIPLAYER</span>
+                            <div className="h-px bg-gray-700 flex-1"></div>
+                        </div>
+
                         <button
                             onClick={handleCreateRoom}
                             className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded font-bold transition-all transform hover:scale-[1.02] shadow-lg mb-4"
@@ -271,3 +315,4 @@ export const MainMenu = () => {
         </div>
     );
 };
+
