@@ -202,15 +202,18 @@ export class MainScene extends Phaser.Scene {
     // Terminals depth 1: Above ground (0), below player (default sorting or higher)
     if (dbZone) {
       this.dbZone = dbZone;
-      this.add.image(dbZone.x, dbZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D');
+      this.add.image(dbZone.x, dbZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D').setTint(0xffaa00);
+      this.add.text(dbZone.x, dbZone.y - 35, "☀️", { fontSize: '24px' }).setOrigin(0.5).setDepth(2);
     }
     if (apiZone) {
       this.logicZone = apiZone;
-      this.add.image(apiZone.x, apiZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D');
+      this.add.image(apiZone.x, apiZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D').setTint(0x00ffff);
+      this.add.text(apiZone.x, apiZone.y - 35, "🌿", { fontSize: '24px' }).setOrigin(0.5).setDepth(2);
     }
     if (hubZone) {
       this.hubZone = hubZone;
-      this.add.image(hubZone.x, hubZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D');
+      this.add.image(hubZone.x, hubZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D').setTint(0x00ff00);
+      this.add.text(hubZone.x, hubZone.y - 35, "♻️", { fontSize: '24px' }).setOrigin(0.5).setDepth(2);
     }
 
     if (solarAcademyZone) {
@@ -413,8 +416,8 @@ export class MainScene extends Phaser.Scene {
     let acadType: 'solar' | 'waste' | 'oxygen' | null = null;
 
     if (inDbZone) activeZoneId = 'file_sum';
-    else if (inLogicZone) activeZoneId = 'file_loop';
-    else if (inHubZone) activeZoneId = 'file_cpp_hello';
+    else if (inLogicZone) activeZoneId = 'file_cpp_hello';
+    else if (inHubZone) activeZoneId = 'file_loop';
     else if (inSolarAcademy) acadType = 'solar';
     else if (inWasteAcademy) acadType = 'waste';
     else if (inOxygenAcademy) acadType = 'oxygen';
