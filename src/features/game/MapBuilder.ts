@@ -98,6 +98,9 @@ export class MapBuilder {
         // Meeting Room: Right (Row 12, Col 16 approx)
         const meetingZone = this.createZone(16.5, 12.5, 0xff00ff);
 
+        // School/Medical: Top Right (Row 2, Col 16 approx)
+        const schoolZone = this.createZone(16.5, 2.5, 0x00ffff);
+
         // Spawn Point (Database Room)
         const spawnPoint = { x: 4.5 * TILE_SIZE, y: 2.5 * TILE_SIZE };
 
@@ -109,7 +112,8 @@ export class MapBuilder {
             dbZone,
             apiZone,
             hubZone,
-            meetingZone, // New Zone
+            meetingZone,
+            schoolZone,
             spawnPoint,
             doorTiles: this.doorTiles // Export door locations
         };

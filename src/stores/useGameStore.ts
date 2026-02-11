@@ -3,7 +3,7 @@ import type { NetworkService } from '../features/networking/NetworkInterface';
 
 interface GameStore {
     isTerminalOpen: boolean;
-    terminalType: 'hacking' | 'editor' | 'hub' | null;
+    terminalType: 'hacking' | 'editor' | 'hub' | 'school' | null;
     activeFileId: string | null;
     network: NetworkService | null;
     bgmVolume: number; // 0.0 to 1.0
@@ -15,13 +15,18 @@ interface GameStore {
     playerName: string | null;
     isHost: boolean;
     gameState: 'MENU' | 'LOBBY' | 'GAME';
+    gameStatus: 'IN_PROGRESS' | 'VICTORY' | 'DEFEAT';
+    tasksCompleted: number;
+    totalTasks: number;
 
     // Customization State
     playerSkin: string; // 'doux', 'mort', etc.
     playerTint: number; // Hex color
+    playerRole: 'data_scientist' | 'web_activist' | 'systems_engineer' | null;
+    playerLanguage: 'python' | 'javascript' | 'cpp' | null;
 
     openEditor: (fileId: string) => void;
-    openTerminal: (type: 'hacking' | 'editor' | 'hub') => void;
+    openTerminal: (type: 'hacking' | 'editor' | 'hub' | 'school') => void;
     closeTerminal: () => void;
     setNetwork: (network: NetworkService) => void;
     setBgmVolume: (volume: number) => void;
@@ -34,7 +39,11 @@ interface GameStore {
     setPlayerSkin: (skin: string) => void;
     setPlayerTint: (tint: number) => void;
     setIsHost: (isHost: boolean) => void;
-    setGameState: (state: 'MENU' | 'LOBBY' | 'GAME') => void;
+    setIsHost: (isHost: boolean) => void;
+    setPlayerRole: (role: 'data_scientist' | 'web_activist' | 'systems_engineer') => void;
+    setPlayerLanguage: (lang: 'python' | 'javascript' | 'cpp') => void;
+    incrementTasksCompleted: () => void;
+    setGameStatus: (status: 'IN_PROGRESS' | 'VICTORY' | 'DEFEAT') => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -51,10 +60,15 @@ export const useGameStore = create<GameStore>((set) => ({
     playerName: null,
     isHost: false,
     gameState: 'MENU',
+    gameStatus: 'IN_PROGRESS',
+    tasksCompleted: 0,
+    totalTasks: 3,
 
     // Default Customization
     playerSkin: 'doux',
     playerTint: 0xffffff,
+    playerRole: null,
+    playerLanguage: null,
 
     openEditor: (fileId) => set({
         isTerminalOpen: true,
@@ -85,5 +99,15 @@ export const useGameStore = create<GameStore>((set) => ({
     setPlayerSkin: (skin) => set({ playerSkin: skin }),
     setPlayerTint: (tint) => set({ playerTint: tint }),
     setIsHost: (isHost) => set({ isHost }),
-    setGameState: (gameState) => set({ gameState })
+    setGameState: (gameState) => set({ gameState }),
+    setPlayerRole: (role) => set({ playerRole: role }),
+    setPlayerLanguage: (lang) => set({ playerLanguage: lang }),
+    incrementTasksCompleted: () => set((state) => {
+        const newCount = state.tasksCompleted + 1;
+        return {
+            tasksCompleted: newCount,
+            gameStatus: newCount >= state.totalTasks ? 'VICTORY' : 'IN_PROGRESS'
+        };
+    }),
+    setGameStatus: (status) => set({ gameStatus: status })
 }));

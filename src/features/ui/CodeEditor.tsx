@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../../stores/useGameStore';
+import { getHint } from '../../services/ai';
 import { db } from '../../firebaseConfig';
 import { ref, onValue, set, update } from 'firebase/database';
 import { executeCode } from '../game/CodeRunner';
@@ -12,6 +13,7 @@ export const CodeEditor = () => {
     const [output, setOutput] = useState('');
     const [isRunning, setIsRunning] = useState(false);
     const [status, setStatus] = useState<'PENDING' | 'PASS' | 'FAIL'>('PENDING');
+    const [hintLoading, setHintLoading] = useState(false);
 
     // Get problem definition
     const problem = activeFileId ? LEVEL_1_PROBLEMS[activeFileId] : null;
@@ -77,11 +79,30 @@ export const CodeEditor = () => {
 
         // Update Status in Firebase
         const newStatus = result.success ? 'PASS' : 'FAIL';
+
+        if (newStatus === 'PASS' && status !== 'PASS') {
+            useGameStore.getState().incrementTasksCompleted();
+        }
+
         setStatus(newStatus);
 
         update(ref(db, `gamestate/files/${activeFileId}`), {
             testStatus: newStatus
         });
+    };
+
+    const handleHint = async () => {
+        if (!problem) return;
+        setHintLoading(true);
+        try {
+            const hint = await getHint(`Problem: ${problem.description}. Code: ${code}. Language: ${problem.language}`);
+            alert(`💡 AI Hint:\n${hint}`); // Simple alert for now, or use a modal
+        } catch (error) {
+            console.error(error);
+            alert("Failed to get hint.");
+        } finally {
+            setHintLoading(false);
+        }
     };
 
     return (
@@ -105,6 +126,13 @@ export const CodeEditor = () => {
                             className={`px-3 py-0.5 text-xs text-white ${isRunning ? 'bg-gray-600' : 'bg-green-700 hover:bg-green-600'} rounded`}
                         >
                             {isRunning ? 'Running...' : '▶ RUN'}
+                        </button>
+                        <button
+                            onClick={handleHint}
+                            disabled={hintLoading}
+                            className={`px-3 py-0.5 text-xs text-white ${hintLoading ? 'bg-gray-600' : 'bg-yellow-600 hover:bg-yellow-500'} rounded`}
+                        >
+                            {hintLoading ? 'Thinking...' : '💡 Hint'}
                         </button>
                         <button onClick={closeTerminal} className="text-gray-400 hover:text-white px-2">✖</button>
                     </div>

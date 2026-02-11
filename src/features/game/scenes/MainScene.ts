@@ -24,6 +24,7 @@ export class MainScene extends Phaser.Scene {
   };
   private logicZone!: Phaser.GameObjects.Rectangle;
   private hubZone!: Phaser.GameObjects.Rectangle;
+  private schoolZone!: Phaser.GameObjects.Rectangle;
   private bgm!: Phaser.Sound.BaseSound;
   private meetingBgm!: Phaser.Sound.BaseSound;
   private footsteps!: Phaser.Sound.BaseSound;
@@ -189,7 +190,7 @@ export class MainScene extends Phaser.Scene {
     // 2. Build Map
     const mapBuilder = new MapBuilder(this);
     const buildResult = mapBuilder.build();
-    const { walls, dbZone, apiZone, hubZone, meetingZone, doorTiles, spawnPoint } = buildResult;
+    const { walls, dbZone, apiZone, hubZone, meetingZone, schoolZone, doorTiles, spawnPoint } = buildResult;
 
     // We know 'walls' is a TilemapLayer in this context, but TS infers union with StaticGroup
     this.wallLayer = walls as Phaser.Tilemaps.TilemapLayer;
@@ -208,6 +209,12 @@ export class MainScene extends Phaser.Scene {
     if (hubZone) {
       this.hubZone = hubZone;
       this.add.image(hubZone.x, hubZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D');
+    }
+    if (schoolZone) {
+      this.schoolZone = schoolZone;
+      // Use a different image or color to distinguish, or just a terminal for now
+      this.add.text(schoolZone.x, schoolZone.y - 30, "Academy", { fontSize: '10px', color: '#ffffff' }).setOrigin(0.5);
+      this.add.image(schoolZone.x, schoolZone.y, 'terminal').setDepth(1).setOrigin(0.5, 0.5).setPipeline('Light2D').setTint(0x00ffff);
     }
 
     // Meeting Room Table
@@ -386,55 +393,75 @@ export class MainScene extends Phaser.Scene {
     const inDbZone = this.physics.overlap(this.player, this.dbZone);
     const inLogicZone = this.physics.overlap(this.player, this.logicZone);
     const inHubZone = this.physics.overlap(this.player, this.hubZone);
+    const inSchoolZone = this.physics.overlap(this.player, this.schoolZone);
 
-    let activeZoneId: string | null = null;
     if (inDbZone) activeZoneId = 'file_sum';
     else if (inLogicZone) activeZoneId = 'file_loop';
     else if (inHubZone) activeZoneId = 'file_cpp_hello';
 
-    // 1. If we are in a zone, but it's not the "current" (open) one
-    if (activeZoneId && activeZoneId !== this.currentZone) {
-      // If we were tracking a different zone, reset
-      if (this.pendingZoneId !== activeZoneId) {
-        this.pendingZoneId = activeZoneId;
-        this.zoneTimer = 0;
-      }
+    // School isn't a "file", so it needs special handling in openTerminal if we want to reuse the progress bar logic
+    // OR we can just check if inSchoolZone -> openTerminal('school') immediately? 
+    // Let's reuse the zone detection but specific ID.
+    // We can pass a special string to openEditor? No, openTerminal handles types.
 
-      // Increment Timer
-      this.zoneTimer += delta;
+    // Let's modify the loop slightly.
+    let targetTerminalType: 'editor' | 'school' | null = null;
+    let targetFileId: string | null = null;
 
-      // Draw Progress Bar
-      const progress = Math.min(this.zoneTimer / 700, 1);
-      this.zoneProgressBar.clear();
-      this.zoneProgressBar.fillStyle(0x000000, 0.5);
-      this.zoneProgressBar.fillRect(this.player.x - 20, this.player.y + 20, 40, 6);
-      this.zoneProgressBar.fillStyle(0x00ffff, 1);
-      this.zoneProgressBar.fillRect(this.player.x - 20, this.player.y + 20, 40 * progress, 6);
+    if (inDbZone) { targetTerminalType = 'editor'; targetFileId = 'file_sum'; }
+    else if (inLogicZone) { targetTerminalType = 'editor'; targetFileId = 'file_loop'; }
+    else if (inHubZone) { targetTerminalType = 'editor'; targetFileId = 'file_cpp_hello'; }
+    else if (inSchoolZone) { targetTerminalType = 'school'; }
 
-      // Threshold Reached?
-      if (this.zoneTimer >= 700) {
-        this.currentZone = activeZoneId;
-        openEditor(activeZoneId);
+    // If we have a target
+    if (targetTerminalType) {
+      // We need an "activeZoneId" string for consistency with existing state logic
+      const zoneKey = targetFileId || 'school_zone';
+
+      if (zoneKey !== this.currentZone) {
+        if (this.pendingZoneId !== zoneKey) {
+          this.pendingZoneId = zoneKey;
+          this.zoneTimer = 0;
+        }
+        this.zoneTimer += delta;
+
+        // Draw Bar
+        const progress = Math.min(this.zoneTimer / 700, 1);
         this.zoneProgressBar.clear();
-        this.zoneTimer = 0;
-        this.pendingZoneId = null;
+        this.zoneProgressBar.fillStyle(0x000000, 0.5);
+        this.zoneProgressBar.fillRect(this.player.x - 20, this.player.y + 20, 40, 6);
+        this.zoneProgressBar.fillStyle(0x00ff00, 1);
+        this.zoneProgressBar.fillRect(this.player.x - 20, this.player.y + 20, 40 * progress, 6);
+
+        if (this.zoneTimer >= 700) {
+          this.currentZone = zoneKey;
+          if (targetTerminalType === 'editor' && targetFileId) {
+            openEditor(targetFileId);
+          } else if (targetTerminalType === 'school') {
+            useGameStore.getState().openTerminal('school');
+          }
+          this.zoneProgressBar.clear();
+          this.zoneTimer = 0;
+          this.pendingZoneId = null;
+        }
       }
-    }
-    // 2. If we left the zone or are in the current zone
-    else {
-      // If we are NOT in the active zone anymore, but we thought we were
-      if (!activeZoneId && this.currentZone) {
+    } else {
+      // Reset if not in any zone
+      if (this.currentZone) {
         closeTerminal();
         this.currentZone = null;
       }
-
-      // Reset timer if we just ran through or left
-      if (!activeZoneId || activeZoneId === this.currentZone) {
+      if (this.pendingZoneId) {
         this.zoneTimer = 0;
         this.pendingZoneId = null;
         this.zoneProgressBar.clear();
       }
     }
+
+    /* 
+    Legacy Logic Removed for Clarity
+    if (activeZoneId && activeZoneId !== this.currentZone) { ... } 
+    */
 
     // Debug: Call Meeting checks (Now strictly button based)
     // Distance check
