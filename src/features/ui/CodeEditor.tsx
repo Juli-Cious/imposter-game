@@ -188,7 +188,7 @@ export const CodeEditor = () => {
 
                     {/* Animation Panel - Right Side */}
                     <div className="w-96 flex-shrink-0">
-                        <ChallengeAnimation challengeId={activeFileId || ''} isRunning={isRunning} />
+                        <ChallengeAnimation challengeId={activeFileId || ''} status={status} />
                     </div>
                 </div>
 

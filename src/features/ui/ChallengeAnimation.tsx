@@ -2,25 +2,29 @@ import { useEffect, useState } from 'react';
 
 interface ChallengeAnimationProps {
     challengeId: string;
-    isRunning: boolean;
+    status: 'PENDING' | 'PASS' | 'FAIL';
 }
 
-export const ChallengeAnimation = ({ challengeId, isRunning }: ChallengeAnimationProps) => {
+export const ChallengeAnimation = ({ challengeId, status }: ChallengeAnimationProps) => {
     const [animationStep, setAnimationStep] = useState(0);
     const [typedText, setTypedText] = useState('');
+    const [hasAnimated, setHasAnimated] = useState(false);
 
-    // Reset animation when running starts
+    // Reset animation when status changes
     useEffect(() => {
-        if (isRunning) {
+        if (status === 'PASS' && !hasAnimated) {
             setAnimationStep(0);
             setTypedText('');
+            setHasAnimated(true);
+        } else if (status === 'PENDING') {
+            setHasAnimated(false);
         }
-    }, [isRunning]);
+    }, [status, hasAnimated]);
 
     // Solar Challenge: Addition Animation
     const SolarAnimation = () => {
         useEffect(() => {
-            if (!isRunning) return;
+            if (status !== 'PASS') return;
 
             const timer1 = setTimeout(() => setAnimationStep(1), 400);
             const timer2 = setTimeout(() => setAnimationStep(2), 900);
@@ -35,7 +39,7 @@ export const ChallengeAnimation = ({ challengeId, isRunning }: ChallengeAnimatio
                 clearTimeout(timer4);
                 clearTimeout(timer5);
             };
-        }, [isRunning]);
+        }, [status]);
 
         return (
             <div className="flex flex-col items-center justify-center h-full p-6 bg-gradient-to-br from-blue-950 to-gray-900">
@@ -100,14 +104,14 @@ export const ChallengeAnimation = ({ challengeId, isRunning }: ChallengeAnimatio
     // Waste Challenge: Loop Animation
     const WasteAnimation = () => {
         useEffect(() => {
-            if (!isRunning) return;
+            if (status !== 'PASS') return;
 
             const timers = [0, 1, 2, 3, 4].map((step) =>
                 setTimeout(() => setAnimationStep(step + 1), step * 400)
             );
 
             return () => timers.forEach(clearTimeout);
-        }, [isRunning]);
+        }, [status]);
 
         const items = [0, 1, 2, 3, 4];
 
@@ -164,7 +168,7 @@ export const ChallengeAnimation = ({ challengeId, isRunning }: ChallengeAnimatio
         const fullText = "Oxy-System: ACTIVE";
 
         useEffect(() => {
-            if (!isRunning) return;
+            if (status !== 'PASS') return;
 
             let currentIndex = 0;
             const typingInterval = setInterval(() => {
@@ -178,7 +182,7 @@ export const ChallengeAnimation = ({ challengeId, isRunning }: ChallengeAnimatio
             }, 80);
 
             return () => clearInterval(typingInterval);
-        }, [isRunning]);
+        }, [status]);
 
         return (
             <div className="flex flex-col items-center justify-center h-full p-6 bg-gradient-to-br from-teal-950 to-gray-900">
