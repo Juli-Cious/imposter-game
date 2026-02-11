@@ -34,12 +34,22 @@
 }
 
 @keyframes float-particle {
-    0%, 100% { transform: translateY(0px); opacity: 0.3; }
-    50% { transform: translateY(-30px); opacity: 1; }
+
+    0%,
+    100% {
+        transform: translateY(0px);
+        opacity: 0.3;
+    }
+
+    50% {
+        transform: translateY(-30px);
+        opacity: 1;
+    }
 }
 
 /* Letterbox Bars */
-.letterbox-top, .letterbox-bottom {
+.letterbox-top,
+.letterbox-bottom {
     position: absolute;
     left: 0;
     right: 0;
@@ -49,8 +59,13 @@
     z-index: 10;
 }
 
-.letterbox-top { top: 0; }
-.letterbox-bottom { bottom: 0; }
+.letterbox-top {
+    top: 0;
+}
+
+.letterbox-bottom {
+    bottom: 0;
+}
 
 /* Scene Container */
 .scene-container {
@@ -74,9 +89,10 @@
 /* Dinosaur Base Styles */
 .dino {
     position: absolute;
-    width: 96px;
-    height: 96px;
-    background-size: 240px 96px; /* 10 frames x 24px width, 4 rows x 24px height */
+    width: 24px;
+    height: 24px;
+    /* Sprite sheet: 10 columns x 4 rows, each frame 24x24px = 240px wide x 96px tall */
+    background-size: 240px 96px;
     background-repeat: no-repeat;
     image-rendering: pixelated;
     transform: scale(4);
@@ -84,42 +100,82 @@
 }
 
 /* Dinosaur Sprite Sheets */
-.dino-doux { background-image: url('/assets/sprites/DinoSprites - doux.png'); }
-.dino-mort { background-image: url('/assets/sprites/DinoSprites - mort.png'); }
-.dino-tard { background-image: url('/assets/sprites/DinoSprites - tard.png'); }
-.dino-vita { background-image: url('/assets/sprites/DinoSprites - vita.png'); }
+.dino-doux {
+    background-image: url('/assets/sprites/DinoSprites - doux.png');
+}
+
+.dino-mort {
+    background-image: url('/assets/sprites/DinoSprites - mort.png');
+}
+
+.dino-tard {
+    background-image: url('/assets/sprites/DinoSprites - tard.png');
+}
+
+.dino-vita {
+    background-image: url('/assets/sprites/DinoSprites - vita.png');
+}
 
 /* Animation Delays */
-.delay-1 { animation-delay: 0.2s !important; }
-.delay-2 { animation-delay: 0.4s !important; }
-.delay-3 { animation-delay: 0.6s !important; }
+.delay-1 {
+    animation-delay: 0.2s !important;
+}
+
+.delay-2 {
+    animation-delay: 0.4s !important;
+}
+
+.delay-3 {
+    animation-delay: 0.6s !important;
+}
 
 /* Worried Animation (idle frames) */
 .dino.worried {
     animation: worried-idle 1s steps(4) infinite, float-up-down 2s ease-in-out infinite;
-    background-position: 0 0; /* First row for idle */
+    background-position: 0 0;
+    /* First row for idle */
 }
 
 @keyframes worried-idle {
-    0% { background-position: 0 0; }
-    100% { background-position: -96px 0; } /* 4 frames @ 24px */
+    0% {
+        background-position: 0 0;
+    }
+
+    100% {
+        background-position: -96px 0;
+    }
+
+    /* 4 frames @ 24px */
 }
 
 @keyframes float-up-down {
-    0%, 100% { transform: scale(4) translateY(0px); }
-    50% { transform: scale(4) translateY(-5px); }
+
+    0%,
+    100% {
+        transform: scale(4) translateY(0px);
+    }
+
+    50% {
+        transform: scale(4) translateY(-5px);
+    }
 }
 
 /* Walk In From Left */
 .dino.walk-in-left {
     left: -100px;
     animation: walk-from-left 2s ease-out forwards, walk-cycle 0.6s steps(6) infinite;
-    background-position: 0 -24px; /* Second row for walking */
+    background-position: 0 -24px;
+    /* Second row for walking */
 }
 
 @keyframes walk-from-left {
-    0% { left: -100px; }
-    100% { left: 20%; }
+    0% {
+        left: -100px;
+    }
+
+    100% {
+        left: 20%;
+    }
 }
 
 /* Walk In From Right */
@@ -127,17 +183,30 @@
     right: -100px;
     animation: walk-from-right 2s ease-out forwards, walk-cycle 0.6s steps(6) infinite;
     background-position: 0 -24px;
-    transform: scale(4) scaleX(-1); /* Flip horizontally */
+    transform: scale(4) scaleX(-1);
+    /* Flip horizontally */
 }
 
 @keyframes walk-from-right {
-    0% { right: -100px; }
-    100% { right: 20%; }
+    0% {
+        right: -100px;
+    }
+
+    100% {
+        right: 20%;
+    }
 }
 
 @keyframes walk-cycle {
-    0% { background-position-x: 0; }
-    100% { background-position-x: -144px; } /* 6 frames @ 24px */
+    0% {
+        background-position-x: 0;
+    }
+
+    100% {
+        background-position-x: -144px;
+    }
+
+    /* 6 frames @ 24px */
 }
 
 /* Power Up Animation */
@@ -147,22 +216,31 @@
 }
 
 @keyframes power-up-anim {
-    0% { 
+    0% {
         transform: scale(0) rotate(-180deg);
         opacity: 0;
     }
+
     60% {
         transform: scale(4.5) rotate(10deg);
     }
-    100% { 
+
+    100% {
         transform: scale(4) rotate(0deg);
         opacity: 1;
     }
 }
 
 @keyframes idle-breath {
-    0%, 100% { transform: scale(4); }
-    50% { transform: scale(4.1); }
+
+    0%,
+    100% {
+        transform: scale(4);
+    }
+
+    50% {
+        transform: scale(4.1);
+    }
 }
 
 .power-icon {
@@ -175,11 +253,14 @@
 }
 
 @keyframes power-icon-glow {
-    0%, 100% { 
+
+    0%,
+    100% {
         filter: drop-shadow(0 0 10px gold);
         transform: translateX(-50%) translateY(0px);
     }
-    50% { 
+
+    50% {
         filter: drop-shadow(0 0 30px gold);
         transform: translateX(-50%) translateY(-10px);
     }
@@ -193,8 +274,13 @@
 }
 
 @keyframes walk-across-screen {
-    0% { left: -10%; }
-    100% { left: 110%; }
+    0% {
+        left: -10%;
+    }
+
+    100% {
+        left: 110%;
+    }
 }
 
 /* Celebrate Animation */
@@ -204,8 +290,15 @@
 }
 
 @keyframes jump-celebrate {
-    0%, 100% { transform: scale(4) translateY(0px); }
-    50% { transform: scale(4) translateY(-30px); }
+
+    0%,
+    100% {
+        transform: scale(4) translateY(0px);
+    }
+
+    50% {
+        transform: scale(4) translateY(-30px);
+    }
 }
 
 /* Confetti */
@@ -224,11 +317,12 @@
 }
 
 @keyframes confetti-fall {
-    0% { 
+    0% {
         transform: translateY(0) rotate(0deg);
         opacity: 1;
     }
-    100% { 
+
+    100% {
         transform: translateY(100vh) rotate(720deg);
         opacity: 0;
     }
@@ -252,6 +346,7 @@
         opacity: 0;
         transform: translateX(-50%) translateY(30px);
     }
+
     100% {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
@@ -262,7 +357,7 @@
     font-size: 2.5rem;
     font-weight: 900;
     color: white;
-    text-shadow: 
+    text-shadow:
         0 0 20px rgba(0, 0, 0, 0.8),
         0 0 40px rgba(96, 165, 250, 0.5),
         0 4px 8px rgba(0, 0, 0, 0.5);
@@ -322,11 +417,14 @@
 }
 
 @keyframes pulse-glow {
-    0%, 100% { 
+
+    0%,
+    100% {
         transform: translateX(-50%) scale(1);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 158, 11, 0.5);
     }
-    50% { 
+
+    50% {
         transform: translateX(-50%) scale(1.05);
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 40px rgba(245, 158, 11, 0.8);
     }
@@ -341,15 +439,15 @@
     .dino {
         transform: scale(2);
     }
-    
+
     .scene-text {
         font-size: 1.5rem;
     }
-    
+
     .scene-narration {
         font-size: 1rem;
     }
-    
+
     .start-btn {
         font-size: 1.3rem;
         padding: 15px 36px;
