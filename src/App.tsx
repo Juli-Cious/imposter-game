@@ -17,15 +17,17 @@ import "./index.css";
 
 function App() {
   const { isTerminalOpen, terminalType, gameState, setGameState } = useGameStore();
-  const { shouldShowIntro, shouldShowTutorial, shouldShowVictory } = usePlayerProgress();
+  const { shouldShowIntro, shouldShowTutorial, shouldShowVictory, completedChallenges } = usePlayerProgress();
   const [showVictory, setShowVictory] = useState(false);
 
-  // Check for victory condition
+  // Check for victory condition whenever challenges are completed
   useEffect(() => {
-    if (shouldShowVictory() && !showVictory) {
+    const shouldShow = shouldShowVictory();
+    if (shouldShow && !showVictory) {
+      console.log('Victory condition met! Showing victory animation...');
       setShowVictory(true);
     }
-  }, [shouldShowVictory, showVictory]);
+  }, [completedChallenges, shouldShowVictory, showVictory]);
 
   // Show intro on first load
   const handleIntroComplete = () => {
