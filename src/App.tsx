@@ -14,7 +14,6 @@ function App() {
   const {
     isTerminalOpen,
     terminalType,
-    closeTerminal,
     gameState,
     gameStatus
   } = useGameStore();

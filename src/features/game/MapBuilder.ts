@@ -196,7 +196,7 @@ export class MapBuilder {
     private getEmptyResult() {
         return {
             walls: this.scene.physics.add.staticGroup(),
-            dbZone: null, apiZone: null, hubZone: null, meetingZone: null, spawnPoint: null,
+            dbZone: null, apiZone: null, hubZone: null, meetingZone: null, schoolZone: null, spawnPoint: null,
             doorTiles: []
         };
     }
