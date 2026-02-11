@@ -14,120 +14,48 @@ export interface StoryScene {
 
 export const INTRO_SCENES: StoryScene[] = [
     {
-        id: 'earth-beautiful',
-        duration: 1500,
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        visual: '🌍✨🌟',
-        text: 'Once upon a time, Planet Earth was a beautiful paradise...',
-        narration: 'A world full of life, energy, and wonder.',
-        animation: 'fade-in'
-    },
-    {
-        id: 'crisis-pollution',
-        duration: 1500,
-        background: 'linear-gradient(135deg, #57534e 0%, #292524 100%)',
-        visual: '☁️🏭💨😷',
-        text: 'But then... dark clouds of pollution began to spread.',
-        narration: 'Factories pumped smoke. The air became toxic.',
-        animation: 'darken'
-    },
-    {
-        id: 'crisis-energy',
-        duration: 1500,
-        background: 'linear-gradient(135deg, #1c1917 0%, #0c0a09 100%)',
-        visual: '🔌💔🌃',
-        text: 'Cities ran out of clean energy. Lights went dark.',
-        narration: 'Without power, schools closed. Hospitals struggled.',
-        animation: 'lights-out'
-    },
-    {
-        id: 'crisis-waste',
-        duration: 1500,
-        background: 'linear-gradient(135deg, #3f3f46 0%, #27272a 100%)',
-        visual: '🗑️🌊🐋😢',
-        text: 'Mountains of waste filled oceans. Animals suffered.',
-        narration: 'Plastic everywhere. Nature was dying.',
-        animation: 'waves'
-    },
-    {
-        id: 'earth-crying',
-        duration: 1200,
+        id: 'earth-crisis',
+        duration: 3500,
         background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-        visual: '🌍😢💔',
-        text: 'Earth cried out for help...',
-        narration: 'The planet was in danger. Time was running out.',
+        visual: 'dinos-worried',
+        text: 'Planet Earth is in danger! Pollution, waste, and energy crisis threaten all life...',
+        narration: 'The world needs heroes!',
         animation: 'shake'
     },
     {
-        id: 'guardian-appears',
-        duration: 1500,
+        id: 'guardian-calls',
+        duration: 3500,
         background: 'linear-gradient(135deg, #1e3a8a 0%, #312e81 100%)',
-        visual: '✨🧙‍♀️✨',
-        text: 'Then, the Ancient Guardian appeared from the stars...',
-        narration: 'Professor Gaia, protector of Earth.',
+        visual: 'dinos-gather',
+        text: 'Professor Gaia calls upon four brave heroes to save the planet!',
+        narration: 'Doux, Mort, Tard, and Vita answer the call!',
         animation: 'sparkle'
     },
     {
-        id: 'call-to-action',
-        duration: 1500,
-        background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)',
-        visual: '🌟👤🌟',
-        text: 'She searched the world for someone special...',
-        narration: 'Someone with the potential to become a hero.',
-        animation: 'search'
-    },
-    {
-        id: 'chosen-one',
-        duration: 1800,
-        background: 'linear-gradient(135deg, #f59e0b 0%, #dc2626 100%)',
-        visual: '⚡YOU⚡',
-        text: 'And she found YOU! You have been CHOSEN!',
-        narration: 'You possess incredible potential!',
+        id: 'powers-revealed',
+        duration: 4000,
+        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        visual: 'dinos-powers',
+        text: 'Each hero gains amazing powers: Solar Energy ⚡ Recycling ♻️ Air Quality 💨',
+        narration: 'Together, they can heal the Earth!',
         animation: 'glow'
     },
     {
-        id: 'powers-reveal',
-        duration: 1800,
-        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-        visual: '⚡♻️💨',
-        text: 'Three powerful abilities await you...',
-        narration: 'Solar Energy ⚡ | Recycling ♻️ | Air Quality 💨',
-        animation: 'float'
-    },
-    {
-        id: 'training-needed',
-        duration: 1500,
+        id: 'training-time',
+        duration: 3500,
         background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-        visual: '📚🚀🎯',
-        text: 'But first, you must learn to master your powers!',
-        narration: 'Every hero needs training...',
-        animation: 'pulse'
-    },
-    {
-        id: 'space-station',
-        duration: 1800,
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
-        visual: '🛸✨🌟',
-        text: 'Welcome to your Space Station training facility!',
-        narration: 'Here you will become Earth\'s greatest defender!',
-        animation: 'zoom-in'
-    },
-    {
-        id: 'mission-briefing',
-        duration: 1800,
-        background: 'linear-gradient(135deg, #1e40af 0%, #7c3aed 100%)',
-        visual: '📚➡️🎯',
-        text: 'Visit ACADEMIES to learn. Solve CHALLENGES to save Earth!',
-        narration: 'The fate of our planet is in your hands!',
+        visual: 'dinos-walking',
+        text: 'They train at the Space Station to master coding and save the world!',
+        narration: 'Visit ACADEMIES to learn. Solve CHALLENGES to win!',
         animation: 'slide'
     },
     {
-        id: 'call-to-adventure',
-        duration: 1800,
+        id: 'adventure-begins',
+        duration: 4000,
         background: 'linear-gradient(135deg, #dc2626 0%, #f59e0b 100%)',
-        visual: '🦸‍♀️🌍💪',
-        text: 'Are you ready to become Earth\'s Guardian?',
-        narration: 'Your adventure begins NOW!',
+        visual: 'dinos-celebrate',
+        text: 'Are you ready to join them? The adventure begins NOW!',
+        narration: 'Become Earth\'s Guardian!',
         animation: 'bounce'
     }
 ];

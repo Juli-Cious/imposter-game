@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { INTRO_SCENES } from '../../shared/StoryContent';
 import { usePlayerProgress } from '../../stores/usePlayerProgress';
+import './DinoIntro.css';
 
 interface IntroAnimationProps {
     onComplete: () => void;
@@ -43,229 +44,139 @@ export const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
 
     if (!isVisible) return null;
 
-    // Animation styles based on scene
-    const getAnimationClass = () => {
-        switch (currentScene.animation) {
-            case 'fade-in':
-                return 'animate-fadeIn';
-            case 'shake':
-                return 'animate-shake';
-            case 'glow':
-                return 'animate-glow';
-            case 'pulse':
-                return 'animate-pulse';
-            case 'bounce':
-                return 'animate-bounce';
+    // Render different dinosaur scenes based on visual type
+    const renderDinoScene = () => {
+        const visual = currentScene.visual;
+
+        switch (visual) {
+            case 'dinos-worried':
+                return (
+                    <div className="dino-scene">
+                        <div className="dino dino-doux worried" style={{ left: '20%' }} />
+                        <div className="dino dino-mort worried" style={{ left: '40%' }} />
+                        <div className="dino dino-tard worried" style={{ left: '60%' }} />
+                        <div className="dino dino-vita worried" style={{ left: '80%' }} />
+                    </div>
+                );
+
+            case 'dinos-gather':
+                return (
+                    <div className="dino-scene">
+                        <div className="dino dino-doux walk-in-left" />
+                        <div className="dino dino-mort walk-in-left delay-1" />
+                        <div className="dino dino-tard walk-in-right" />
+                        <div className="dino dino-vita walk-in-right delay-1" />
+                    </div>
+                );
+
+            case 'dinos-powers':
+                return (
+                    <div className="dino-scene">
+                        <div className="dino dino-doux power-up" style={{ left: '15%' }}>
+                            <div className="power-icon">⚡</div>
+                        </div>
+                        <div className="dino dino-mort power-up delay-1" style={{ left: '35%' }}>
+                            <div className="power-icon">♻️</div>
+                        </div>
+                        <div className="dino dino-tard power-up delay-2" style={{ left: '55%' }}>
+                            <div className="power-icon">💨</div>
+                        </div>
+                        <div className="dino dino-vita power-up delay-3" style={{ left: '75%' }}>
+                            <div className="power-icon">🌱</div>
+                        </div>
+                    </div>
+                );
+
+            case 'dinos-walking':
+                return (
+                    <div className="dino-scene">
+                        <div className="dino dino-doux walking" />
+                        <div className="dino dino-mort walking delay-1" />
+                        <div className="dino dino-tard walking delay-2" />
+                        <div className="dino dino-vita walking delay-3" />
+                    </div>
+                );
+
+            case 'dinos-celebrate':
+                return (
+                    <div className="dino-scene">
+                        <div className="dino dino-doux celebrate" style={{ left: '15%' }} />
+                        <div className="dino dino-mort celebrate delay-1" style={{ left: '35%' }} />
+                        <div className="dino dino-tard celebrate delay-2" style={{ left: '55%' }} />
+                        <div className="dino dino-vita celebrate delay-3" style={{ left: '75%' }} />
+                        <div className="confetti-container">
+                            {Array.from({ length: 30 }).map((_, i) => (
+                                <div key={i} className="confetti" style={{
+                                    left: `${Math.random() * 100}%`,
+                                    animationDelay: `${Math.random() * 2}s`,
+                                    background: ['#ff0', '#f0f', '#0ff', '#0f0', '#f00'][Math.floor(Math.random() * 5)]
+                                }} />
+                            ))}
+                        </div>
+                    </div>
+                );
+
             default:
-                return 'animate-fadeIn';
+                return null;
         }
     };
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden">
+        <div className="intro-container-dino">
             {/* Animated Background */}
             <div
-                className="absolute inset-0 transition-all duration-1000"
+                className="intro-background"
                 style={{ background: currentScene.background }}
             />
 
-            {/* Dynamic Particle Effects */}
-            <div className="absolute inset-0 opacity-40">
-                {/* Floating particles */}
-                {[...Array(80)].map((_, i) => (
+            {/* Particle Effects */}
+            <div className="particle-field">
+                {Array.from({ length: 40 }).map((_, i) => (
                     <div
-                        key={`float-${i}`}
-                        className="absolute rounded-full"
+                        key={`particle-${i}`}
+                        className="particle"
                         style={{
                             left: `${Math.random() * 100}%`,
                             top: `${Math.random() * 100}%`,
-                            width: `${2 + Math.random() * 4}px`,
-                            height: `${2 + Math.random() * 4}px`,
-                            background: `rgba(255, 255, 255, ${0.3 + Math.random() * 0.7})`,
-                            animation: `float ${3 + Math.random() * 4}s ease-in-out infinite`,
-                            animationDelay: `${Math.random() * 3}s`
+                            animationDelay: `${Math.random() * 3}s`,
+                            animationDuration: `${3 + Math.random() * 4}s`
                         }}
                     />
                 ))}
-
-                {/* Explosion particles on scene change */}
-                {[...Array(20)].map((_, i) => (
-                    <div
-                        key={`burst-${i}`}
-                        className="absolute w-2 h-2 rounded-full bg-white"
-                        style={{
-                            left: '50%',
-                            top: '50%',
-                            animation: `burst 0.8s ease-out`,
-                            animationDelay: `${i * 0.02}s`,
-                            transform: `rotate(${i * 18}deg) translateX(${50 + Math.random() * 100}px)`,
-                            opacity: 0
-                        }}
-                    />
-                ))}
-
-                {/* Energy waves */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-40 h-40 rounded-full border-2 border-cyan-400 animate-ping opacity-20"></div>
-                    <div className="w-60 h-60 rounded-full border-2 border-blue-400 animate-ping opacity-15" style={{ animationDelay: '0.5s' }}></div>
-                    <div className="w-80 h-80 rounded-full border-2 border-purple-400 animate-ping opacity-10" style={{ animationDelay: '1s' }}></div>
-                </div>
             </div>
 
             {/* Cinematic letterbox bars */}
-            <div className="absolute top-0 left-0 right-0 h-16 bg-black opacity-90" />
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-black opacity-90" />
+            <div className="letterbox-top" />
+            <div className="letterbox-bottom" />
 
-            {/* Content Container */}
-            <div className="relative z-10 max-w-4xl mx-auto px-8 text-center">
-                {/* Visual Elements (Emojis) with enhanced animations */}
-                <div
-                    className={`text-8xl mb-8 ${getAnimationClass()}`}
-                    style={{
-                        animation: `${getAnimationClass().replace('animate-', '')} 1s ease-out, float 3s ease-in-out infinite`,
-                        filter: 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.5))'
-                    }}
-                >
-                    {currentScene.visual}
-                </div>
+            {/* Dinosaur Scene */}
+            <div className="scene-container">
+                {renderDinoScene()}
+            </div>
 
-                {/* Main Text with glitch effect on key scenes */}
-                <h2
-                    className="text-4xl md:text-5xl font-black text-white mb-6 drop-shadow-2xl leading-tight animate-slideUp"
-                    style={{
-                        textShadow: '0 0 20px rgba(255, 255, 255, 0.5), 0 0 40px rgba(96, 165, 250, 0.3)',
-                        animation: currentScene.id === 'chosen-one' || currentScene.id === 'call-to-adventure'
-                            ? 'slideUp 0.8s ease-out, glitchText 0.15s infinite'
-                            : undefined
-                    }}
-                >
+            {/* Text Content */}
+            <div className="text-container">
+                <h2 className="scene-text">
                     {currentScene.text}
                 </h2>
-
-                {/* Narration */}
                 {currentScene.narration && (
-                    <p className="text-xl md:text-2xl text-gray-200 italic opacity-90 animate-slideUp" style={{ animationDelay: '0.3s' }}>
+                    <p className="scene-narration">
                         {currentScene.narration}
                     </p>
                 )}
-
-                {/* Progress Indicator - Hidden */}
-                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2" style={{ display: 'none' }}>
-                    {INTRO_SCENES.map((_, index) => (
-                        <div
-                            key={index}
-                            className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentSceneIndex
-                                ? 'bg-white w-8'
-                                : index < currentSceneIndex
-                                    ? 'bg-white/60'
-                                    : 'bg-white/20'
-                                }`}
-                        />
-                    ))}
-                </div>
             </div>
 
             {/* Skip Button */}
-            <button
-                onClick={handleSkip}
-                className="absolute top-20 right-8 bg-black/50 hover:bg-black/70 text-white px-6 py-3 rounded-full transition-all text-sm font-bold backdrop-blur-sm border border-white/20"
-            >
-                Skip Intro (ESC)
+            <button onClick={handleSkip} className="skip-btn">
+                Skip Intro ›
             </button>
 
             {/* Start Button (last scene only) */}
             {isLastScene && (
-                <button
-                    onClick={handleComplete}
-                    className="absolute bottom-32 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-gray-900 px-12 py-4 rounded-full font-black text-2xl shadow-2xl animate-bounce border-4 border-white/30"
-                >
-                    Begin Your Adventure! 🚀
+                <button onClick={handleComplete} className="start-btn">
+                    Start Adventure! 🚀
                 </button>
             )}
-
-            {/* Keyboard shortcut */}
-            <style>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: scale(0.8); }
-                    to { opacity: 1; transform: scale(1); }
-                }
-                @keyframes slideUp {
-                    from { opacity: 0; transform: translateY(30px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                @keyframes shake {
-                    0%, 100% { transform: translateX(0) rotate(0deg); }
-                    25% { transform: translateX(-10px) rotate(-2deg); }
-                    75% { transform: translateX(10px) rotate(2deg); }
-                }
-                @keyframes glow {
-                    0%, 100% { 
-                        filter: drop-shadow(0 0 20px gold) drop-shadow(0 0 40px rgba(255, 215, 0, 0.5));
-                        transform: scale(1);
-                    }
-                    50% { 
-                        filter: drop-shadow(0 0 60px gold) drop-shadow(0 0 80px rgba(255, 215, 0, 0.8));
-                        transform: scale(1.1);
-                    }
-                }
-                @keyframes twinkle {
-                    0%, 100% { opacity: 0.3; transform: scale(1); }
-                    50% { opacity: 1; transform: scale(1.2); }
-                }
-                @keyframes float {
-                    0%, 100% { transform: translateY(0px); }
-                    50% { transform: translateY(-20px); }
-                }
-                @keyframes burst {
-                    0% { opacity: 1; transform: scale(0); }
-                    50% { opacity: 0.8; }
-                    100% { opacity: 0; transform: scale(1.5); }
-                }
-                @keyframes scaleIn {
-                    0% { 
-                        opacity: 0; 
-                        transform: scale(0.5) rotate(-5deg); 
-                    }
-                    70% { 
-                        transform: scale(1.05) rotate(2deg); 
-                    }
-                    100% { 
-                        opacity: 1; 
-                        transform: scale(1) rotate(0deg); 
-                    }
-                }
-                @keyframes glitchText {
-                    0%, 100% { transform: translate(0); }
-                    20% { transform: translate(-2px, 2px); }
-                    40% { transform: translate(2px, -2px); }
-                    60% { transform: translate(-1px, -1px); }
-                    80% { transform: translate(1px, 1px); }
-                }
-                .animate-fadeIn {
-                    animation: fadeIn 1s ease-out, scaleIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-                }
-                .animate-slideUp {
-                    animation: slideUp 0.8s ease-out;
-                }
-                .animate-shake {
-                    animation: shake 0.5s ease-in-out infinite;
-                }
-                .animate-glow {
-                    animation: glow 2s ease-in-out infinite;
-                }
-                .animate-twinkle {
-                    animation: twinkle 3s ease-in-out infinite;
-                }
-            `}</style>
         </div>
     );
 };
-
-// ESC key handler
-if (typeof window !== 'undefined') {
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            // Handled by parent component
-        }
-    });
-}
