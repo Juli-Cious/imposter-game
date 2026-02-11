@@ -3,9 +3,10 @@ import { useEffect, useState } from 'react';
 interface ChallengeAnimationProps {
     challengeId: string;
     status: 'PENDING' | 'PASS' | 'FAIL';
+    output?: string;
 }
 
-export const ChallengeAnimation = ({ challengeId, status }: ChallengeAnimationProps) => {
+export const ChallengeAnimation = ({ challengeId, status, output }: ChallengeAnimationProps) => {
     const [animationStep, setAnimationStep] = useState(0);
     const [typedText, setTypedText] = useState('');
     const [hasAnimated, setHasAnimated] = useState(false);
@@ -165,7 +166,8 @@ export const ChallengeAnimation = ({ challengeId, status }: ChallengeAnimationPr
 
     // Oxygen Challenge: Typing Animation
     const OxygenAnimation = () => {
-        const fullText = "Oxy-System: ACTIVE";
+        // Use the actual output from user's code, or fallback to default message
+        const fullText = output?.trim() || "Oxy-System: ACTIVE";
 
         useEffect(() => {
             if (status !== 'PASS') return;
