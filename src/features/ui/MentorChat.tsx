@@ -7,6 +7,7 @@ interface MentorChatProps {
     challengeId?: string;
     challengeDescription?: string;
     currentCode?: string;
+    initialError?: string;
 }
 
 const QUICK_QUESTIONS = [
@@ -16,7 +17,7 @@ const QUICK_QUESTIONS = [
     "What does this error mean? ❓"
 ];
 
-export const MentorChat = ({ isOpen, onClose, challengeId, challengeDescription, currentCode }: MentorChatProps) => {
+export const MentorChat = ({ isOpen, onClose, challengeId, challengeDescription, currentCode, initialError }: MentorChatProps) => {
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
             id: '1',
@@ -30,6 +31,44 @@ export const MentorChat = ({ isOpen, onClose, challengeId, challengeDescription,
     const [error, setError] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    // Handle Initial Error (Auto-trigger explanation)
+    useEffect(() => {
+        if (isOpen && initialError) {
+            const explainError = async () => {
+                // Add a user message simulating "Help me with this error"
+                const userMsg: ChatMessage = {
+                    id: Date.now().toString(),
+                    role: 'user',
+                    content: `I got this error: "${initialError}". Can you explain it? 🚨`,
+                    timestamp: Date.now()
+                };
+                setMessages(prev => [...prev, userMsg]);
+                setIsLoading(true);
+
+                // Import dynamically to avoid circular dependencies if any, 
+                // but here we can just call the service since it's already imported at top
+                // Wait, we need to import `explainError` from service.
+                // We'll trust the import is added or available.
+                // Actually, let's use the existing `sendMessage` flow but adapted.
+
+                // Since `chatWithMentor` is generic, we can send this as a normal chat
+                // OR use the specific `explainError` tool.
+                // Let's use the `chatWithMentor` for simplicity as it maintains context, 
+                // but prepend the system prompt with error context instructions?
+                // No, we built a specific `explainError` tool. Let's use it.
+
+                /* 
+                   Wait, I need to import `explainError` in the file first!
+                   I'll rely on the previous `chatWithMentor` for now OR 
+                   I will need to add the import in a separate block.
+                   Refactoring: Let's simply trigger `sendMessage` with the error text.
+                */
+                sendMessage(`I got this error: \n${initialError}\n\nCan you explain what it means and how to fix it?`);
+            };
+            explainError();
+        }
+    }, [isOpen, initialError]); // Only run when opening with an error
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {

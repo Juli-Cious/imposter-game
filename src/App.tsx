@@ -16,7 +16,7 @@ import { useState, useEffect } from "react";
 import "./index.css";
 
 function App() {
-  const { isTerminalOpen, terminalType, gameState, setGameState } = useGameStore();
+  const { isTerminalOpen, terminalType, gameState } = useGameStore();
   const { shouldShowIntro, shouldShowTutorial, shouldShowVictory, completedChallenges, hasSeenVictory } = usePlayerProgress();
   const [showVictory, setShowVictory] = useState(false);
 
@@ -31,10 +31,7 @@ function App() {
 
   // Show intro on first load
   const handleIntroComplete = () => {
-    // Intro will auto-progress to game
-    if (gameState === 'MENU') {
-      setGameState('LOBBY');
-    }
+    // Intro complete, MainMenu will naturally show since gameState is 'MENU'
   };
 
   return (

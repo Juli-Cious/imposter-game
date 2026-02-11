@@ -275,3 +275,100 @@ class HintRateLimiter {
 }
 
 export const hintRateLimiter = new HintRateLimiter();
+
+// --- Error Explanation Types ---
+
+interface ErrorExplanationRequest {
+    code: string;
+    error: string;
+    challengeDescription?: string;
+    language?: string;
+}
+
+interface ErrorExplanationResponse {
+    explanation: string;
+    success: boolean;
+    fixSuggestion?: string;
+    error?: string;
+}
+
+/**
+ * Explain a coding error using Professor Gaia's persona
+ */
+export async function explainError(request: ErrorExplanationRequest): Promise<ErrorExplanationResponse> {
+    if (!API_KEY) {
+        return {
+            success: false,
+            explanation: '',
+            error: 'Professor Gaia is currently unavailable (API key not configured).'
+        };
+    }
+
+    try {
+        const prompt = buildErrorPrompt(request);
+
+        const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.6, // Lower temperature for more precise error explanations
+                    maxOutputTokens: 300,
+                }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error explanation request failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'I couldn\'t quite understand that error.';
+
+        // Simple parsing if the AI returns JSON-like format or just text
+        // For now we assume the AI follows the prompt to be conversational
+
+        return {
+            success: true,
+            explanation: text.trim()
+        };
+    } catch (error) {
+        console.error('Error explaining code:', error);
+        return {
+            success: false,
+            explanation: '',
+            error: error instanceof Error ? error.message : 'Professor Gaia encountered an error'
+        };
+    }
+}
+
+function buildErrorPrompt(request: ErrorExplanationRequest): string {
+    const { code, error, challengeDescription, language } = request;
+
+    return `You are Professor Gaia, the friendly AI mentor for a children's coding game.
+    
+The student has encountered an error in their ${language || 'code'}.
+    
+Context:
+- Challenge: ${challengeDescription || 'Unknown'}
+- Code:
+\`\`\`
+${code}
+\`\`\`
+- Error Message: "${error}"
+
+Your task:
+1. Explain what this error means in simple, child-friendly terms (metaphors are great!).
+2. Don't simply give the answer, but point them to the specific line or concept that is broken.
+3. Be encouraging! Errors are part of learning.
+4. Keep it short (max 2-3 sentences).
+5. Use emojis.
+6. Return ONLY the explanation message.`;
+}

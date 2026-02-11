@@ -76,6 +76,7 @@ export const CodeEditor = () => {
 
         setIsRunning(true);
         setOutput("Running...");
+        setLastError(null); // Clear previous errors
 
         // Execute against the problem's expected output
         const result = await executeCode(problem.language, code, problem.expectedOutput);
@@ -90,6 +91,12 @@ export const CodeEditor = () => {
         // Track completion in player progress
         if (result.success && activeFileId) {
             completeChallenge(activeFileId);
+        } else {
+            // If failed, checking if it's an error vs just wrong output
+            if (result.output.toLowerCase().includes('error')) {
+                setLastError(result.output);
+                // Optional: Auto-open chat or show a "Ask Gaia" button
+            }
         }
 
         update(ref(db, `gamestate/files/${activeFileId}`), {
@@ -102,6 +109,72 @@ export const CodeEditor = () => {
         setShowMentorChat(true);
     };
 
+
+    // State for Error Decoder
+    const [lastError, setLastError] = useState<string | null>(null);
+
+    // Monaco Editor OnMount - Register Eco-Lens
+    const handleEditorDidMount = (_editor: any, monaco: any) => {
+        // Register the Eco-Lens Hover Provider
+        monaco.languages.registerHoverProvider('javascript', {
+            provideHover: function (model: any, position: any) {
+                const word = model.getWordAtPosition(position);
+                if (!word) return null;
+
+                const keywords: Record<string, string> = {
+                    'for': '🔄 **LOOPS = RECYCLING ROBOTS**\n\nJust like sorting 100 bottles one by one is hard, loops let us automate the process! One loop can sort millions of items automatically.',
+                    'while': '🔄 **LOOPS = PERPETUAL ENERGY**\n\nKeeps running as long as a condition is true, like a solar panel generating power while the sun is shining! ☀️',
+                    'if': '🤔 **DECISIONS = SMART SENSORS**\n\nLike a pollution sensor deciding: "IF air is dirty, turn on the fans!"',
+                    'else': '🛤️ **ALTERNATIVES = BACKUP POWER**\n\n"ELSE, stay in standby mode." It gives our code a backup plan!',
+                    'var': '📦 **VARIABLES = CONTAINERS**\n\nThink of this like a recycling bin. We put data inside to use it later!',
+                    'let': '📦 **VARIABLES = REUSABLE CONTAINERS**\n\nA box we can empty and fill with something new later!',
+                    'const': '🔒 **CONSTANTS = PERMANENT FOUNDATIONS**\n\nLike the foundation of a wind turbine - it shouldn\'t change once it\'s built!',
+                    'function': '⚙️ **FUNCTIONS = FACTORIES**\n\nA special machine that takes ingredients (inputs) and makes something new (outputs)!',
+                    'return': '📤 **RETURN = DELIVERY**\n\nSending the finished product out of the factory!',
+                    'print': '📢 **PRINT = PUBLIC ANNOUNCEMENT**\n\nBroadcasting a message to the world!',
+                    'console': '🖥️ **CONSOLE = MISSION CONTROL**\n\nThe dashboard where we see what\'s happening in our system.',
+                    'log': '📝 **LOG = CAPTAIN\'S LOG**\n\nRecording an event in the ship\'s records.'
+                };
+
+                if (keywords[word.word]) {
+                    return {
+                        range: new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn),
+                        contents: [
+                            { value: '**🌍 ECO-LENS**' },
+                            { value: keywords[word.word] }
+                        ]
+                    };
+                }
+                return null;
+            }
+        });
+
+        // Similarly for Python if we switch languages
+        monaco.languages.registerHoverProvider('python', {
+            provideHover: function (model: any, position: any) {
+                const word = model.getWordAtPosition(position);
+                if (!word) return null;
+
+                const keywords: Record<string, string> = {
+                    'for': '🔄 **LOOPS = RECYCLING ROBOTS**\n\nJust like sorting 100 bottles one by one is hard, loops let us automate the process! One loop can sort millions of items automatically.',
+                    'while': '🔄 **LOOPS = PERPETUAL ENERGY**\n\nKeeps running as long as a condition is true, like a solar panel generating power while the sun is shining! ☀️',
+                    'def': '⚙️ **DEF = BUILD MACHINE**\n\nDefining a new machine (function) that allows us to do a specific task repeatedly.',
+                    'print': '📢 **PRINT = BROADCAST**\n\nSending a signal to the monitoring station!',
+                    'if': '🤔 **DECISIONS = SMART SENSORS**\n\nLike a pollution sensor deciding: "IF air is dirty, turn on the fans!"',
+                };
+                if (keywords[word.word]) {
+                    return {
+                        range: new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn),
+                        contents: [
+                            { value: '**🌍 ECO-LENS**' },
+                            { value: keywords[word.word] }
+                        ]
+                    };
+                }
+                return null;
+            }
+        });
+    };
 
     return (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-50 p-10">
@@ -177,6 +250,7 @@ export const CodeEditor = () => {
                             theme="vs-dark"
                             value={code}
                             onChange={handleEditorChange}
+                            onMount={handleEditorDidMount}
                             options={{
                                 minimap: { enabled: false },
                                 fontSize: 14,
@@ -210,10 +284,14 @@ export const CodeEditor = () => {
             {/* AI Mentor Chat */}
             <MentorChat
                 isOpen={showMentorChat}
-                onClose={() => setShowMentorChat(false)}
+                onClose={() => {
+                    setShowMentorChat(false);
+                    setLastError(null);
+                }}
                 challengeId={activeFileId || undefined}
                 challengeDescription={problem?.description}
                 currentCode={code}
+                initialError={lastError || undefined}
             />
         </div>
     );

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useGameStore } from '../../stores/useGameStore';
 import { db } from '../../firebaseConfig';
 import { ref, onValue, update } from 'firebase/database';
+import { PlanetDashboard } from './PlanetDashboard';
 
 export const LobbyScreen = () => {
     const { roomCode, isHost, playerId, network, setGameState, playerSkin, playerTint } = useGameStore();
@@ -13,12 +14,11 @@ export const LobbyScreen = () => {
         if (session) {
             try {
                 const data = JSON.parse(session);
-                // Only write if changed to avoid unnecessary writes, though checking object equality is cheap here
+                // Only write if changed to avoid unnecessary writes
                 if (data.skin !== (playerSkin || 'doux') || data.tint !== (playerTint || 0xffffff)) {
                     data.skin = playerSkin || 'doux';
                     data.tint = playerTint || 0xffffff;
                     localStorage.setItem('imposter_session', JSON.stringify(data));
-                    // console.log("[Lobby] Updated local session customization", { skin: data.skin, tint: data.tint });
                 }
             } catch (e) {
                 console.error("Failed to update session", e);
@@ -71,50 +71,68 @@ export const LobbyScreen = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
-            <div className="w-full max-w-2xl bg-gray-800 p-8 rounded-lg shadow-xl">
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold text-cyan-400">LOBBY</h1>
-                    <div className="flex items-center gap-4 bg-gray-700 px-4 py-2 rounded">
-                        <span className="text-gray-400">ROOM CODE:</span>
-                        <span className="text-2xl font-mono tracking-widest font-bold">{roomCode}</span>
-                        <button
-                            onClick={copyCode}
-                            className="ml-2 text-sm bg-gray-600 hover:bg-gray-500 px-2 py-1 rounded transition"
-                        >
-                            COPY
-                        </button>
-                    </div>
-                </div>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4 overflow-y-auto">
+            <div className="w-full max-w-6xl space-y-8 my-8">
 
-                <div className="grid grid-cols-2 gap-8 mb-8">
-                    <div className="bg-gray-700/50 p-4 rounded">
-                        <h2 className="text-xl font-bold mb-4 border-b border-gray-600 pb-2">PLAYERS ({players.length})</h2>
-                        <ul className="space-y-2">
-                            {players.map((p) => (
-                                <li key={p.id} className="flex items-center gap-2">
-                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: p.color }}></div>
-                                    <span className={p.id === playerId ? "text-yellow-400 font-bold" : "text-gray-300"}>
-                                        {p.name} {p.id === playerId && "(YOU)"}
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
+                {/* 1. Global Impact Dashboard (New Phase 3) */}
+                <PlanetDashboard />
+
+                <div className="flex flex-col md:flex-row gap-8 items-start">
+                    {/* Left Column: Lobby Details */}
+                    <div className="flex-1 w-full bg-gray-800 p-8 rounded-lg shadow-xl">
+                        <div className="flex justify-between items-center mb-8">
+                            <h1 className="text-3xl font-bold text-cyan-400">LOBBY</h1>
+                            <div className="flex items-center gap-4 bg-gray-700 px-4 py-2 rounded">
+                                <span className="text-gray-400">ROOM CODE:</span>
+                                <span className="text-2xl font-mono tracking-widest font-bold">{roomCode}</span>
+                                <button
+                                    onClick={copyCode}
+                                    className="ml-2 text-sm bg-gray-600 hover:bg-gray-500 px-2 py-1 rounded transition"
+                                >
+                                    COPY
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="bg-gray-700/50 p-4 rounded mb-8">
+                            <h2 className="text-xl font-bold mb-4 border-b border-gray-600 pb-2">PLAYERS ({players.length})</h2>
+                            <ul className="space-y-2">
+                                {players.map((p) => (
+                                    <li key={p.id} className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: p.color }}></div>
+                                        <span className={p.id === playerId ? "text-yellow-400 font-bold" : "text-gray-300"}>
+                                            {p.name} {p.id === playerId && "(YOU)"}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        <div className="mt-8">
+                            {isHost ? (
+                                <button
+                                    onClick={handleStartGame}
+                                    className="w-full py-4 bg-green-600 hover:bg-green-500 rounded font-bold text-xl shadow-lg transition transform hover:scale-[1.02]"
+                                >
+                                    START GAME
+                                </button>
+                            ) : (
+                                <div className="text-center text-gray-400 animate-pulse">
+                                    Waiting for host to start...
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="bg-gray-700/50 p-4 rounded flex flex-col items-center justify-center">
+                    {/* Right Column: Customization */}
+                    <div className="w-full md:w-96 bg-gray-800 p-8 rounded-lg shadow-xl flex-shrink-0">
                         <h2 className="text-xl font-bold mb-4 border-b border-gray-600 pb-2 w-full text-center">CUSTOMIZE</h2>
 
                         <div className="flex flex-col gap-4 w-full">
                             {/* Preview Area */}
                             <div className="flex justify-center mb-2">
                                 <div className="relative w-24 h-24 bg-gray-800 rounded-lg border border-gray-600 flex items-center justify-center overflow-hidden">
-                                    {/* 
-                                        Sprite Preview 
-                                        We use a 24x24 base size scaled up. 
-                                        Using a container to hold the sprite helps with centering.
-                                    */}
-                                    <div className="relative w-[96px] h-[96px]"> {/* 24 * 4 = 96 */}
+                                    <div className="relative w-[96px] h-[96px]">
                                         <style>{`
                                             @keyframes sprite-play {
                                                 from { background-position-x: 0; }
@@ -155,7 +173,7 @@ export const LobbyScreen = () => {
                                 </div>
                             </div>
 
-                            {/* Skin Selector (Arrows) */}
+                            {/* Skin Selector */}
                             <div className="flex items-center justify-center gap-4">
                                 <button
                                     onClick={() => {
@@ -196,7 +214,7 @@ export const LobbyScreen = () => {
 
                             {/* Tint Picker */}
                             <div className="flex justify-center gap-2 flex-wrap p-2 bg-gray-800/50 rounded-lg">
-                                {/* NO TINT option */}
+                                {/* NO TINT */}
                                 <button
                                     onClick={() => {
                                         useGameStore.getState().setPlayerTint(0xffffff);
@@ -228,21 +246,6 @@ export const LobbyScreen = () => {
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div className="mt-8">
-                    {isHost ? (
-                        <button
-                            onClick={handleStartGame}
-                            className="w-full py-4 bg-green-600 hover:bg-green-500 rounded font-bold text-xl shadow-lg transition transform hover:scale-[1.02]"
-                        >
-                            START GAME
-                        </button>
-                    ) : (
-                        <div className="text-center text-gray-400 animate-pulse">
-                            Waiting for host to start...
-                        </div>
-                    )}
                 </div>
             </div>
         </div>
