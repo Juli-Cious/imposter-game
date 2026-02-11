@@ -17,7 +17,7 @@ export const INTRO_SCENES: StoryScene[] = [
         id: 'earth-crisis',
         duration: 3500,
         background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-        visual: 'dinos-worried',
+        visual: '🌍😢💔',
         text: 'Planet Earth is in danger! Pollution, waste, and energy crisis threaten all life...',
         narration: 'The world needs heroes!',
         animation: 'shake'
@@ -26,17 +26,17 @@ export const INTRO_SCENES: StoryScene[] = [
         id: 'guardian-calls',
         duration: 3500,
         background: 'linear-gradient(135deg, #1e3a8a 0%, #312e81 100%)',
-        visual: 'dinos-gather',
-        text: 'Professor Gaia calls upon four brave heroes to save the planet!',
-        narration: 'Doux, Mort, Tard, and Vita answer the call!',
+        visual: '✨🧙‍♀️✨',
+        text: 'Professor Gaia calls upon brave heroes to save the planet!',
+        narration: 'Four champions answer the call!',
         animation: 'sparkle'
     },
     {
         id: 'powers-revealed',
         duration: 4000,
         background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-        visual: 'dinos-powers',
-        text: 'Each hero gains amazing powers: Solar Energy ⚡ Recycling ♻️ Air Quality 💨',
+        visual: '⚡♻️💨🌱',
+        text: 'Each gains amazing powers: Solar Energy ⚡ Recycling ♻️ Air Quality 💨',
         narration: 'Together, they can heal the Earth!',
         animation: 'glow'
     },
@@ -44,16 +44,16 @@ export const INTRO_SCENES: StoryScene[] = [
         id: 'training-time',
         duration: 3500,
         background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-        visual: 'dinos-walking',
+        visual: '🚀📚💻',
         text: 'They train at the Space Station to master coding and save the world!',
         narration: 'Visit ACADEMIES to learn. Solve CHALLENGES to win!',
-        animation: 'slide'
+        animation: 'pulse'
     },
     {
         id: 'adventure-begins',
         duration: 4000,
         background: 'linear-gradient(135deg, #dc2626 0%, #f59e0b 100%)',
-        visual: 'dinos-celebrate',
+        visual: '🎉🦸‍♀️🌍',
         text: 'Are you ready to join them? The adventure begins NOW!',
         narration: 'Become Earth\'s Guardian!',
         animation: 'bounce'

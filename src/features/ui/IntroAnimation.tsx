@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { INTRO_SCENES } from '../../shared/StoryContent';
 import { usePlayerProgress } from '../../stores/usePlayerProgress';
-import './DinoIntro.css';
 
 interface IntroAnimationProps {
     onComplete: () => void;
@@ -44,139 +43,154 @@ export const IntroAnimation = ({ onComplete }: IntroAnimationProps) => {
 
     if (!isVisible) return null;
 
-    // Render different dinosaur scenes based on visual type
-    const renderDinoScene = () => {
-        const visual = currentScene.visual;
-
-        switch (visual) {
-            case 'dinos-worried':
-                return (
-                    <div className="dino-scene">
-                        <div className="dino dino-doux worried" style={{ left: '20%' }} />
-                        <div className="dino dino-mort worried" style={{ left: '40%' }} />
-                        <div className="dino dino-tard worried" style={{ left: '60%' }} />
-                        <div className="dino dino-vita worried" style={{ left: '80%' }} />
-                    </div>
-                );
-
-            case 'dinos-gather':
-                return (
-                    <div className="dino-scene">
-                        <div className="dino dino-doux walk-in-left" />
-                        <div className="dino dino-mort walk-in-left delay-1" />
-                        <div className="dino dino-tard walk-in-right" />
-                        <div className="dino dino-vita walk-in-right delay-1" />
-                    </div>
-                );
-
-            case 'dinos-powers':
-                return (
-                    <div className="dino-scene">
-                        <div className="dino dino-doux power-up" style={{ left: '15%' }}>
-                            <div className="power-icon">⚡</div>
-                        </div>
-                        <div className="dino dino-mort power-up delay-1" style={{ left: '35%' }}>
-                            <div className="power-icon">♻️</div>
-                        </div>
-                        <div className="dino dino-tard power-up delay-2" style={{ left: '55%' }}>
-                            <div className="power-icon">💨</div>
-                        </div>
-                        <div className="dino dino-vita power-up delay-3" style={{ left: '75%' }}>
-                            <div className="power-icon">🌱</div>
-                        </div>
-                    </div>
-                );
-
-            case 'dinos-walking':
-                return (
-                    <div className="dino-scene">
-                        <div className="dino dino-doux walking" />
-                        <div className="dino dino-mort walking delay-1" />
-                        <div className="dino dino-tard walking delay-2" />
-                        <div className="dino dino-vita walking delay-3" />
-                    </div>
-                );
-
-            case 'dinos-celebrate':
-                return (
-                    <div className="dino-scene">
-                        <div className="dino dino-doux celebrate" style={{ left: '15%' }} />
-                        <div className="dino dino-mort celebrate delay-1" style={{ left: '35%' }} />
-                        <div className="dino dino-tard celebrate delay-2" style={{ left: '55%' }} />
-                        <div className="dino dino-vita celebrate delay-3" style={{ left: '75%' }} />
-                        <div className="confetti-container">
-                            {Array.from({ length: 30 }).map((_, i) => (
-                                <div key={i} className="confetti" style={{
-                                    left: `${Math.random() * 100}%`,
-                                    animationDelay: `${Math.random() * 2}s`,
-                                    background: ['#ff0', '#f0f', '#0ff', '#0f0', '#f00'][Math.floor(Math.random() * 5)]
-                                }} />
-                            ))}
-                        </div>
-                    </div>
-                );
-
-            default:
-                return null;
+    // Animation styles
+    const getAnimationClass = () => {
+        switch (currentScene.animation) {
+            case 'shake': return 'animate-shake';
+            case 'sparkle': return 'animate-sparkle';
+            case 'glow': return 'animate-glow';
+            case 'pulse': return 'animate-pulse';
+            case 'bounce': return 'animate-bounce';
+            default: return 'animate-fadeIn';
         }
     };
 
     return (
-        <div className="intro-container-dino">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden">
             {/* Animated Background */}
             <div
-                className="intro-background"
+                className="absolute inset-0 transition-all duration-1000"
                 style={{ background: currentScene.background }}
             />
 
             {/* Particle Effects */}
-            <div className="particle-field">
-                {Array.from({ length: 40 }).map((_, i) => (
+            <div className="absolute inset-0 opacity-30">
+                {Array.from({ length: 50 }).map((_, i) => (
                     <div
-                        key={`particle-${i}`}
-                        className="particle"
+                        key={i}
+                        className="absolute w-2 h-2 bg-white rounded-full animate-twinkle"
                         style={{
                             left: `${Math.random() * 100}%`,
                             top: `${Math.random() * 100}%`,
                             animationDelay: `${Math.random() * 3}s`,
-                            animationDuration: `${3 + Math.random() * 4}s`
+                            animationDuration: `${2 + Math.random() * 3}s`
                         }}
                     />
                 ))}
             </div>
 
             {/* Cinematic letterbox bars */}
-            <div className="letterbox-top" />
-            <div className="letterbox-bottom" />
+            <div className="absolute top-0 left-0 right-0 h-20 bg-black opacity-90" />
+            <div className="absolute bottom-0 left-0 right-0 h-20 bg-black opacity-90" />
 
-            {/* Dinosaur Scene */}
-            <div className="scene-container">
-                {renderDinoScene()}
-            </div>
+            {/* Content Container */}
+            <div className="relative z-10 max-w-4xl mx-auto px-8 text-center">
+                {/* Visual Elements (Emojis) */}
+                <div
+                    className={`text-9xl mb-8 ${getAnimationClass()}`}
+                    style={{
+                        filter: 'drop-shadow(0 0 20px rgba(255, 255, 255, 0.5))',
+                        animation: `${getAnimationClass().replace('animate-', '')} 1.5s ease-out`
+                    }}
+                >
+                    {currentScene.visual}
+                </div>
 
-            {/* Text Content */}
-            <div className="text-container">
-                <h2 className="scene-text">
+                {/* Main Text */}
+                <h2
+                    className="text-4xl md:text-5xl font-black text-white mb-6 drop-shadow-2xl leading-tight animate-slideUp"
+                    style={{
+                        textShadow: '0 0 20px rgba(0, 0, 0, 0.8), 0 0 40px rgba(96, 165, 250, 0.5)',
+                    }}
+                >
                     {currentScene.text}
                 </h2>
+
+                {/* Narration */}
                 {currentScene.narration && (
-                    <p className="scene-narration">
+                    <p className="text-xl md:text-2xl text-gray-200 italic opacity-90 animate-slideUp" style={{ animationDelay: '0.3s' }}>
                         {currentScene.narration}
                     </p>
                 )}
             </div>
 
             {/* Skip Button */}
-            <button onClick={handleSkip} className="skip-btn">
+            <button
+                onClick={handleSkip}
+                className="absolute top-24 right-8 bg-black/60 hover:bg-black/80 text-white px-6 py-3 rounded-full transition-all text-sm font-bold backdrop-blur-sm border border-white/20"
+            >
                 Skip Intro ›
             </button>
 
             {/* Start Button (last scene only) */}
             {isLastScene && (
-                <button onClick={handleComplete} className="start-btn">
+                <button
+                    onClick={handleComplete}
+                    className="absolute bottom-32 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-gray-900 px-12 py-4 rounded-full font-black text-2xl shadow-2xl animate-bounce border-4 border-white/30"
+                >
                     Start Adventure! 🚀
                 </button>
             )}
+
+            {/* Animations */}
+            <style>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: scale(0.8); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                @keyframes slideUp {
+                    from { opacity: 0; transform: translateY(30px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0) rotate(0deg); }
+                    25% { transform: translateX(-10px) rotate(-5deg); }
+                    75% { transform: translateX(10px) rotate(5deg); }
+                }
+                @keyframes sparkle {
+                    0%, 100% { transform: scale(1) rotate(0deg); }
+                    50% { transform: scale(1.2) rotate(180deg); }
+                }
+                @keyframes glow {
+                    0%, 100% { 
+                        filter: drop-shadow(0 0 20px gold) drop-shadow(0 0 40px rgba(255, 215, 0, 0.5));
+                        transform: scale(1);
+                    }
+                    50% { 
+                        filter: drop-shadow(0 0 60px gold) drop-shadow(0 0 80px rgba(255, 215, 0, 0.8));
+                        transform: scale(1.1);
+                    }
+                }
+                @keyframes twinkle {
+                    0%, 100% { opacity: 0.3; transform: scale(1); }
+                    50% { opacity: 1; transform: scale(1.5); }
+                }
+                @keyframes pulse {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.1); }
+                }
+                .animate-fadeIn {
+                    animation: fadeIn 1s ease-out;
+                }
+                .animate-slideUp {
+                    animation: slideUp 0.8s ease-out;
+                }
+                .animate-shake {
+                    animation: shake 0.6s ease-in-out;
+                }
+                .animate-sparkle {
+                    animation: sparkle 1.5s ease-in-out;
+                }
+                .animate-glow {
+                    animation: glow 2s ease-in-out infinite;
+                }
+                .animate-twinkle {
+                    animation: twinkle 3s ease-in-out infinite;
+                }
+                .animate-pulse {
+                    animation: pulse 1.5s ease-in-out;
+                }
+            `}</style>
         </div>
     );
 };
