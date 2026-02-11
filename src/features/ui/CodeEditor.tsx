@@ -7,7 +7,8 @@ import { LEVEL_1_PROBLEMS } from '../../shared/ProblemData';
 import Editor from '@monaco-editor/react';
 import { ChallengeAnimation } from './ChallengeAnimation';
 import { SDGBadgeGroup } from './SDGBadge';
-import { getHint, hintRateLimiter } from '../../services/GoogleAIService';
+import { MentorChat } from './MentorChat';
+import { usePlayerProgress } from '../../stores/usePlayerProgress';
 
 export const CodeEditor = () => {
     const { activeFileId, closeTerminal } = useGameStore();
@@ -89,64 +90,21 @@ export const CodeEditor = () => {
         const newStatus = result.success ? 'PASS' : 'FAIL';
         setStatus(newStatus);
 
+        // Track completion in player progress
+        if (result.success && activeFileId) {
+            completeChallenge(activeFileId);
+        }
+
         update(ref(db, `gamestate/files/${activeFileId}`), {
             testStatus: newStatus
         });
     };
 
-    // Get AI hint
-    const handleGetHint = async () => {
-        if (!problem || !activeFileId) return;
-
-        // Check rate limiting
-        if (!hintRateLimiter.canRequest()) {
-            const remaining = hintRateLimiter.getTimeRemaining();
-            setHintError(`Please wait ${remaining} seconds before requesting another hint 🕐`);
-            setShowHintModal(true);
-            setTimeout(() => setHintError(''), 3000);
-            return;
-        }
-
-        setIsLoadingHint(true);
-        setShowHintModal(true);
-        setHintError('');
-
-        // Use built-in hints if available
-        const hintIndex = hintLevel === 'gentle' ? 0 : hintLevel === 'specific' ? 1 : 2;
-        if (problem.hints && problem.hints[hintIndex]) {
-            setCurrentHint(problem.hints[hintIndex]);
-            setIsLoadingHint(false);
-            hintRateLimiter.recordRequest();
-            return;
-        }
-
-        // Fallback to AI hints
-        const result = await getHint({
-            challengeId: activeFileId,
-            challengeDescription: problem.description,
-            currentCode: code,
-            difficulty: hintLevel
-        });
-
-        setIsLoadingHint(false);
-
-        if (result.success) {
-            setCurrentHint(result.hint);
-            hintRateLimiter.recordRequest();
-        } else {
-            setHintError(result.error || 'Unable to get hint. Please try again.');
-        }
+    // Open Mentor Chat
+    const handleOpenMentorChat = () => {
+        setShowMentorChat(true);
     };
 
-    const handleNextHint = () => {
-        if (hintLevel === 'gentle') {
-            setHintLevel('specific');
-        } else if (hintLevel === 'specific') {
-            setHintLevel('solution');
-        }
-        setCurrentHint('');
-        handleGetHint();
-    };
 
     return (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-50 p-10">
@@ -171,11 +129,10 @@ export const CodeEditor = () => {
                     </div>
                     <div className="flex gap-2 items-center">
                         <button
-                            onClick={handleGetHint}
-                            disabled={isLoadingHint}
+                            onClick={handleOpenMentorChat}
                             className="px-3 py-1 text-xs bg-purple-700 hover:bg-purple-600 text-white rounded flex items-center gap-1 transition-colors"
                         >
-                            💡 {isLoadingHint ? 'Loading...' : 'Need Help?'}
+                            💬 Chat with Professor Gaia
                         </button>
                         <button
                             onClick={handleRun}
@@ -252,70 +209,15 @@ export const CodeEditor = () => {
                     <span>Ln {code.split('\n').length}, Col 1</span>
                 </div>
             </div>
+
+            {/* AI Mentor Chat */}
+            <MentorChat
+                isOpen={showMentorChat}
+                onClose={() => setShowMentorChat(false)}
+                challengeId={activeFileId || undefined}
+                challengeDescription={problem?.description}
+                currentCode={code}
+            />
         </div>
-
-            {/* Hint Modal */ }
-    {
-        showHintModal && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowHintModal(false)}>
-                <div className="bg-gray-900 border-2 border-purple-500 rounded-xl p-6 max-w-2xl w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center gap-2">
-                            <h3 className="text-purple-400 font-bold text-lg">💡 AI Hint Helper</h3>
-                            <span className="text-xs bg-purple-900/50 text-purple-300 px-2 py-1 rounded">
-                                Level: {hintLevel === 'gentle' ? 'Gentle Nudge' : hintLevel === 'specific' ? 'Specific Help' : 'Full Solution'}
-                            </span>
-                        </div>
-                        <button
-                            onClick={() => setShowHintModal(false)}
-                            className="text-gray-400 hover:text-white text-2xl leading-none"
-                        >
-                            ×
-                        </button>
-                    </div>
-
-                    {hintError && (
-                        <div className="bg-red-900/30 border border-red-700 rounded p-3 mb-4 text-red-300 text-sm">
-                            {hintError}
-                        </div>
-                    )}
-
-                    {isLoadingHint ? (
-                        <div className="flex flex-col items-center justify-center py-12">
-                            <div className="animate-spin text-4xl mb-4">🤖</div>
-                            <p className="text-gray-400">Thinking about how to help you...</p>
-                        </div>
-                    ) : currentHint ? (
-                        <div>
-                            <div className="bg-gray-800 rounded-lg p-4 mb-4 border border-gray-700">
-                                <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">{currentHint}</p>
-                            </div>
-                            <div className="flex gap-2 justify-end">
-                                {hintLevel !== 'solution' && (
-                                    <button
-                                        onClick={handleNextHint}
-                                        className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded font-bold transition-colors"
-                                    >
-                                        {hintLevel === 'gentle' ? 'I need more help 🤔' : 'Show me the solution 📝'}
-                                    </button>
-                                )}
-                                <button
-                                    onClick={() => setShowHintModal(false)}
-                                    className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded font-bold transition-colors"
-                                >
-                                    Got it! 💪
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="text-center py-8 text-gray-400">
-                            Click "Need Help?" to get a hint!
-                        </div>
-                    )}
-                </div>
-            </div>
-        )
-    }
-        </div >
     );
 };
