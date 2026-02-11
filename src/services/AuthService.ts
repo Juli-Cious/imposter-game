@@ -1,13 +1,11 @@
-import { getAuth, signInAnonymously, updateProfile, onAuthStateChanged, type User } from 'firebase/auth';
+import { signInAnonymously, updateProfile, onAuthStateChanged, type User } from 'firebase/auth';
 import { ref, get, set, update } from 'firebase/database';
-import { db } from '../firebaseConfig';
+import { db, auth } from '../firebaseConfig';
 
 /**
  * Firebase Authentication Service
  * Handles user authentication and profile management
  */
-
-export const auth = getAuth();
 
 export interface UserProfile {
     uid: string;
