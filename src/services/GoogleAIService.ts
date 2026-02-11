@@ -3,8 +3,7 @@
  * Uses Google Generative AI (Gemini) for context-aware, conversational assistance
  */
 
-// Fallback key provided for Vercel deployment where env cannot be configured by user
-const API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY || 'AIzaSyD3sFTS8gINLxm5KtJXJnPPbVkXQ5pLMiU';
+const API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY;
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
 interface HintRequest {
