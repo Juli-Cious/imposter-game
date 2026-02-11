@@ -135,7 +135,7 @@ export const INTRO_SCENES: StoryScene[] = [
 export const VICTORY_SCENES: StoryScene[] = [
     {
         id: 'powers-complete',
-        duration: 5000,
+        duration: 3500,
         background: 'linear-gradient(135deg, #f59e0b 0%, #dc2626 100%)',
         visual: '⚡♻️💨',
         text: 'You have mastered ALL THREE powers!',
@@ -144,7 +144,7 @@ export const VICTORY_SCENES: StoryScene[] = [
     },
     {
         id: 'earth-healing-start',
-        duration: 4000,
+        duration: 3000,
         background: 'linear-gradient(135deg, #3b82f6 0%, #10b981 100%)',
         visual: '🌍✨💫',
         text: 'Watch as your powers begin to heal the Earth!',
@@ -153,7 +153,7 @@ export const VICTORY_SCENES: StoryScene[] = [
     },
     {
         id: 'solar-impact',
-        duration: 6000,
+        duration: 3500,
         background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
         visual: '☀️🔆⚡🏙️',
         text: 'Solar panels light up cities around the world!',
@@ -162,7 +162,7 @@ export const VICTORY_SCENES: StoryScene[] = [
     },
     {
         id: 'recycling-impact',
-        duration: 6000,
+        duration: 3500,
         background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
         visual: '♻️🌊🐋🌈',
         text: 'Oceans become clean! Marine life thrives again!',
@@ -171,7 +171,7 @@ export const VICTORY_SCENES: StoryScene[] = [
     },
     {
         id: 'air-impact',
-        duration: 6000,
+        duration: 3500,
         background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
         visual: '💨🌈🦋🌸',
         text: 'The air becomes pure and fresh!',
@@ -180,7 +180,7 @@ export const VICTORY_SCENES: StoryScene[] = [
     },
     {
         id: 'earth-healed',
-        duration: 7000,
+        duration: 4000,
         background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)',
         visual: '🌍💚✨🎉',
         text: 'Earth is SAVED! The world is beautiful again!',
@@ -189,7 +189,7 @@ export const VICTORY_SCENES: StoryScene[] = [
     },
     {
         id: 'celebration',
-        duration: 8000,
+        duration: 4500,
         background: 'linear-gradient(135deg, #f59e0b 0%, #dc2626 100%)',
         visual: '🎉🎊🏆🌟',
         text: 'YOU DID IT! You saved the entire world!',
@@ -198,7 +198,7 @@ export const VICTORY_SCENES: StoryScene[] = [
     },
     {
         id: 'guardian-thanks',
-        duration: 7000,
+        duration: 4000,
         background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)',
         visual: '🧙‍♀️💖👤',
         text: 'Professor Gaia: "I knew you were special!"',
@@ -207,7 +207,7 @@ export const VICTORY_SCENES: StoryScene[] = [
     },
     {
         id: 'ongoing-mission',
-        duration: 7000,
+        duration: 4000,
         background: 'linear-gradient(135deg, #1e40af 0%, #10b981 100%)',
         visual: '🌍🛡️💪',
         text: 'But remember: Earth needs protecting every day...',
@@ -216,7 +216,7 @@ export const VICTORY_SCENES: StoryScene[] = [
     },
     {
         id: 'real-world-call',
-        duration: 8000,
+        duration: 4500,
         background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
         visual: '♻️🌳💚',
         text: 'In the real world, YOU can help too!',

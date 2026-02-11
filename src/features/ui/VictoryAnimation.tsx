@@ -16,25 +16,56 @@ export const VictoryAnimation = ({ onClose }: VictoryAnimationProps) => {
     const currentScene = VICTORY_SCENES[currentSceneIndex];
     const isLastScene = currentSceneIndex === VICTORY_SCENES.length - 1;
 
-    // Auto-advance to next scene
+    // Helper: Skip to Impact Summary
+    const handleSkipAll = () => {
+        setShowImpactSummary(true);
+        setConfetti(true); // Ensure confetti stays if skipped
+    };
+
+    // Helper: Advance to next scene
+    const handleNext = () => {
+        if (isLastScene) {
+            handleSkipAll();
+        } else {
+            setCurrentSceneIndex(prev => prev + 1);
+        }
+    };
+
+    // Auto-advance to next scene (Timer)
     useEffect(() => {
+        if (showImpactSummary) return;
+
         const timer = setTimeout(() => {
-            if (isLastScene) {
-                setShowImpactSummary(true);
-            } else {
-                setCurrentSceneIndex(currentSceneIndex + 1);
-            }
+            handleNext();
         }, currentScene.duration);
 
         return () => clearTimeout(timer);
-    }, [currentSceneIndex, currentScene.duration, isLastScene]);
+    }, [currentSceneIndex, currentScene.duration, isLastScene, showImpactSummary]);
+
+    // Keyboard support: Space/Enter = Next, Escape = Skip All
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (showImpactSummary) return;
+
+            if (e.code === 'Space' || e.key === 'Enter') {
+                e.preventDefault();
+                handleNext();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                handleSkipAll();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [currentSceneIndex, isLastScene, showImpactSummary]);
 
     // Trigger confetti on celebration scene
     useEffect(() => {
-        if (currentScene.animation === 'confetti') {
+        if (currentScene?.animation === 'confetti' || showImpactSummary) {
             setConfetti(true);
         }
-    }, [currentScene]);
+    }, [currentScene, showImpactSummary]);
 
     if (showImpactSummary) {
         return (
@@ -195,12 +226,31 @@ export const VictoryAnimation = ({ onClose }: VictoryAnimationProps) => {
 
     // Victory scene animation
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden">
+        <div
+            className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden cursor-pointer"
+            onClick={handleNext}
+        >
             {/* Animated Background */}
             <div
                 className="absolute inset-0 transition-all duration-1000"
                 style={{ background: currentScene.background }}
             />
+
+            {/* Skip Button */}
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    handleSkipAll();
+                }}
+                className="absolute top-8 right-8 z-[210] bg-black/30 hover:bg-black/50 text-white/70 hover:text-white px-6 py-2 rounded-full border border-white/20 transition-all backdrop-blur-sm"
+            >
+                Skip Animation [Esc]
+            </button>
+
+            {/* Advanced Info */}
+            <div className="absolute top-8 left-8 z-[210] text-white/50 text-sm hidden md:block">
+                Press Space/Enter to advance | Click anywhere
+            </div>
 
             {/* Confetti effect on celebration scene */}
             {confetti && (
@@ -222,7 +272,7 @@ export const VictoryAnimation = ({ onClose }: VictoryAnimationProps) => {
             )}
 
             {/* Content Container */}
-            <div className="relative z-10 max-w-4xl mx-auto px-8 text-center">
+            <div className="relative z-10 max-w-4xl mx-auto px-8 text-center select-none">
                 {/* Visual Elements */}
                 <div className="text-9xl mb-8 animate-bounce">
                     {currentScene.visual}
@@ -247,10 +297,10 @@ export const VictoryAnimation = ({ onClose }: VictoryAnimationProps) => {
                     <div
                         key={index}
                         className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentSceneIndex
-                                ? 'bg-white w-8'
-                                : index < currentSceneIndex
-                                    ? 'bg-white/60'
-                                    : 'bg-white/20'
+                            ? 'bg-white w-8'
+                            : index < currentSceneIndex
+                                ? 'bg-white/60'
+                                : 'bg-white/20'
                             }`}
                     />
                 ))}
@@ -270,3 +320,4 @@ export const VictoryAnimation = ({ onClose }: VictoryAnimationProps) => {
         </div>
     );
 };
+
