@@ -74,6 +74,39 @@ export const LobbyScreen = () => {
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4 overflow-y-auto">
             <div className="w-full max-w-6xl space-y-8 my-8">
 
+                {/* START GAME Button (Top Position - Always Visible for Host) */}
+                {isHost && (
+                    <div className="bg-gradient-to-r from-green-700 to-emerald-700 rounded-xl p-6 shadow-2xl border-2 border-green-400 animate-pulse">
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <h2 className="text-2xl font-black text-white flex items-center gap-2">
+                                    <span className="text-3xl">👑</span>
+                                    YOU ARE THE HOST
+                                </h2>
+                                <p className="text-green-100 text-sm mt-1">Ready to start the mission? Click below!</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleStartGame}
+                            className="w-full py-5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 rounded-lg font-black text-2xl shadow-lg transition-all transform hover:scale-[1.02] flex items-center justify-center gap-3 border-2 border-green-300"
+                        >
+                            <span className="text-3xl">🚀</span>
+                            START GAME
+                            <span className="text-3xl">🚀</span>
+                        </button>
+                    </div>
+                )}
+
+                {/* Non-Host Message */}
+                {!isHost && (
+                    <div className="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700">
+                        <div className="text-center text-gray-400 animate-pulse flex items-center justify-center gap-2">
+                            <span className="text-2xl">⏳</span>
+                            <span className="text-lg">Waiting for host to start the game...</span>
+                        </div>
+                    </div>
+                )}
+
                 {/* 1. Global Impact Dashboard (New Phase 3) */}
                 <PlanetDashboard />
 
@@ -106,21 +139,6 @@ export const LobbyScreen = () => {
                                     </li>
                                 ))}
                             </ul>
-                        </div>
-
-                        <div className="mt-8">
-                            {isHost ? (
-                                <button
-                                    onClick={handleStartGame}
-                                    className="w-full py-4 bg-green-600 hover:bg-green-500 rounded font-bold text-xl shadow-lg transition transform hover:scale-[1.02]"
-                                >
-                                    START GAME
-                                </button>
-                            ) : (
-                                <div className="text-center text-gray-400 animate-pulse">
-                                    Waiting for host to start...
-                                </div>
-                            )}
                         </div>
                     </div>
 
