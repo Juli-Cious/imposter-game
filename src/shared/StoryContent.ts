@@ -14,48 +14,48 @@ export interface StoryScene {
 
 export const INTRO_SCENES: StoryScene[] = [
     {
-        id: 'earth-crisis',
+        id: 'virus-alert',
         duration: 3500,
-        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-        visual: '🌍😢💔',
-        text: 'Planet Earth is in danger! Pollution, waste, and energy crisis threaten all life...',
-        narration: 'The world needs heroes!',
+        background: 'linear-gradient(135deg, #dc2626 0%, #7f1d1d 100%)',
+        visual: '🦠💻🚨',
+        text: 'ALERT! A mysterious virus is attacking Earth\'s environmental systems!',
+        narration: 'The planet\'s defenses are failing!',
         animation: 'shake'
     },
     {
         id: 'guardian-calls',
         duration: 3500,
         background: 'linear-gradient(135deg, #1e3a8a 0%, #312e81 100%)',
-        visual: '✨🧙‍♀️✨',
-        text: 'Professor Gaia calls upon brave heroes to save the planet!',
-        narration: 'Four champions answer the call!',
+        visual: '✨🧙‍♀️🌍',
+        text: 'Professor Gaia calls upon brave CODERS to fix the systems and save Earth!',
+        narration: 'Young heroes answer the call!',
         animation: 'sparkle'
     },
     {
-        id: 'powers-revealed',
-        duration: 4000,
-        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-        visual: '⚡♻️💨🌱',
-        text: 'Each gains amazing powers: Solar Energy ⚡ Recycling ♻️ Air Quality 💨',
-        narration: 'Together, they can heal the Earth!',
-        animation: 'glow'
+        id: 'imposter-warning',
+        duration: 4500,
+        background: 'linear-gradient(135deg, #7c2d12 0%, #1c1917 100%)',
+        visual: '🕵️❓🎭',
+        text: 'But BEWARE! One coder among you is secretly a SABOTEUR!',
+        narration: 'Someone is trying to stop you from saving the planet...',
+        animation: 'shake'
     },
     {
-        id: 'training-time',
-        duration: 3500,
-        background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-        visual: '🚀📚💻',
-        text: 'They train at the Space Station to master coding and save the world!',
-        narration: 'Visit ACADEMIES to learn. Solve CHALLENGES to win!',
+        id: 'dual-mission',
+        duration: 4000,
+        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        visual: '🦸‍♀️🔍💻',
+        text: 'HEROES: Fix the code, complete challenges, find the saboteur! SABOTEUR: Stay hidden!',
+        narration: 'Work together... but trust carefully!',
         animation: 'pulse'
     },
     {
         id: 'adventure-begins',
         duration: 4000,
-        background: 'linear-gradient(135deg, #dc2626 0%, #f59e0b 100%)',
-        visual: '🎉🦸‍♀️🌍',
-        text: 'Are you ready to join them? The adventure begins NOW!',
-        narration: 'Become Earth\'s Guardian!',
+        background: 'linear-gradient(135deg, #3b82f6 0%, #f59e0b 100%)',
+        visual: '🎉🚀🌍',
+        text: 'Are you ready to solve this mystery and save the world?',
+        narration: 'The detective adventure begins NOW!',
         animation: 'bounce'
     }
 ];
@@ -168,8 +168,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
         id: 'welcome',
         target: 'game-canvas',
         position: 'center',
-        title: 'Welcome to Your Space Station! 🚀',
-        description: 'This is your training facility where you\'ll learn your coding powers to save Earth!',
+        title: 'Welcome to the Code Detective Mission! 🕵️',
+        description: 'Earth\'s systems are under attack! Work together to fix the code... but beware of the saboteur!',
         highlight: false,
         arrow: false
     },
@@ -178,7 +178,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
         target: 'academy-stations',
         position: 'right',
         title: 'ACADEMY Stations 📚',
-        description: 'Click these glowing stations to LEARN your powers! Visit them first to unlock your abilities.',
+        description: 'Learn coding skills here! Visit these stations to unlock powers that help you complete challenges.',
         highlight: true,
         arrow: true
     },
@@ -187,7 +187,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
         target: 'challenge-stations',
         position: 'right',
         title: 'CHALLENGE Stations 🎯',
-        description: 'After learning, come here to TEST your powers and help save Earth!',
+        description: 'Fix the broken code here to save Earth! Complete challenges to win... but watch for sabotage!',
         highlight: true,
         arrow: true
     },
@@ -196,16 +196,16 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
         target: 'hint-button',
         position: 'bottom',
         title: 'Need Help? Ask Professor Gaia! 💡',
-        description: 'Stuck? Click "Need Help?" to chat with your AI Mentor anytime!',
+        description: 'Stuck on code? Professor Gaia can help detect bugs and guide you! (Extra helpful in Kids Mode)',
         highlight: true,
         arrow: false
     },
     {
-        id: 'sdg-badges',
-        target: 'sdg-badges',
+        id: 'detective-work',
+        target: 'task-board',
         position: 'bottom',
-        title: 'UN Sustainable Development Goals 🌍',
-        description: 'These badges show which global goals you\'re helping achieve!',
+        title: 'Detective Work! 🔍',
+        description: 'Watch for suspicious behavior! If code suddenly breaks or changes mysteriously, the saboteur might be nearby...',
         highlight: true,
         arrow: false
     },
@@ -213,8 +213,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
         id: 'start-journey',
         target: 'academy-solar',
         position: 'right',
-        title: 'Start Your Journey! ⚡',
-        description: 'Begin with the Solar Academy →  Learn addition to power cities with clean energy!',
+        title: 'Start Your Mission! ⚡',
+        description: 'Begin with an Academy to learn, then solve challenges! Work together to find the saboteur and save Earth!',
         highlight: true,
         arrow: true
     }
