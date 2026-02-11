@@ -7,7 +7,57 @@
 import '../utils/debugGoogleAI';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY;
-const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+
+// Model fallback priority: Best → Smallest
+const GEMMA_MODELS = [
+    'gemma-3-27b-it',  // Most capable (27B parameters)
+    'gemma-3-12b-it',  // Good balance (12B parameters)
+    'gemma-3-4b-it',   // Faster (4B parameters)
+    'gemma-3-2b-it'    // Fastest/Fallback (2B parameters)
+];
+
+const API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+
+/**
+ * Try API call with model fallback
+ * Attempts models in order until one succeeds
+ */
+async function callGemmaWithFallback(prompt: string, config: any): Promise<any> {
+    let lastError: Error | null = null;
+
+    for (const model of GEMMA_MODELS) {
+        try {
+            const url = `${API_BASE_URL}/${model}:generateContent?key=${API_KEY}`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: config
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log(`✅ Success using model: ${model}`);
+                return data;
+            }
+
+            // Model not available or other error, try next
+            console.warn(`⚠️ Model ${model} failed (${response.status}), trying next...`);
+            lastError = new Error(`Model ${model}: ${response.status}`);
+
+        } catch (error) {
+            console.warn(`⚠️ Model ${model} error:`, error);
+            lastError = error instanceof Error ? error : new Error(String(error));
+            continue;
+        }
+    }
+
+    // All models failed
+    throw lastError || new Error('All Gemma models failed');
+}
 
 // Enhanced debugging for API key issues
 if (!API_KEY) {
@@ -84,29 +134,10 @@ export async function getHint(request: HintRequest): Promise<HintResponse> {
     try {
         const prompt = buildPrompt(request);
 
-        const response = await fetch(`${API_URL}?key=${API_KEY}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 500,
-                }
-            })
+        const data = await callGemmaWithFallback(prompt, {
+            temperature: 0.7,
+            maxOutputTokens: 500,
         });
-
-        if (!response.ok) {
-            throw new Error(`API request failed: ${response.status}`);
-        }
-
-        const data = await response.json();
         const hint = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Unable to generate hint.';
 
         return {
@@ -139,29 +170,10 @@ export async function chatWithMentor(request: ChatRequest): Promise<ChatResponse
     try {
         const prompt = buildChatPrompt(request);
 
-        const response = await fetch(`${API_URL}?key=${API_KEY}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }],
-                generationConfig: {
-                    temperature: 0.8,
-                    maxOutputTokens: 400,
-                }
-            })
+        const data = await callGemmaWithFallback(prompt, {
+            temperature: 0.8,
+            maxOutputTokens: 400,
         });
-
-        if (!response.ok) {
-            throw new Error(`Chat request failed: ${response.status}`);
-        }
-
-        const data = await response.json();
         const message = data.candidates?.[0]?.content?.parts?.[0]?.text || 'I\'m having trouble responding right now. Try again!';
 
         return {
@@ -338,29 +350,10 @@ export async function explainError(request: ErrorExplanationRequest): Promise<Er
     try {
         const prompt = buildErrorPrompt(request);
 
-        const response = await fetch(`${API_URL}?key=${API_KEY}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }],
-                generationConfig: {
-                    temperature: 0.6, // Lower temperature for more precise error explanations
-                    maxOutputTokens: 300,
-                }
-            })
+        const data = await callGemmaWithFallback(prompt, {
+            temperature: 0.6, // Lower temperature for more precise error explanations
+            maxOutputTokens: 300,
         });
-
-        if (!response.ok) {
-            throw new Error(`Error explanation request failed: ${response.status}`);
-        }
-
-        const data = await response.json();
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'I couldn\'t quite understand that error.';
 
         // Simple parsing if the AI returns JSON-like format or just text
@@ -452,18 +445,10 @@ export async function generateSabotage(request: SabotageRequest): Promise<Sabota
         
         Ensure the sabotaged code is syntactically valid enough to "run" but fail logic or loop forever, unless the concept is "syntax error".`;
 
-        const response = await fetch(`${API_URL}?key=${API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.9, maxOutputTokens: 1000 }
-            })
+        const data = await callGemmaWithFallback(prompt, {
+            temperature: 0.9,
+            maxOutputTokens: 1000
         });
-
-        if (!response.ok) throw new Error('Sabotage generation failed');
-
-        const data = await response.json();
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
         // Clean markdown code blocks if present to get pure JSON
@@ -525,16 +510,9 @@ export async function reviewCode(request: ReviewRequest): Promise<ReviewResponse
             "tip": "One cool coding tip to make it even better next time"
         }`;
 
-        const response = await fetch(`${API_URL}?key=${API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.7 }
-            })
+        const data = await callGemmaWithFallback(prompt, {
+            temperature: 0.7
         });
-
-        const data = await response.json();
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
         const jsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
         const result = JSON.parse(jsonText);
@@ -578,23 +556,10 @@ export async function generateDynamicLevel(request: DynamicLevelRequest): Promis
     try {
         const prompt = buildChaosEnginePrompt(request);
 
-        const response = await fetch(`${API_URL}?key=${API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.9, // Higher creativity for varied levels
-                    maxOutputTokens: 1500
-                }
-            })
+        const data = await callGemmaWithFallback(prompt, {
+            temperature: 0.9, // Higher creativity for varied levels
+            maxOutputTokens: 1500
         });
-
-        if (!response.ok) {
-            throw new Error(`Dynamic level generation failed: ${response.status}`);
-        }
-
-        const data = await response.json();
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!text) {
@@ -681,23 +646,10 @@ export async function analyzeGreenCode(request: GreenCoderRequest): Promise<Gree
     try {
         const prompt = buildGreenCoderPrompt(request);
 
-        const response = await fetch(`${API_URL}?key=${API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.6, // Lower temp for consistent analysis
-                    maxOutputTokens: 1200
-                }
-            })
+        const data = await callGemmaWithFallback(prompt, {
+            temperature: 0.6, // Lower temp for consistent analysis
+            maxOutputTokens: 1200
         });
-
-        if (!response.ok) {
-            throw new Error(`Green code analysis failed: ${response.status}`);
-        }
-
-        const data = await response.json();
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!text) {
