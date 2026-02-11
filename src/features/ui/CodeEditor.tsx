@@ -6,6 +6,8 @@ import { executeCode } from '../game/CodeRunner';
 import { LEVEL_1_PROBLEMS } from '../../shared/ProblemData';
 import Editor from '@monaco-editor/react';
 import { ChallengeAnimation } from './ChallengeAnimation';
+import { SDGBadgeGroup } from './SDGBadge';
+import { getHint, hintRateLimiter } from '../../services/GoogleAIService';
 
 export const CodeEditor = () => {
     const { activeFileId, closeTerminal } = useGameStore();
@@ -13,6 +15,13 @@ export const CodeEditor = () => {
     const [output, setOutput] = useState('');
     const [isRunning, setIsRunning] = useState(false);
     const [status, setStatus] = useState<'PENDING' | 'PASS' | 'FAIL'>('PENDING');
+
+    // Hint system state
+    const [showHintModal, setShowHintModal] = useState(false);
+    const [currentHint, setCurrentHint] = useState('');
+    const [hintLevel, setHintLevel] = useState<'gentle' | 'specific' | 'solution'>('gentle');
+    const [isLoadingHint, setIsLoadingHint] = useState(false);
+    const [hintError, setHintError] = useState('');
 
     // Get problem definition
     const problem = activeFileId ? LEVEL_1_PROBLEMS[activeFileId] : null;
@@ -85,6 +94,60 @@ export const CodeEditor = () => {
         });
     };
 
+    // Get AI hint
+    const handleGetHint = async () => {
+        if (!problem || !activeFileId) return;
+
+        // Check rate limiting
+        if (!hintRateLimiter.canRequest()) {
+            const remaining = hintRateLimiter.getTimeRemaining();
+            setHintError(`Please wait ${remaining} seconds before requesting another hint 🕐`);
+            setShowHintModal(true);
+            setTimeout(() => setHintError(''), 3000);
+            return;
+        }
+
+        setIsLoadingHint(true);
+        setShowHintModal(true);
+        setHintError('');
+
+        // Use built-in hints if available
+        const hintIndex = hintLevel === 'gentle' ? 0 : hintLevel === 'specific' ? 1 : 2;
+        if (problem.hints && problem.hints[hintIndex]) {
+            setCurrentHint(problem.hints[hintIndex]);
+            setIsLoadingHint(false);
+            hintRateLimiter.recordRequest();
+            return;
+        }
+
+        // Fallback to AI hints
+        const result = await getHint({
+            challengeId: activeFileId,
+            challengeDescription: problem.description,
+            currentCode: code,
+            difficulty: hintLevel
+        });
+
+        setIsLoadingHint(false);
+
+        if (result.success) {
+            setCurrentHint(result.hint);
+            hintRateLimiter.recordRequest();
+        } else {
+            setHintError(result.error || 'Unable to get hint. Please try again.');
+        }
+    };
+
+    const handleNextHint = () => {
+        if (hintLevel === 'gentle') {
+            setHintLevel('specific');
+        } else if (hintLevel === 'specific') {
+            setHintLevel('solution');
+        }
+        setCurrentHint('');
+        handleGetHint();
+    };
+
     return (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-50 p-10">
             <div className="bg-[#1e1e1e] w-full h-full max-w-6xl border border-gray-600 flex flex-col shadow-2xl">
@@ -100,11 +163,20 @@ export const CodeEditor = () => {
                             }`}>
                             {status}
                         </span>
-                        <span className="text-gray-400 text-xs ml-4 italic truncate max-w-sm">
-                            {problem?.description}
-                        </span>
+                        {problem && problem.sdgGoals && (
+                            <div className="ml-2">
+                                <SDGBadgeGroup goals={problem.sdgGoals} size="small" />
+                            </div>
+                        )}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
+                        <button
+                            onClick={handleGetHint}
+                            disabled={isLoadingHint}
+                            className="px-3 py-1 text-xs bg-purple-700 hover:bg-purple-600 text-white rounded flex items-center gap-1 transition-colors"
+                        >
+                            💡 {isLoadingHint ? 'Loading...' : 'Need Help?'}
+                        </button>
                         <button
                             onClick={handleRun}
                             disabled={isRunning}
@@ -115,6 +187,30 @@ export const CodeEditor = () => {
                         <button onClick={closeTerminal} className="text-gray-400 hover:text-white px-2">✖</button>
                     </div>
                 </div>
+
+                {/* Environmental Context Panel */}
+                {problem && (
+                    <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-3 border-b border-gray-700">
+                        <div className="flex gap-4 items-start">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-blue-400 text-xs font-bold">🌍 YOUR MISSION:</span>
+                                </div>
+                                <p className="text-gray-300 text-xs leading-relaxed">{problem.storyContext}</p>
+                            </div>
+                            <div className="flex-1 border-l border-gray-700 pl-4">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-green-400 text-xs font-bold">🎯 LEARNING:</span>
+                                </div>
+                                <p className="text-gray-300 text-xs leading-relaxed">{problem.detailedInstructions.split('\n')[0]}</p>
+                            </div>
+                        </div>
+                        <div className="mt-2 bg-green-900/20 rounded px-2 py-1 border-l-2 border-green-500">
+                            <span className="text-green-400 text-[10px] font-bold">💚 IMPACT: </span>
+                            <span className="text-gray-300 text-[10px]">{problem.environmentalImpact}</span>
+                        </div>
+                    </div>
+                )}
 
                 <div className="flex-1 overflow-hidden flex">
                     {/* Code Editor - Left Side */}
@@ -157,5 +253,69 @@ export const CodeEditor = () => {
                 </div>
             </div>
         </div>
+
+            {/* Hint Modal */ }
+    {
+        showHintModal && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowHintModal(false)}>
+                <div className="bg-gray-900 border-2 border-purple-500 rounded-xl p-6 max-w-2xl w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-purple-400 font-bold text-lg">💡 AI Hint Helper</h3>
+                            <span className="text-xs bg-purple-900/50 text-purple-300 px-2 py-1 rounded">
+                                Level: {hintLevel === 'gentle' ? 'Gentle Nudge' : hintLevel === 'specific' ? 'Specific Help' : 'Full Solution'}
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => setShowHintModal(false)}
+                            className="text-gray-400 hover:text-white text-2xl leading-none"
+                        >
+                            ×
+                        </button>
+                    </div>
+
+                    {hintError && (
+                        <div className="bg-red-900/30 border border-red-700 rounded p-3 mb-4 text-red-300 text-sm">
+                            {hintError}
+                        </div>
+                    )}
+
+                    {isLoadingHint ? (
+                        <div className="flex flex-col items-center justify-center py-12">
+                            <div className="animate-spin text-4xl mb-4">🤖</div>
+                            <p className="text-gray-400">Thinking about how to help you...</p>
+                        </div>
+                    ) : currentHint ? (
+                        <div>
+                            <div className="bg-gray-800 rounded-lg p-4 mb-4 border border-gray-700">
+                                <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">{currentHint}</p>
+                            </div>
+                            <div className="flex gap-2 justify-end">
+                                {hintLevel !== 'solution' && (
+                                    <button
+                                        onClick={handleNextHint}
+                                        className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded font-bold transition-colors"
+                                    >
+                                        {hintLevel === 'gentle' ? 'I need more help 🤔' : 'Show me the solution 📝'}
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => setShowHintModal(false)}
+                                    className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded font-bold transition-colors"
+                                >
+                                    Got it! 💪
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-8 text-gray-400">
+                            Click "Need Help?" to get a hint!
+                        </div>
+                    )}
+                </div>
+            </div>
+        )
+    }
+        </div >
     );
 };
