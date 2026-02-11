@@ -16,6 +16,7 @@ import { usePlayerProgress } from "./stores/usePlayerProgress";
 import { useAuthStore } from "./stores/useAuthStore";
 import { useState, useEffect } from "react";
 import "./index.css";
+import { DEMO_MODE } from "./config/demoMode";
 
 function App() {
   const { isTerminalOpen, terminalType, gameState } = useGameStore();
@@ -23,9 +24,11 @@ function App() {
   const { isAuthenticated, isLoading, initialize } = useAuthStore();
   const [showVictory, setShowVictory] = useState(false);
 
-  // Initialize Firebase auth on mount
+  // Initialize Firebase auth on mount (skip if demo mode)
   useEffect(() => {
-    initialize();
+    if (!DEMO_MODE) {
+      initialize();
+    }
   }, [initialize]);
 
   // Check for victory condition
@@ -37,8 +40,8 @@ function App() {
     }
   }, [completedChallenges, shouldShowVictory, showVictory, hasSeenVictory]);
 
-  // Loading state
-  if (isLoading) {
+  // Loading state (skip if demo mode)
+  if (!DEMO_MODE && isLoading) {
     return (
       <div className="fixed inset-0 bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -49,12 +52,12 @@ function App() {
     );
   }
 
-  // Login screen if not authenticated
-  if (!isAuthenticated) {
+  // Login screen if not authenticated (skip if demo mode)
+  if (!DEMO_MODE && !isAuthenticated) {
     return <LoginScreen />;
   }
 
-  // Main game (authenticated)
+  // Main game (authenticated or demo mode)
   return (
     <div className="w-full h-full relative bg-gray-900 text-white">
 
