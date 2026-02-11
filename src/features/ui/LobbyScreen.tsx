@@ -71,7 +71,7 @@ export const LobbyScreen = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4 overflow-y-auto">
+        <div className="flex flex-col items-center min-h-screen bg-gray-900 text-white p-4 overflow-y-auto">
             <div className="w-full max-w-6xl space-y-8 my-8">
 
                 {/* START GAME Button (Top Position - Always Visible for Host) */}
