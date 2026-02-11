@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { addToGlobalImpact } from '../services/GlobalImpactService';
 
 export interface Achievement {
     id: string;
@@ -47,6 +48,7 @@ interface PlayerProgress {
     addImpact: (impact: Partial<EnvironmentalImpact>) => void;
     markVictorySeen: () => void;
     resetProgress: () => void;
+    loadFromCloud: (cloudData: any) => void; // Sync from Firebase
 
     // Computed getters
     isAllChallengesComplete: () => boolean;
@@ -130,6 +132,7 @@ export const usePlayerProgress = create<PlayerProgress>()(
                         break;
                 }
 
+                // Update local state
                 set({
                     completedChallenges: newCompleted,
                     totalImpact: {
@@ -139,6 +142,34 @@ export const usePlayerProgress = create<PlayerProgress>()(
                         sdgsContributed: [...new Set([...state.totalImpact.sdgsContributed, ...sdgs])]
                     },
                     lastPlayedAt: Date.now()
+                });
+
+                // Sync to global Firebase database (async, fire and forget)
+                addToGlobalImpact({
+                    co2Prevented: impact.co2Prevented,
+                    wasteRecycled: impact.wasteRecycled,
+                    peopleProtected: impact.peopleProtected,
+                    challengesCompleted: 1
+                }).catch(err => {
+                    console.error('Failed to sync global impact to Firebase:', err);
+                    // Don't block user experience if sync fails
+                });
+
+                // Sync user progress to Firebase (if authenticated)
+                import('./useAuthStore').then(({ useAuthStore }) => {
+                    const user = useAuthStore.getState().user;
+                    if (user) {
+                        import('../services/UserProgressSyncService').then(({ updateUserProgress }) => {
+                            const state = get();
+                            updateUserProgress(user.uid, {
+                                completedChallenges: state.completedChallenges,
+                                totalImpact: state.totalImpact,
+                                lastPlayedAt: Date.now()
+                            } as any).catch(err => {
+                                console.error('Failed to sync user progress:', err);
+                            });
+                        });
+                    }
                 });
 
                 // Auto-unlock achievement when all challenges complete
@@ -193,6 +224,23 @@ export const usePlayerProgress = create<PlayerProgress>()(
                 firstPlayedAt: Date.now(),
                 lastPlayedAt: Date.now()
             }),
+
+            loadFromCloud: (cloudData: any) => {
+                // Sync Firebase data to local state
+                set({
+                    hasSeenIntro: cloudData.hasSeenIntro || false,
+                    hasCompletedTutorial: cloudData.hasCompletedTutorial || false,
+                    hasSeenVictory: cloudData.hasSeenVictory || false,
+                    completedChallenges: cloudData.completedChallenges || [],
+                    achievements: cloudData.achievements || [],
+                    totalImpact: cloudData.totalImpact || initialState.totalImpact,
+                    currentTutorialStep: cloudData.currentTutorialStep || 0,
+                    tutorialCompleted: cloudData.tutorialCompleted || false,
+                    firstPlayedAt: cloudData.firstPlayedAt || Date.now(),
+                    lastPlayedAt: cloudData.lastPlayedAt || Date.now()
+                });
+                console.log('Loaded progress from Firebase');
+            },
 
             // Computed
             isAllChallengesComplete: () => {

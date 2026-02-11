@@ -11,16 +11,24 @@ import { AcademyUI } from "./features/ui/AcademyUI";
 import { IntroAnimation } from "./features/ui/IntroAnimation";
 import { TutorialOverlay } from "./features/ui/TutorialOverlay";
 import { VictoryAnimation } from "./features/ui/VictoryAnimation";
+import { LoginScreen } from "./features/ui/LoginScreen";
 import { usePlayerProgress } from "./stores/usePlayerProgress";
+import { useAuthStore } from "./stores/useAuthStore";
 import { useState, useEffect } from "react";
 import "./index.css";
 
 function App() {
   const { isTerminalOpen, terminalType, gameState } = useGameStore();
   const { shouldShowIntro, shouldShowTutorial, shouldShowVictory, completedChallenges, hasSeenVictory } = usePlayerProgress();
+  const { isAuthenticated, isLoading, initialize } = useAuthStore();
   const [showVictory, setShowVictory] = useState(false);
 
-  // Check for victory condition whenever challenges are completed or victory status changes
+  // Initialize Firebase auth on mount
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+  // Check for victory condition
   useEffect(() => {
     const shouldShow = shouldShowVictory();
     if (shouldShow && !showVictory) {
@@ -29,16 +37,29 @@ function App() {
     }
   }, [completedChallenges, shouldShowVictory, showVictory, hasSeenVictory]);
 
-  // Show intro on first load
-  const handleIntroComplete = () => {
-    // Intro complete, MainMenu will naturally show since gameState is 'MENU'
-  };
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl animate-spin mb-4">🌍</div>
+          <p className="text-white text-xl">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
+  // Login screen if not authenticated
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
+
+  // Main game (authenticated)
   return (
     <div className="w-full h-full relative bg-gray-900 text-white">
 
       {/* INTRO ANIMATION (First-time only) */}
-      {shouldShowIntro() && <IntroAnimation onComplete={handleIntroComplete} />}
+      {shouldShowIntro() && <IntroAnimation onComplete={() => { }} />}
 
       {/* VICTORY ANIMATION (When all challenges complete) */}
       {showVictory && <VictoryAnimation onClose={() => setShowVictory(false)} />}
