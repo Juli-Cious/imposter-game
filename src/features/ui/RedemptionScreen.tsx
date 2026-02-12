@@ -13,7 +13,7 @@ export const RedemptionScreen = () => {
     const handleHighlightError = () => {
         // Logic to help heroes: Insert a "HINT" in the global chat or highlight a line
         // For now, let's just send a chat message as "SYSTEM"
-        network?.sendChatMessage("SYSTEM: The Reformed Imposter has revealed a hint! Check line 10 in oxygen.py!");
+        network?.sendChatMessage("The Reformed Imposter has revealed a hint! Check line 10 in oxygen.py!", "SYSTEM");
         // Or trigger a specific visual aid
     };
 
