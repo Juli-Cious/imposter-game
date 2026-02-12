@@ -14,6 +14,7 @@ import { VictoryAnimation } from "./features/ui/VictoryAnimation";
 import { LoginScreen } from "./features/ui/LoginScreen";
 import { RedemptionScreen } from "./features/ui/RedemptionScreen";
 import { AIImposterService } from "./services/AIImposterService";
+import { ChallengeMonitor } from "./features/game/ChallengeMonitor";
 import { usePlayerProgress } from "./stores/usePlayerProgress";
 import { useAuthStore } from "./stores/useAuthStore";
 import { useState, useEffect } from "react";
@@ -98,6 +99,7 @@ function App() {
       {gameState === 'GAME' && (
         <>
           <GameComponent />
+          <ChallengeMonitor />
 
           <TaskBoard /> {/* Always visible to user */}
           <LevelManager /> {/* <--- The Reset Button */}

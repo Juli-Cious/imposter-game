@@ -42,6 +42,7 @@ interface PlayerProgress {
     skipIntro: () => void;
     completeTutorial: () => void;
     setTutorialStep: (step: number) => void;
+    uncompleteChallenge: (challengeId: string) => void;
     completeChallenge: (challengeId: string) => void;
     unlockAchievement: (achievement: Achievement) => void;
     addImpact: (impact: Partial<EnvironmentalImpact>) => void;
@@ -101,6 +102,23 @@ export const usePlayerProgress = create<PlayerProgress>((set, get) => ({
         currentTutorialStep: step,
         lastPlayedAt: Date.now()
     }),
+
+    uncompleteChallenge: (challengeId: string) => {
+        const state = get();
+        if (!state.completedChallenges.includes(challengeId)) {
+            return;
+        }
+
+        const newCompleted = state.completedChallenges.filter(id => id !== challengeId);
+
+        // Update local state
+        set({
+            completedChallenges: newCompleted,
+            lastPlayedAt: Date.now()
+        });
+
+        console.log(`[Progress] Challenge ${challengeId} un-completed due to sabotage/failure.`);
+    },
 
     completeChallenge: (challengeId: string) => {
         const state = get();

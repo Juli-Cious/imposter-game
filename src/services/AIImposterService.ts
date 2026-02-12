@@ -142,10 +142,11 @@ export class AIImposterService {
 
         const now = Date.now();
         if (now - this.lastSabotageTime > this.sabotageCooldown) {
-            const uncompleted = Object.keys(LEVEL_1_PROBLEMS).filter(id => !completedChallenges.includes(id));
-            if (uncompleted.length === 0) return;
+            // Target ANY file (even completed ones) to undo progress
+            const allFiles = Object.keys(LEVEL_1_PROBLEMS);
+            if (allFiles.length === 0) return;
 
-            const targetFileId = uncompleted[Math.floor(Math.random() * uncompleted.length)];
+            const targetFileId = allFiles[Math.floor(Math.random() * allFiles.length)];
             await this.sabotageFile(targetFileId, imposterBot);
             this.lastSabotageTime = now;
         }
