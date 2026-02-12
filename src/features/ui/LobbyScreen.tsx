@@ -7,36 +7,35 @@ import { RoleRevealModal } from './RoleRevealModal';
 import { assignRoles, syncRolesToFirebase, getPlayerRole } from '../../utils/RoleManager';
 
 import { usePlayerStore } from '../../stores/usePlayerStore';
-import { useAuthStore } from '../../stores/useAuthStore'; // Assuming this import is needed for useAuthStore
-import { FirebaseAdapter } from '../../services/FirebaseAdapter'; // Assuming this import is needed for FirebaseAdapter
+import { FirebaseAdapter } from '../../features/networking/FirebaseAdapter';
+import type { PlayerState } from '../../features/networking/NetworkInterface';
 
 export const LobbyScreen = () => {
     const {
         roomCode, playerId, isHost,
         playerSkin, playerTint,
-        setRoomCode, setPlayerId, setIsHost, setGameState
+        setGameState, network
     } = useGameStore();
 
     // Local state for UI
     const [players, setLocalPlayers] = useState<PlayerState[]>([]);
     const { setPlayers: setGlobalPlayers } = usePlayerStore();
-    const { isAuthenticated, user } = useAuthStore();
-    const [isJoining, setIsJoining] = useState(false);
 
     // Services
     const [adapter] = useState(() => new FirebaseAdapter());
 
-    // Sync network players to both local state (for rendering here) and global store (for MeetingUI)
+    // Sync network players
     useEffect(() => {
         if (!roomCode) return;
 
-        adapter.subscribeToPlayers((updatedPlayers) => {
+        adapter.subscribeToPlayers((updatedPlayers: PlayerState[]) => {
             setLocalPlayers(updatedPlayers);
             setGlobalPlayers(updatedPlayers);
         });
     }, [roomCode, adapter, setGlobalPlayers]);
+
     const [showRoleReveal, setShowRoleReveal] = useState(false);
-    const [playerRole, setPlayerRole] = useState<'hero' | 'imposter' | null>(null);
+    const [playerRole, setPlayerRole] = useState<'hero' | 'imposter' | 'reformed' | null>(null);
     const [assignmentError, setAssignmentError] = useState<string | null>(null);
 
     // Sync Customization to LocalStorage
@@ -69,8 +68,8 @@ export const LobbyScreen = () => {
         const unsub = onValue(playersRef, (snapshot) => {
             console.log("[Lobby] Players update:", snapshot.key, snapshot.val());
             const data = snapshot.val();
-            if (data) setPlayers(Object.values(data));
-            else setPlayers([]);
+            if (data) setLocalPlayers(Object.values(data));
+            else setLocalPlayers([]);
         });
 
         // Listen for Game Start

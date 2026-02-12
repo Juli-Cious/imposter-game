@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import './RoleRevealModal.css';
 
 interface RoleRevealModalProps {
-    playerRole: 'hero' | 'imposter';
+    playerRole: 'hero' | 'imposter' | 'reformed';
     onClose: () => void;
 }
 
@@ -15,34 +15,37 @@ export const RoleRevealModal = ({ playerRole, onClose }: RoleRevealModalProps) =
     }, []);
 
     const isHero = playerRole === 'hero';
+    const isReformed = playerRole === 'reformed';
 
     return (
         <div className="role-reveal-overlay" onClick={onClose}>
             <div
-                className={`role-reveal-modal ${isVisible ? 'visible' : ''} ${isHero ? 'hero-theme' : 'imposter-theme'}`}
+                className={`role-reveal-modal ${isVisible ? 'visible' : ''} ${isHero || isReformed ? 'hero-theme' : 'imposter-theme'}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="role-reveal-content">
                     {/* Icon Display */}
-                    <div className={`role-icon ${isHero ? 'hero-icon' : 'imposter-icon'}`}>
-                        {isHero ? '🦸‍♀️' : '🕵️'}
+                    <div className={`role-icon ${isHero || isReformed ? 'hero-icon' : 'imposter-icon'}`}>
+                        {isHero ? '🦸‍♀️' : isReformed ? '😇' : '🕵️'}
                     </div>
 
                     {/* Role Title */}
                     <h1 className="role-title">
-                        {isHero ? 'YOU ARE A HERO!' : 'YOU ARE THE IMPOSTER!'}
+                        {isHero ? 'YOU ARE A HERO!' : isReformed ? 'YOU ARE REFORMED!' : 'YOU ARE THE IMPOSTER!'}
                     </h1>
 
                     {/* Role Description */}
                     <p className="role-description">
                         {isHero
                             ? 'Fix the code and find the saboteur before it\'s too late!'
-                            : 'Sabotage the mission without getting caught!'}
+                            : isReformed
+                                ? 'You have turned a new leaf! Help the heroes win!'
+                                : 'Sabotage the mission without getting caught!'}
                     </p>
 
                     {/* Additional Icons */}
                     <div className="role-emojis">
-                        {isHero ? '🔍💻✨' : '🎭💀🔥'}
+                        {isHero ? '🔍💻✨' : isReformed ? '🛠️🤝✨' : '🎭💀🔥'}
                     </div>
 
                     {/* Objectives */}

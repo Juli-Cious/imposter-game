@@ -164,7 +164,7 @@ export const VictoryAnimation = ({ onClose }: VictoryAnimationProps) => {
 
                             {/* Redemption Badge */}
                             {useGameStore.getState().playerSkin === 'reformed_skin_placeholder' || /* Check role logic here properly */
-                                usePlayerStore.getState().players.find(p => p.id === useGameStore.getState().playerId)?.role === 'reformed' && (
+                                (usePlayerStore.getState().players.find(p => p.id === useGameStore.getState().playerId)?.role as string) === 'reformed' && (
                                     <div className="mt-4 pt-4 border-t border-yellow-500/30">
                                         <p className="text-xl md:text-2xl font-bold text-purple-300 mb-1">
                                             😇 Reformed Hero

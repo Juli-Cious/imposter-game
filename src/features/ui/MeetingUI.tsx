@@ -19,7 +19,7 @@ export const MeetingUI = () => {
     const { network, playerId, isHost, roomCode } = useGameStore();
     const { players } = usePlayerStore();
 
-    const [selectedFile, setSelectedFile] = useState<string>(Object.keys(LEVEL_1_PROBLEMS)[0]);
+    const [selectedFile] = useState<string>(Object.keys(LEVEL_1_PROBLEMS)[0]);
     const selectedFileRef = React.useRef(selectedFile);
     const [timeLeft, setTimeLeft] = useState(0);
     const [chatInput, setChatInput] = useState('');
@@ -219,7 +219,6 @@ export const MeetingUI = () => {
                         <div className="grid grid-cols-2 gap-4">
                             {players.map(player => {
                                 const isMe = player.id === playerId;
-                                const isVoted = votes[player.id]; // Did this player vote? (Wait, votes is voter->candidate)
                                 const hasPlayerVoted = Object.keys(votes).includes(player.id);
                                 const myVote = votes[playerId!] === player.id;
 

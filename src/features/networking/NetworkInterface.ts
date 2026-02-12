@@ -8,7 +8,7 @@ export interface PlayerState {
   skin?: string;
   tint?: number;
   // Imposter Mode fields
-  role?: 'hero' | 'imposter';
+  role?: 'hero' | 'imposter' | 'reformed';
   isAlive?: boolean;
   status?: 'active' | 'ejected' | 'reformed';
 }

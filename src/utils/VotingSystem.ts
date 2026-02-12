@@ -15,7 +15,7 @@ export async function castVote(
     candidateId: string,
     roomCode: string
 ): Promise<void> {
-    await update(ref(db, `rooms/${roomCode}/meeting/votes/${voterId}`), candidateId);
+    await update(ref(db, `rooms/${roomCode}/meeting/votes`), { [voterId]: candidateId });
     console.log(`[Voting] ${voterId} voted for ${candidateId}`);
 }
 

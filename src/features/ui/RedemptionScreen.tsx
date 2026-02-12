@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { useGameStore } from '../../stores/useGameStore';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { motion } from 'framer-motion';

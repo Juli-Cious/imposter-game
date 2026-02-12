@@ -1,7 +1,7 @@
-import { GoogleAIService } from './GoogleAIService';
+import * as GoogleAIService from './GoogleAIService';
 import { useGameStore } from '../stores/useGameStore';
 import { usePlayerProgress } from '../stores/usePlayerProgress';
-import { useMeetingStore } from '../stores/useMeetingStore'; // Correct import
+import { useMeetingStore } from '../stores/useMeetingStore';
 import { LEVEL_1_PROBLEMS } from '../shared/ProblemData';
 import { db } from '../firebaseConfig';
 import { ref, update } from 'firebase/database'; // Removed unused set
@@ -9,7 +9,7 @@ import { FirebaseAdapter } from '../features/networking/FirebaseAdapter';
 
 export class AIImposterService {
     private static instance: AIImposterService;
-    private loopInterval: NodeJS.Timeout | null = null;
+    private loopInterval: any = null;
     private isRunning = false;
     private lastSabotageTime = 0;
     private sabotageCooldown = 30000; // 30s initial cooldown
@@ -87,7 +87,7 @@ export class AIImposterService {
         // 3. Sabotage Logic
         // Check if bot is alive/active before sabotaging
         if (this.botId) {
-            const { players } = useGameStore.getState() as any; // Or usePlayerStore
+            // const { players } = usePlayerStore.getState();
             // Since we don't have direct access to player store here easily without import
             // Let's assume if game is still running, bot might be alive.
             // But if we want to stop sabotage after catch:
@@ -123,7 +123,7 @@ export class AIImposterService {
                 // Let's just vote immediately for now to ensure progress.
 
                 // Get candidates
-                const { players } = useGameStore.getState() as any; // or fetch via adapter?
+                // const { players } = usePlayerStore.getState();
                 // We don't have players list in GameStore easily accessible here unless we use usePlayerStore
                 // Better to just skip or vote self (bad idea).
                 // Let's vote 'skip' for now or try to vote for the player.
