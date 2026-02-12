@@ -93,22 +93,42 @@ export const MeetingUI = () => {
         let candidate: string | null = null;
         let isTie = false;
 
-        Object.entries(voteCounts).forEach(([id, count]) => {
+        // First pass: find max votes
+        Object.values(voteCounts).forEach((count) => {
             if (count > maxVotes) {
                 maxVotes = count;
-                candidate = id;
-                isTie = false;
-            } else if (count === maxVotes) {
-                isTie = true;
             }
         });
+
+        // Second pass: check for ties and get candidate
+        const candidatesWithMaxVotes: string[] = [];
+        Object.entries(voteCounts).forEach(([id, count]) => {
+            if (count === maxVotes) {
+                candidatesWithMaxVotes.push(id);
+            }
+        });
+
+        if (candidatesWithMaxVotes.length > 1) {
+            isTie = true;
+            candidate = null;
+        } else if (candidatesWithMaxVotes.length === 1) {
+            candidate = candidatesWithMaxVotes[0];
+            isTie = false;
+        }
 
         // 3. Apply Result
         let finalResultMsg = "";
         const ejectedPlayer = candidate ? players.find((p: any) => p.id === candidate) : null;
 
-        if (skipCount >= maxVotes || isTie || !candidate) {
-            finalResultMsg = `Vote Skipped (${isTie ? "Tie" : "Skipped"}).`;
+        // Skip if: skip votes are higher than max, OR there's a tie, OR no valid candidate
+        if (skipCount > maxVotes || isTie || !candidate) {
+            if (skipCount > maxVotes) {
+                finalResultMsg = `Vote Skipped (Skip votes won with ${skipCount} votes).`;
+            } else if (isTie) {
+                finalResultMsg = `Vote Skipped (Tie between ${candidatesWithMaxVotes.length} players with ${maxVotes} votes each).`;
+            } else {
+                finalResultMsg = `Vote Skipped (No votes cast).`;
+            }
         } else if (ejectedPlayer) {
             // Redemption Arc: If Imposter, they become Reformed
             if (ejectedPlayer.role === 'imposter') {
@@ -141,12 +161,16 @@ export const MeetingUI = () => {
 
             // --- WIN CONDITION CHECK ---
             const remainingPlayers = players.filter((p: any) => p.isAlive && p.id !== ejectedPlayer.id);
+            // Count ONLY active imposters (not reformed)
             const imposterCount = remainingPlayers.filter((p: any) => p.role === 'imposter').length;
-            const crewCount = remainingPlayers.filter((p: any) => p.role !== 'imposter').length;
+            // Count heroes (exclude reformed imposters too)
+            const heroCount = remainingPlayers.filter((p: any) => p.role === 'hero').length;
 
             if (imposterCount === 0) {
+                // All imposters voted out or reformed
                 globalUpdates[`rooms/${roomCode}/status`] = 'VICTORY_CREW';
-            } else if (imposterCount >= crewCount) {
+            } else if (imposterCount >= heroCount) {
+                // Imposters equal or outnumber heroes
                 globalUpdates[`rooms/${roomCode}/status`] = 'VICTORY_IMPOSTER';
             }
         }
