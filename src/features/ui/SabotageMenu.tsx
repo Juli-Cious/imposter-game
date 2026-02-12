@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { triggerSabotage, type SabotageType } from '../../utils/SabotageSystem';
 import { useSabotageCooldown } from '../../hooks/useSabotageCooldown';
-import './SabotageMenu.css';
 
 interface SabotageMenuProps {
     roomCode: string;
@@ -40,75 +39,100 @@ export const SabotageMenu = ({ roomCode, playerId, targetFileId, onSabotageCompl
     };
 
     return (
-        <div className="sabotage-menu-container">
+        <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end pointer-events-auto">
             {/* Floating Sabotage Button */}
             <button
-                className={`sabotage-button ${!canSabotage ? 'disabled' : ''} ${isSabotaging ? 'sabotaging' : ''}`}
+                className={`
+                    w-20 h-20 rounded-full border-4 shadow-2xl flex items-center justify-center text-4xl transition-all duration-300
+                    ${!canSabotage || isSabotaging
+                        ? 'bg-gray-700 border-gray-600 grayscale cursor-not-allowed scale-90'
+                        : 'bg-red-600 border-red-400 hover:bg-red-500 hover:scale-110 hover:shadow-[0_0_30px_rgba(220,38,38,0.6)] animate-pulse'
+                    }
+                    ${isOpen ? 'rotate-45' : 'rotate-0'}
+                `}
                 onClick={() => canSabotage && setIsOpen(!isOpen)}
                 disabled={!canSabotage || isSabotaging}
                 title={canSabotage ? 'Sabotage' : `Cooldown: ${cooldownRemaining}s`}
             >
                 {isSabotaging ? '⏳' : '🔪'}
                 {!canSabotage && (
-                    <span className="cooldown-badge">{cooldownRemaining}s</span>
+                    <span className="absolute -top-2 -right-2 bg-gray-900 text-white text-xs font-bold px-2 py-1 rounded-full border border-gray-500">
+                        {cooldownRemaining}s
+                    </span>
                 )}
             </button>
 
             {/* Sabotage Options Menu */}
             {isOpen && canSabotage && (
-                <div className="sabotage-menu">
-                    <div className="sabotage-menu-header">
-                        <span className="sabotage-menu-title">🕵️ SABOTAGE</span>
-                        <button className="close-btn" onClick={() => setIsOpen(false)}>✖</button>
+                <div className="absolute bottom-24 right-0 w-80 bg-gray-900/95 backdrop-blur-md rounded-xl border-2 border-red-500/50 shadow-2xl p-4 animate-slide-up origin-bottom-right">
+                    <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                        <span className="text-red-500 font-black text-xl italic tracking-wider flex items-center gap-2">
+                            🕵️ SABOTAGE
+                        </span>
+                        <button
+                            className="text-gray-400 hover:text-white transition-colors"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            ✖
+                        </button>
                     </div>
 
-                    <div className="sabotage-options">
-                        <button
-                            className="sabotage-option"
+                    <div className="space-y-3">
+                        <SabotageOption
+                            icon="⚠️"
+                            title="Syntax Error"
+                            desc="Break their code structure"
                             onClick={() => handleSabotage('syntax_error', 'Syntax Error')}
-                        >
-                            <div className="option-icon">⚠️</div>
-                            <div className="option-content">
-                                <div className="option-name">Syntax Error</div>
-                                <div className="option-desc">Remove semicolon or add mismatched bracket</div>
-                            </div>
-                        </button>
-
-                        <button
-                            className="sabotage-option"
+                        />
+                        <SabotageOption
+                            icon="🔄"
+                            title="Logic Swap"
+                            desc="Reverse their boolean logic"
                             onClick={() => handleSabotage('logic_swap', 'Logic Swap')}
-                        >
-                            <div className="option-icon">🔄</div>
-                            <div className="option-content">
-                                <div className="option-name">Logic Swap</div>
-                                <div className="option-desc">Swap operators (true/false, +/-)</div>
-                            </div>
-                        </button>
-
-                        <button
-                            className="sabotage-option"
+                        />
+                        <SabotageOption
+                            icon="🗑️"
+                            title="Clear Line"
+                            desc="Delete a random line"
                             onClick={() => handleSabotage('clear_line', 'Clear Line')}
-                        >
-                            <div className="option-icon">🗑️</div>
-                            <div className="option-content">
-                                <div className="option-name">Clear Line</div>
-                                <div className="option-desc">Delete a random line of code</div>
-                            </div>
-                        </button>
-
-                        <button
-                            className="sabotage-option power-cut"
+                        />
+                        <SabotageOption
+                            icon="⚡"
+                            title="Power Cut"
+                            desc="Blackout the station"
+                            isUltimate
                             onClick={() => handleSabotage('power_cut', 'Power Cut')}
-                        >
-                            <div className="option-icon">⚡</div>
-                            <div className="option-content">
-                                <div className="option-name">Power Cut</div>
-                                <div className="option-desc">Plunge the station into darkness</div>
-                            </div>
-                        </button>
+                        />
                     </div>
                 </div>
             )}
         </div>
     );
 };
+
+interface SabotageOptionProps {
+    icon: string;
+    title: string;
+    desc: string;
+    onClick: () => void;
+    isUltimate?: boolean;
+}
+
+const SabotageOption = ({ icon, title, desc, onClick, isUltimate }: SabotageOptionProps) => (
+    <button
+        className={`
+            w-full flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 group text-left
+            ${isUltimate
+                ? 'bg-red-900/30 border-red-500/50 hover:bg-red-900/50 hover:border-red-400'
+                : 'bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-500'
+            }
+        `}
+        onClick={onClick}
+    >
+        <div className="text-2xl group-hover:scale-110 transition-transform">{icon}</div>
+        <div className="flex-1">
+            <div className={`font-bold text-sm ${isUltimate ? 'text-red-400' : 'text-gray-200'}`}>{title}</div>
+            <div className="text-xs text-gray-500 group-hover:text-gray-400">{desc}</div>
+        </div>
+    </button>
+);

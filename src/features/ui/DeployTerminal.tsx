@@ -13,38 +13,40 @@ export const DeployTerminal = () => {
 
         // Simulate "Integration Test"
         setTimeout(() => {
-            // Fetch latest data
+            // Fetch latest data from gamestate/files (Source of Truth)
             import('firebase/database').then(({ ref, get, set }) => {
                 import('../../firebaseConfig').then(({ db }) => {
-                    // 1. Check for Corruption in Files
-                    get(ref(db, `rooms/${roomCode}/gamestate/files`)).then((fileSnap) => {
+                    get(ref(db, `gamestate/files`)).then((fileSnap) => {
                         const files = fileSnap.val() || {};
-                        const corruptedFiles = Object.values(files).filter((f: any) => f.isCorrupted);
+                        const fileList = Object.values(files) as any[];
 
-                        if (corruptedFiles.length > 0) {
+                        // Count how many files are actually passing (Real or Fake)
+                        const passedFiles = fileList.filter(f => f.testStatus === 'PASS');
+                        const passedCount = passedFiles.length;
+
+                        // Dynamic Total (based on actual files in DB, or fallback to 3)
+                        // If no files are in DB yet (start of game), use hardcoded fallback
+                        const totalChallenges = fileList.length > 0 ? fileList.length : 3;
+
+                        // Check for Corruption (Imposter Sabotage) within the PASSED files
+                        // A file is only dangerous if it's "Passing" but Corrupted.
+                        const corruptedFiles = passedFiles.filter(f => f.isCorrupted);
+
+                        if (passedCount < totalChallenges) {
+                            network.sendNotification(`❌ DEPLOYMENT FAILED! ${totalChallenges - passedCount} modules incomplete. -30s Penalty!`, "error");
+                            network.applyTimerPenalty(30);
+                        } else if (corruptedFiles.length > 0) {
+                            // ALL Passed, BUT Corruption Detected!
                             network.sendNotification(`❌ DEPLOYMENT FAILED! Critical system corruption detected. -30s Penalty!`, "error");
                             network.applyTimerPenalty(30);
-                            setIsDeploying(false);
-                            setIsOpen(false);
-                            return;
+                        } else {
+                            // ALL Passed AND Clean
+                            network.sendNotification("🚀 DEPLOYMENT SUCCESSFUL! SYSTEM STABLE.", "success");
+                            set(ref(db, `rooms/${roomCode}/status`), 'VICTORY_CREW');
                         }
 
-                        // 2. Check for Completion of Challenges
-                        get(ref(db, `rooms/${roomCode}/teamChallenges`)).then((chalSnap) => {
-                            const completed = chalSnap.val() || {};
-                            const completedCount = Object.keys(completed).length;
-                            const totalChallenges = 3; // Hardcoded Level 1
-
-                            if (completedCount >= totalChallenges) {
-                                network.sendNotification("🚀 DEPLOYMENT SUCCESSFUL! SYSTEM STABLE.", "success");
-                                set(ref(db, `rooms/${roomCode}/status`), 'VICTORY_CREW');
-                            } else {
-                                network.sendNotification(`❌ DEPLOYMENT FAILED! ${totalChallenges - completedCount} modules incomplete. -30s Penalty!`, "error");
-                                network.applyTimerPenalty(30);
-                            }
-                            setIsDeploying(false);
-                            setIsOpen(false);
-                        });
+                        setIsDeploying(false);
+                        setIsOpen(false);
                     });
                 });
             });
