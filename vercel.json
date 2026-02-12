@@ -1,0 +1,8 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/piston/:match*",
+            "destination": "https://emkc.org/api/v2/piston/:match*"
+        }
+    ]
+}

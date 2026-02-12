@@ -8,4 +8,13 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    proxy: {
+      '/api/piston': {
+        target: 'https://emkc.org/api/v2/piston',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/piston/, ''),
+      },
+    },
+  },
 })
