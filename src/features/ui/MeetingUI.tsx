@@ -122,13 +122,34 @@ export const MeetingUI = () => {
                 updates[`rooms/${roomCode}/players/${candidate}/isAlive`] = false;
 
                 // Redemption Arc: If Imposter, they become Reformed
+                let isImposter = false;
                 if (ejectedPlayer.role === 'imposter') {
+                    isImposter = true;
                     updates[`rooms/${roomCode}/players/${candidate}/status`] = 'reformed';
                     updates[`rooms/${roomCode}/players/${candidate}/role`] = 'reformed';
                     finalResultMsg = `${ejectedPlayer.name} was the Imposter! They are now Reformed.`;
                 } else {
                     updates[`rooms/${roomCode}/players/${candidate}/status`] = 'ejected';
                     finalResultMsg = `${ejectedPlayer.name} was NOT the Imposter.`;
+                }
+
+                // --- WIN CONDITION CHECK ---
+                // Calculate remaining counts based on the CURRENT state minus this ejection
+                const remainingPlayers = players.filter(p => p.isAlive && p.id !== candidate);
+                const imposterCount = remainingPlayers.filter(p => p.role === 'imposter').length;
+                const crewCount = remainingPlayers.filter(p => p.role !== 'imposter').length;
+
+                // Check 1: Crewmates Win (0 Imposters left)
+                // Note: We use 'imposterCount' from remaining. If the ejected one was the last, count is 0.
+                if (imposterCount === 0) {
+                    finalResultMsg += " \n🎉 CREWMATES WIN! (All Imposters Eliminated)";
+                    updates[`rooms/${roomCode}/status`] = 'VICTORY_CREW'; // Flag for potential global listener
+                }
+                // Check 2: Imposters Win (Imposters >= Crew)
+                // Only if the game is still going (imposters exist)
+                else if (imposterCount >= crewCount) {
+                    finalResultMsg += " \n💀 IMPOSTERS WIN! (Critical Failure)";
+                    updates[`rooms/${roomCode}/status`] = 'VICTORY_IMPOSTER';
                 }
 
                 update(ref(db), updates);
