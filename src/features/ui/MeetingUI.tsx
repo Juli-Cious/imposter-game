@@ -105,68 +105,57 @@ export const MeetingUI = () => {
 
         // 3. Apply Result
         let finalResultMsg = "";
+        const ejectedPlayer = candidate ? players.find((p: any) => p.id === candidate) : null;
 
         if (skipCount >= maxVotes || isTie || !candidate) {
-            // Skip
-            finalResultMsg = "Vote Skipped (Tie/Skip)";
-            update(ref(db, `rooms/${roomCode}/meeting`), {
-                status: 'RESULTS',
-                result: finalResultMsg
-            });
-        } else {
-            // Eject
-            const ejectedPlayer = players.find(p => p.id === candidate);
-            if (ejectedPlayer) {
-                // Update player status
-                const updates: any = {};
-                updates[`rooms/${roomCode}/players/${candidate}/isAlive`] = false;
-
-                // Redemption Arc: If Imposter, they become Reformed
-                let isImposter = false;
-                if (ejectedPlayer.role === 'imposter') {
-                    isImposter = true;
-                    updates[`rooms/${roomCode}/players/${candidate}/status`] = 'reformed';
-                    updates[`rooms/${roomCode}/players/${candidate}/role`] = 'reformed';
-                    finalResultMsg = `${ejectedPlayer.name} was the Imposter! They are now Reformed.`;
-                } else {
-                    updates[`rooms/${roomCode}/players/${candidate}/status`] = 'ejected';
-                    finalResultMsg = `${ejectedPlayer.name} was NOT the Imposter.`;
-                }
-
-                // --- WIN CONDITION CHECK ---
-                // Calculate remaining counts based on the CURRENT state minus this ejection
-                const remainingPlayers = players.filter(p => p.isAlive && p.id !== candidate);
-                const imposterCount = remainingPlayers.filter(p => p.role === 'imposter').length;
-                const crewCount = remainingPlayers.filter(p => p.role !== 'imposter').length;
-
-                // Check 1: Crewmates Win (0 Imposters left)
-                // Note: We use 'imposterCount' from remaining. If the ejected one was the last, count is 0.
-                if (imposterCount === 0) {
-                    finalResultMsg += " \n🎉 CREWMATES WIN! (All Imposters Eliminated)";
-                    updates[`rooms/${roomCode}/status`] = 'VICTORY_CREW'; // Flag for potential global listener
-                }
-                // Check 2: Imposters Win (Imposters >= Crew)
-                // Only if the game is still going (imposters exist)
-                else if (imposterCount >= crewCount) {
-                    finalResultMsg += " \n💀 IMPOSTERS WIN! (Critical Failure)";
-                    updates[`rooms/${roomCode}/status`] = 'VICTORY_IMPOSTER';
-                }
-
-                update(ref(db), updates);
-
-                update(ref(db, `rooms/${roomCode}/meeting`), {
-                    status: 'RESULTS',
-                    result: finalResultMsg
-                });
+            finalResultMsg = `Vote Skipped (${isTie ? "Tie" : "Skipped"}).`;
+        } else if (ejectedPlayer) {
+            // Redemption Arc: If Imposter, they become Reformed
+            if (ejectedPlayer.role === 'imposter') {
+                finalResultMsg = `${ejectedPlayer.name} was the Imposter! They are now Reformed.`;
             } else {
-                console.error("CRITICAL: Ejected player not found in store!", candidate, players);
-                // Fallback result so the game doesn't hang
-                update(ref(db, `rooms/${roomCode}/meeting`), {
-                    status: 'RESULTS',
-                    result: "Player ejected (Name unknown - Sync Error)"
-                });
+                finalResultMsg = `${ejectedPlayer.name} was NOT the Imposter.`;
             }
         }
+
+        // Add Vote Summary to message
+        const voteSummary = Object.entries(voteCounts)
+            .map(([id, count]) => {
+                const name = players.find((p: any) => p.id === id)?.name || "Unknown";
+                return `${name}: ${count}`;
+            })
+            .join(", ") + (skipCount > 0 ? ` (Skip: ${skipCount})` : "");
+
+        const fullResultMsg = `${finalResultMsg}\n\nVotes:\n${voteSummary}`;
+
+        // 4. Update Firebase
+        const globalUpdates: any = {};
+        if (ejectedPlayer && finalResultMsg.includes(ejectedPlayer.name)) {
+            globalUpdates[`rooms/${roomCode}/players/${ejectedPlayer.id}/isAlive`] = false;
+            if (ejectedPlayer.role === 'imposter') {
+                globalUpdates[`rooms/${roomCode}/players/${ejectedPlayer.id}/status`] = 'reformed';
+                globalUpdates[`rooms/${roomCode}/players/${ejectedPlayer.id}/role`] = 'reformed';
+            } else {
+                globalUpdates[`rooms/${roomCode}/players/${ejectedPlayer.id}/status`] = 'ejected';
+            }
+
+            // --- WIN CONDITION CHECK ---
+            const remainingPlayers = players.filter((p: any) => p.isAlive && p.id !== ejectedPlayer.id);
+            const imposterCount = remainingPlayers.filter((p: any) => p.role === 'imposter').length;
+            const crewCount = remainingPlayers.filter((p: any) => p.role !== 'imposter').length;
+
+            if (imposterCount === 0) {
+                globalUpdates[`rooms/${roomCode}/status`] = 'VICTORY_CREW';
+            } else if (imposterCount >= crewCount) {
+                globalUpdates[`rooms/${roomCode}/status`] = 'VICTORY_IMPOSTER';
+            }
+        }
+
+        update(ref(db), globalUpdates);
+        update(ref(db, `rooms/${roomCode}/meeting`), {
+            status: 'RESULTS',
+            result: fullResultMsg
+        });
 
         // 4. Reset after delay
         setTimeout(() => {
@@ -394,13 +383,58 @@ export const MeetingUI = () => {
 
                 {/* RESULTS OVERLAY */}
                 {status === 'RESULTS' && (
-                    <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center animate-fadeIn">
-                        <h1 className="text-4xl text-center md:text-6xl font-black text-white mb-8 tracking-tighter px-4">
-                            {result || "VOTING COMPLETE"}
-                        </h1>
-                        <div className="text-2xl text-gray-400 animate-pulse">
-                            Proceeding...
-                        </div>
+                    <div className="absolute inset-0 bg-black/95 z-50 flex flex-col items-center justify-center animate-fadeIn p-8 text-center">
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="max-w-2xl w-full bg-gray-800 border-4 border-red-600 rounded-3xl p-8 shadow-2xl relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-600 via-white to-red-600 animate-pulse"></div>
+
+                            <h1 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tight leading-tight whitespace-pre-wrap">
+                                {result?.split('\n\n')[0] || "VOTING COMPLETE"}
+                            </h1>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                                {players.filter(p => p.isAlive || votes[p.id]).map(p => {
+                                    const voteTargetId = votes[p.id];
+                                    const voteTargetName = voteTargetId === 'skip' ? '💨 Skipped' :
+                                        players.find(target => target.id === voteTargetId)?.name || '...';
+
+                                    return (
+                                        <div key={p.id} className="flex items-center gap-3 bg-gray-900/50 p-3 rounded-xl border border-white/5">
+                                            <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold" style={{ backgroundColor: p.color + '22', color: p.color }}>
+                                                {p.name.charAt(0)}
+                                            </div>
+                                            <div className="text-left flex-1 min-w-0">
+                                                <div className="text-sm font-bold text-gray-300 truncate">{p.name}</div>
+                                                <div className="text-xs text-cyan-400 font-mono">voted for: {voteTargetName}</div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="text-xl text-gray-400 font-mono mb-4 whitespace-pre-wrap">
+                                {result?.split('\n\n')[1]}
+                            </div>
+
+                            {votes[playerId!] && (
+                                <div className={`text-2xl font-black italic p-4 rounded-xl mb-4
+                                    ${(players.find(p => p.id === votes[playerId!])?.role === 'imposter')
+                                        ? 'bg-green-900/20 text-green-500 border border-green-500/50'
+                                        : 'bg-red-900/20 text-red-500 border border-red-500/50'}
+                                `}>
+                                    {(players.find(p => p.id === votes[playerId!])?.role === 'imposter')
+                                        ? "CORRECT VOTE! ✅"
+                                        : votes[playerId!] === 'skip' ? "PLAYED IT SAFE 💨" : "INCORRECT VOTE! ❌"}
+                                </div>
+                            )}
+
+                            <div className="text-lg text-gray-500 animate-pulse font-bold tracking-widest">
+                                RETURNING TO STATION...
+                            </div>
+                        </motion.div>
                     </div>
                 )}
             </motion.div>
