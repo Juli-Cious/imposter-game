@@ -12,7 +12,7 @@ import { usePlayerProgress } from '../../stores/usePlayerProgress';
 import { aiChallengeService } from '../../services/AIChallengeService';
 import { SDGPopup } from './SDGPopup';
 import { CodeReviewModal } from './CodeReviewModal';
-import { SabotageMenu } from './SabotageMenu';
+
 import { usePlayerRole } from '../../hooks/usePlayerRole';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -421,25 +421,7 @@ export const CodeEditor = () => {
                 isLoading={isReviewing}
             />
 
-            {/* Sabotage Menu for Imposters */}
-            {playerRole === 'imposter' && roomCode && playerId && activeFileId && (
-                <SabotageMenu
-                    roomCode={roomCode}
-                    playerId={playerId}
-                    targetFileId={activeFileId}
-                    onSabotageComplete={() => {
-                        toast.success('Sabotage successful! 😈', {
-                            duration: 2000,
-                            icon: '🔪',
-                            style: {
-                                background: '#1f2937',
-                                color: '#dc2626',
-                                fontWeight: 'bold'
-                            }
-                        });
-                    }}
-                />
-            )}
+
 
             {/* Glitch Effect CSS */}
             <style>{`

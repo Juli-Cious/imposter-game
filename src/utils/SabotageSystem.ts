@@ -114,13 +114,18 @@ export async function triggerSabotage(
     type: SabotageType,
     targetPlayerId: string,
     roomCode: string,
-    fileId: string
+    fileId?: string
 ): Promise<SabotageResult> {
     try {
-        // Get current code from Firebase
-        const fileRef = ref(db, `gamestate/files/${fileId}/content`);
-        const snapshot = await get(fileRef);
-        const currentCode = snapshot.val() || '';
+        // Get current code from Firebase (if fileId provided)
+        let currentCode = '';
+        if (fileId) {
+            const fileRef = ref(db, `gamestate/files/${fileId}/content`);
+            const snapshot = await get(fileRef);
+            currentCode = snapshot.val() || '';
+        } else if (type !== 'power_cut') {
+            return { success: false, newCode: '', description: 'Target file required for this sabotage' };
+        }
 
         // Apply sabotage based on type
         let result: SabotageResult;

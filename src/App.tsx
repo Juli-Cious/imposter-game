@@ -17,6 +17,9 @@ import { VictoryScreen } from "./features/ui/VictoryScreen";
 import { CyberBackground } from "./features/ui/CyberBackground";
 import { BootLoader } from "./features/ui/BootLoader";
 import { AnimatePresence, motion } from "framer-motion";
+import { SabotageMenu } from "./features/ui/SabotageMenu";
+import { usePlayerRole } from "./hooks/usePlayerRole";
+import { Toaster } from "react-hot-toast";
 
 import { ChallengeMonitor } from "./features/game/ChallengeMonitor";
 import { usePlayerProgress } from "./stores/usePlayerProgress";
@@ -27,10 +30,11 @@ import "./index.css";
 import { DEMO_MODE } from "./config/demoMode";
 
 function App() {
-  const { isTerminalOpen, terminalType, gameState, network, roomCode, isHost } = useGameStore();
+  const { isTerminalOpen, terminalType, gameState, network, roomCode, isHost, playerId, activeFileId } = useGameStore();
   const { shouldShowIntro, shouldShowTutorial, shouldShowVictory, completedChallenges, hasSeenVictory } = usePlayerProgress();
   const { isAuthenticated, isLoading, initialize } = useAuthStore();
   const [showVictory, setShowVictory] = useState(false);
+  const playerRole = usePlayerRole(roomCode, playerId);
 
   // Multiplayer victory state
   const [multiplayerVictoryStatus, setMultiplayerVictoryStatus] = useState<'VICTORY_CREW' | 'VICTORY_IMPOSTER' | null>(null);
@@ -223,6 +227,17 @@ function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Toaster position="top-right" />
+
+      {/* Global Sabotage Menu for Imposters */}
+      {gameState === 'GAME' && playerRole === 'imposter' && roomCode && playerId && (
+        <SabotageMenu
+          roomCode={roomCode}
+          playerId={playerId}
+          targetFileId={activeFileId || undefined}
+        />
+      )}
     </div>
   );
 }

@@ -6,7 +6,7 @@ import './SabotageMenu.css';
 interface SabotageMenuProps {
     roomCode: string;
     playerId: string;
-    targetFileId: string;
+    targetFileId?: string;
     onSabotageComplete?: () => void;
 }
 
@@ -18,10 +18,16 @@ export const SabotageMenu = ({ roomCode, playerId, targetFileId, onSabotageCompl
     const handleSabotage = async (type: SabotageType, name: string) => {
         if (!canSabotage || isSabotaging) return;
 
+        // If it's a code sabotage but we don't have a target file, we can't do it
+        if (type !== 'power_cut' && !targetFileId) {
+            console.warn(`[SabotageMenu] ${name} requires a target file!`);
+            return;
+        }
+
         setIsSabotaging(true);
         setIsOpen(false);
 
-        const result = await triggerSabotage(type, playerId, roomCode, targetFileId);
+        const result = await triggerSabotage(type, playerId, roomCode, targetFileId || '');
 
         if (result.success) {
             console.log(`[SabotageMenu] ${name} successful:`, result.description);
