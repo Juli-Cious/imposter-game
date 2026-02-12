@@ -158,6 +158,7 @@ export async function triggerSabotage(
             updates[`rooms/${roomCode}/gamestate/power`] = {
                 status: 'OFF',
                 timestamp: Date.now(),
+                failureTime: Date.now() + 61000, // 60 seconds + 1s buffer
                 triggeredBy: targetPlayerId // In this context it's the imposter
             };
         } else {

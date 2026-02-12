@@ -46,6 +46,8 @@ export class MainScene extends Phaser.Scene {
   private playerLight!: Phaser.GameObjects.Light;
   private powerFixProgressBar!: Phaser.GameObjects.Graphics;
   private powerFixTimer: number = 0;
+  private powerFailureTime: number = 0;
+  private powerFailureText!: Phaser.GameObjects.Text;
 
   constructor() {
     super('MainScene');
@@ -178,8 +180,9 @@ export class MainScene extends Phaser.Scene {
           onValue(powerRef, (snapshot) => {
             const powerData = snapshot.val();
             const powerOut = powerData?.status === 'OFF';
-            if (powerOut !== this.isPowerOut) {
-              this.togglePower(powerOut);
+            const failureTime = powerData?.failureTime || 0;
+            if (powerOut !== this.isPowerOut || (powerOut && failureTime !== this.powerFailureTime)) {
+              this.togglePower(powerOut, failureTime);
             }
           });
         });
@@ -196,6 +199,15 @@ export class MainScene extends Phaser.Scene {
 
     this.powerFixProgressBar = this.add.graphics();
     this.powerFixProgressBar.setDepth(101);
+
+    this.powerFailureText = this.add.text(400, 100, "", {
+      fontSize: '32px',
+      fontFamily: 'Courier',
+      color: '#ff0000',
+      stroke: '#000000',
+      strokeThickness: 6,
+      resolution: 2,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(1000).setVisible(false);
 
     // Meeting Button (Main Room - near spawn)
     // Aligned to Grid (6.5, 3.5) -> (416, 224)
@@ -566,6 +578,31 @@ export class MainScene extends Phaser.Scene {
       this.powerFixTimer = 0;
       this.powerFixProgressBar.clear();
     }
+
+    // Power Failure Countdown
+    if (this.isPowerOut && this.powerFailureTime > 0) {
+      const remaining = Math.max(0, Math.ceil((this.powerFailureTime - Date.now()) / 1000));
+      this.powerFailureText.setText(`CRITICAL POWER FAILURE: ${remaining}s`);
+
+      // Flash the text if low time
+      if (remaining <= 10) {
+        this.powerFailureText.setTint((Math.floor(Date.now() / 250) % 2 === 0) ? 0xff0000 : 0xffffff);
+      } else {
+        this.powerFailureText.clearTint();
+      }
+
+      // Check for failure (Any player can detect it, but we only set it if it's not already a victory)
+      if (remaining === 0) {
+        const { roomCode, gameState } = useGameStore.getState();
+        if (roomCode && gameState === 'GAME') {
+          import('firebase/database').then(({ ref, set }) => {
+            import('../../../firebaseConfig').then(({ db }) => {
+              set(ref(db, `rooms/${roomCode}/status`), 'VICTORY_IMPOSTER');
+            });
+          });
+        }
+      }
+    }
   }
 
   // --- Meeting Logic ---
@@ -621,8 +658,9 @@ export class MainScene extends Phaser.Scene {
   }
 
   // --- Power Sabotage Effects ---
-  private togglePower(isOut: boolean) {
+  private togglePower(isOut: boolean, failureTime: number = 0) {
     this.isPowerOut = isOut;
+    this.powerFailureTime = failureTime;
 
     if (isOut) {
       this.lights.setAmbientColor(0x050505); // Near black
@@ -635,11 +673,13 @@ export class MainScene extends Phaser.Scene {
       // Visual feedback
       this.cameras.main.shake(500, 0.01);
       this.cameras.main.flash(500, 255, 0, 0, true);
+      this.powerFailureText.setVisible(true);
     } else {
       this.lights.setAmbientColor(0x808080); // Normal
       if (this.playerLight) {
         this.playerLight.setVisible(false);
       }
+      this.powerFailureText.setVisible(false);
     }
 
     // Update meeting button visibility based on power

@@ -25,7 +25,7 @@ export const VictoryScreen = ({ status, players, teamChallengesCompleted, onRetu
             winReason = 'All imposters voted out!';
         }
     } else {
-        winReason = 'Imposters outnumbered heroes!';
+        winReason = 'The station has been compromised!';
     }
 
     return (
