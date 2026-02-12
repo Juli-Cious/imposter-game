@@ -41,6 +41,12 @@ export class MainScene extends Phaser.Scene {
   private meetingButton!: Phaser.GameObjects.Arc;
   private meetingText!: Phaser.GameObjects.Text;
 
+  // Dark Mode / Power Sabotage
+  private isPowerOut: boolean = false;
+  private playerLight!: Phaser.GameObjects.Light;
+  private powerFixProgressBar!: Phaser.GameObjects.Graphics;
+  private powerFixTimer: number = 0;
+
   constructor() {
     super('MainScene');
   }
@@ -164,6 +170,22 @@ export class MainScene extends Phaser.Scene {
       useMeetingStore.getState().setMeetingState({ chatMessages: messages });
     });
 
+    // Subscribe to Power State
+    if (roomCode) {
+      import('firebase/database').then(({ ref, onValue }) => {
+        import('../../../firebaseConfig').then(({ db }) => {
+          const powerRef = ref(db, `rooms/${roomCode}/gamestate/power`);
+          onValue(powerRef, (snapshot) => {
+            const powerData = snapshot.val();
+            const powerOut = powerData?.status === 'OFF';
+            if (powerOut !== this.isPowerOut) {
+              this.togglePower(powerOut);
+            }
+          });
+        });
+      });
+    }
+
     // Enable Lights
     this.lights.enable();
     this.lights.setAmbientColor(0x808080); // Increased from 0x101010 to 0x808080 (much brighter)
@@ -171,6 +193,9 @@ export class MainScene extends Phaser.Scene {
     // Progress Bar
     this.zoneProgressBar = this.add.graphics();
     this.zoneProgressBar.setDepth(100); // UI layer above players
+
+    this.powerFixProgressBar = this.add.graphics();
+    this.powerFixProgressBar.setDepth(101);
 
     // Meeting Button (Main Room - near spawn)
     // Aligned to Grid (6.5, 3.5) -> (416, 224)
@@ -408,7 +433,10 @@ export class MainScene extends Phaser.Scene {
     }
 
     // Update Light Position
-    // Player light removed
+    if (this.isPowerOut && this.playerLight) {
+      this.playerLight.x = this.player.x;
+      this.playerLight.y = this.player.y;
+    }
 
     // Zone Interaction
     const { openEditor, openAcademy, closeTerminal } = useGameStore.getState();
@@ -506,6 +534,38 @@ export class MainScene extends Phaser.Scene {
     } else {
       this.meetingText.setVisible(false);
     }
+
+    // Power Fix Interaction (Hub Zone)
+    if (this.isPowerOut && inHubZone) {
+      this.powerFixTimer += delta;
+      const progress = Math.min(this.powerFixTimer / 5000, 1);
+
+      this.powerFixProgressBar.clear();
+      this.powerFixProgressBar.fillStyle(0x000000, 0.5);
+      this.powerFixProgressBar.fillRect(this.player.x - 25, this.player.y + 30, 50, 8);
+      this.powerFixProgressBar.fillStyle(0xffaa00, 1);
+      this.powerFixProgressBar.fillRect(this.player.x - 25, this.player.y + 30, 50 * progress, 8);
+
+      if (this.powerFixTimer >= 5000) {
+        // Restore Power
+        const { roomCode } = useGameStore.getState();
+        if (roomCode) {
+          import('firebase/database').then(({ ref, set }) => {
+            import('../../../firebaseConfig').then(({ db }) => {
+              set(ref(db, `rooms/${roomCode}/gamestate/power`), {
+                status: 'ON',
+                timestamp: Date.now()
+              });
+            });
+          });
+        }
+        this.powerFixTimer = 0;
+        this.powerFixProgressBar.clear();
+      }
+    } else {
+      this.powerFixTimer = 0;
+      this.powerFixProgressBar.clear();
+    }
   }
 
   // --- Meeting Logic ---
@@ -558,6 +618,32 @@ export class MainScene extends Phaser.Scene {
         tile.setVisible(!isOpen);
       }
     });
+  }
+
+  // --- Power Sabotage Effects ---
+  private togglePower(isOut: boolean) {
+    this.isPowerOut = isOut;
+
+    if (isOut) {
+      this.lights.setAmbientColor(0x050505); // Near black
+      if (!this.playerLight) {
+        this.playerLight = this.lights.addLight(0, 0, 120, 0xffffff, 1.5);
+      } else {
+        this.playerLight.setVisible(true);
+      }
+
+      // Visual feedback
+      this.cameras.main.shake(500, 0.01);
+      this.cameras.main.flash(500, 255, 0, 0, true);
+    } else {
+      this.lights.setAmbientColor(0x808080); // Normal
+      if (this.playerLight) {
+        this.playerLight.setVisible(false);
+      }
+    }
+
+    // Update meeting button visibility based on power
+    this.meetingButton.setVisible(!isOut);
   }
 
   // Helper to draw/update other people

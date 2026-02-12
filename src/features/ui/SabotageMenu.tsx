@@ -89,6 +89,17 @@ export const SabotageMenu = ({ roomCode, playerId, targetFileId, onSabotageCompl
                                 <div className="option-desc">Delete a random line of code</div>
                             </div>
                         </button>
+
+                        <button
+                            className="sabotage-option power-cut"
+                            onClick={() => handleSabotage('power_cut', 'Power Cut')}
+                        >
+                            <div className="option-icon">⚡</div>
+                            <div className="option-content">
+                                <div className="option-name">Power Cut</div>
+                                <div className="option-desc">Plunge the station into darkness</div>
+                            </div>
+                        </button>
                     </div>
                 </div>
             )}

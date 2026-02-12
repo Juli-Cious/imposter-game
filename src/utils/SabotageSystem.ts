@@ -1,7 +1,7 @@
 import { db } from '../firebaseConfig';
 import { ref, update, get } from 'firebase/database';
 
-export type SabotageType = 'syntax_error' | 'logic_swap' | 'clear_line';
+export type SabotageType = 'syntax_error' | 'logic_swap' | 'clear_line' | 'power_cut';
 
 export interface SabotageResult {
     success: boolean;
@@ -134,6 +134,10 @@ export async function triggerSabotage(
             case 'clear_line':
                 result = applyClearLine(currentCode);
                 break;
+            case 'power_cut':
+                // Power cut doesn't modify code, just triggers global state
+                result = { success: true, newCode: currentCode, description: 'Power grid cut!' };
+                break;
             default:
                 return { success: false, newCode: currentCode, description: 'Unknown sabotage type' };
         }
@@ -143,22 +147,34 @@ export async function triggerSabotage(
         }
 
         // Sync sabotaged code to Firebase
-        await update(ref(db, `gamestate/files/${fileId}`), {
-            content: result.newCode,
-            lastSabotage: {
-                type,
+        const updates: any = {};
+
+        if (type === 'power_cut') {
+            updates[`rooms/${roomCode}/gamestate/power`] = {
+                status: 'OFF',
                 timestamp: Date.now(),
-                targetPlayerId
-            }
-        });
+                triggeredBy: targetPlayerId // In this context it's the imposter
+            };
+        } else {
+            updates[`gamestate/files/${fileId}`] = {
+                content: result.newCode,
+                lastSabotage: {
+                    type,
+                    timestamp: Date.now(),
+                    targetPlayerId
+                }
+            };
+        }
 
         // Update sabotage cooldown in room
-        await update(ref(db, `rooms/${roomCode}/sabotage`), {
+        updates[`rooms/${roomCode}/sabotage`] = {
             lastAction: Date.now(),
             cooldownEnd: Date.now() + 30000 // 30 seconds
-        });
+        };
 
-        console.log(`[Sabotage] ${type} applied to ${fileId}:`, result.description);
+        await update(ref(db), updates);
+
+        console.log(`[Sabotage] ${type} applied:`, result.description);
         return result;
 
     } catch (error) {
