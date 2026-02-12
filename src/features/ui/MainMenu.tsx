@@ -77,7 +77,6 @@ export const MainMenu = () => {
         setPlayerName(name);
         setRoomCode(code);
         setIsHost(true);
-        useGameStore.getState().setGameMode('MULTIPLAYER');
         setGameState('LOBBY');
     };
 
@@ -113,7 +112,6 @@ export const MainMenu = () => {
         setPlayerName(name);
         setRoomCode(code);
         setIsHost(false);
-        useGameStore.getState().setGameMode('MULTIPLAYER');
         setGameState('LOBBY');
     };
 
@@ -161,6 +159,7 @@ export const MainMenu = () => {
         useGameStore.getState().setPlayerTint(tint || 0xffffff);
 
         // Determine Game State
+        const roomData = roomSnapshot.val();
         if (roomData.status === 'PLAYING') {
             setGameState('GAME');
         } else {
