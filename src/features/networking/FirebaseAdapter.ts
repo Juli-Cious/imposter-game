@@ -194,4 +194,46 @@ export class FirebaseAdapter implements NetworkService {
       playerName: this.playerName || 'Anonymous'
     });
   }
+
+  // --- Team Challenge & Victory Tracking ---
+
+  syncTeamChallengeCompletion(challengeId: string): void {
+    if (!this.roomCode) return;
+
+    // Use a set structure in Firebase to avoid duplicates
+    const challengeRef = this.getRoomRef(`teamChallenges/${challengeId}`);
+    set(challengeRef, true);
+
+    console.log(`[Firebase] Synced team challenge completion: ${challengeId}`);
+  }
+
+  subscribeToGameStatus(callback: (status: string, teamChallengesCompleted: number) => void): void {
+    if (!this.roomCode) return;
+
+    // Subscribe to both status and team challenges
+    const statusRef = this.getRoomRef('status');
+    const challengesRef = this.getRoomRef('teamChallenges');
+
+    let currentStatus = 'GAME';
+    let currentChallenges = 0;
+
+    onValue(statusRef, (snapshot) => {
+      currentStatus = snapshot.val() || 'GAME';
+      callback(currentStatus, currentChallenges);
+    });
+
+    onValue(challengesRef, (snapshot) => {
+      const data = snapshot.val();
+      currentChallenges = data ? Object.keys(data).length : 0;
+      callback(currentStatus, currentChallenges);
+
+      // Check for task-based victory
+      if (currentChallenges >= 3 && !currentStatus.includes('VICTORY')) {
+        // Update status to VICTORY_CREW
+        const statusUpdateRef = this.getRoomRef('status');
+        set(statusUpdateRef, 'VICTORY_CREW');
+        console.log('[Firebase] Task-based victory achieved!');
+      }
+    });
+  }
 }

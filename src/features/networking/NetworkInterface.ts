@@ -53,6 +53,10 @@ export interface NetworkService {
   sendChatMessage(text: string, playerName: string): void;
   subscribeToChat(callback: (messages: ChatMessage[]) => void): void;
   updatePlayerCustomization(skin: string, tint: number): void;
+
+  // Team Challenge Tracking & Victory
+  syncTeamChallengeCompletion(challengeId: string): void;
+  subscribeToGameStatus(callback: (status: string, teamChallengesCompleted: number) => void): void;
 }
 
 export interface ChatMessage {

@@ -17,7 +17,7 @@ import { usePlayerRole } from '../../hooks/usePlayerRole';
 import toast, { Toaster } from 'react-hot-toast';
 
 export const CodeEditor = () => {
-    const { activeFileId, closeTerminal, roomCode, playerId } = useGameStore();
+    const { activeFileId, closeTerminal, roomCode, playerId, network } = useGameStore();
     const { completeChallenge, completedChallenges } = usePlayerProgress();
     const [code, setCode] = useState('');
     const [output, setOutput] = useState('');
@@ -133,6 +133,11 @@ export const CodeEditor = () => {
         // Track completion in player progress
         if (result.success && activeFileId) {
             completeChallenge(activeFileId);
+
+            // Sync to team challenges in multiplayer (for heroes only)
+            if (roomCode && network && playerRole === 'hero') {
+                network.syncTeamChallengeCompletion(activeFileId);
+            }
 
             // Trigger SDG Popup (Visual Celebration)
             if (problem.sdgGoals && problem.sdgGoals.length > 0) {

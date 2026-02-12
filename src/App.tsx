@@ -13,20 +13,26 @@ import { TutorialOverlay } from "./features/ui/TutorialOverlay";
 import { VictoryAnimation } from "./features/ui/VictoryAnimation";
 import { LoginScreen } from "./features/ui/LoginScreen";
 import { RedemptionScreen } from "./features/ui/RedemptionScreen";
+import { VictoryScreen } from "./features/ui/VictoryScreen";
 
 import { ChallengeMonitor } from "./features/game/ChallengeMonitor";
 import { usePlayerProgress } from "./stores/usePlayerProgress";
 import { useAuthStore } from "./stores/useAuthStore";
 import { useState, useEffect } from "react";
+import type { PlayerState } from "./features/networking/NetworkInterface";
 import "./index.css";
 import { DEMO_MODE } from "./config/demoMode";
 
 function App() {
-  const { isTerminalOpen, terminalType, gameState } = useGameStore();
+  const { isTerminalOpen, terminalType, gameState, network, roomCode, isHost } = useGameStore();
   const { shouldShowIntro, shouldShowTutorial, shouldShowVictory, completedChallenges, hasSeenVictory } = usePlayerProgress();
   const { isAuthenticated, isLoading, initialize } = useAuthStore();
   const [showVictory, setShowVictory] = useState(false);
 
+  // Multiplayer victory state
+  const [multiplayerVictoryStatus, setMultiplayerVictoryStatus] = useState<'VICTORY_CREW' | 'VICTORY_IMPOSTER' | null>(null);
+  const [teamChallengesCompleted, setTeamChallengesCompleted] = useState(0);
+  const [players, setPlayers] = useState<PlayerState[]>([]);
 
 
   // Initialize Firebase auth on mount (skip if demo mode)
@@ -35,6 +41,25 @@ function App() {
       initialize();
     }
   }, [initialize]);
+
+  // Subscribe to multiplayer game status (for victory detection)
+  useEffect(() => {
+    if (!network || gameState !== 'GAME') return;
+
+    // Subscribe to game status and team challenge completed count
+    network.subscribeToGameStatus((status, teamChallenges) => {
+      setTeamChallengesCompleted(teamChallenges);
+
+      if (status === 'VICTORY_CREW' || status === 'VICTORY_IMPOSTER') {
+        setMultiplayerVictoryStatus(status);
+      }
+    });
+
+    // Subscribe to players to show in victory screen
+    network.subscribeToPlayers((playerList) => {
+      setPlayers(playerList);
+    });
+  }, [network, gameState]);
 
   // Check for victory condition
   useEffect(() => {
@@ -101,6 +126,34 @@ function App() {
           {isTerminalOpen && terminalType === 'editor' && <CodeEditor />}
           {isTerminalOpen && terminalType === 'hub' && <CentralTerminal />}
           {isTerminalOpen && terminalType === 'academy' && <AcademyUI />}
+
+          {/* Multiplayer Victory Screen */}
+          {multiplayerVictoryStatus && (
+            <VictoryScreen
+              status={multiplayerVictoryStatus}
+              players={players}
+              teamChallengesCompleted={teamChallengesCompleted}
+              onReturnToLobby={isHost ? () => {
+                // Host can reset game to lobby
+                if (network && roomCode) {
+                  import('firebase/database').then(({ ref, set }) => {
+                    import('./firebaseConfig').then(({ db }) => {
+                      set(ref(db, `rooms/${roomCode}/status`), 'LOBBY');
+                      setMultiplayerVictoryStatus(null);
+                    });
+                  });
+                }
+              } : undefined}
+              onLeaveGame={() => {
+                // Leave the game (disconnect)
+                if (network) {
+                  network.disconnect();
+                }
+                useGameStore.getState().setGameState('MENU');
+                setMultiplayerVictoryStatus(null);
+              }}
+            />
+          )}
         </>
       )}
     </div>
