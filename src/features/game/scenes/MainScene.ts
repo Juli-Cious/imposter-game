@@ -320,6 +320,10 @@ export class MainScene extends Phaser.Scene {
     // 6. Handle Other Players
     this.network.subscribeToPlayers((players: PlayerState[]) => {
       this.updateOtherPlayers(players);
+      // Sync to Global Store (CRITICAL for UI)
+      import('../../../stores/usePlayerStore').then(({ usePlayerStore }) => {
+        usePlayerStore.getState().setPlayers(players);
+      });
     });
 
     // 7. Cleanup

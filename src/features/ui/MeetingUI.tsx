@@ -137,6 +137,13 @@ export const MeetingUI = () => {
                     status: 'RESULTS',
                     result: finalResultMsg
                 });
+            } else {
+                console.error("CRITICAL: Ejected player not found in store!", candidate, players);
+                // Fallback result so the game doesn't hang
+                update(ref(db, `rooms/${roomCode}/meeting`), {
+                    status: 'RESULTS',
+                    result: "Player ejected (Name unknown - Sync Error)"
+                });
             }
         }
 

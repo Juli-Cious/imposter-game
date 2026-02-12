@@ -20,6 +20,7 @@ export interface MeetingState {
   presenterId: string | null;
   highlightedLine: { fileId: string, line: number } | null; // Changed from number | null
   votes: Record<string, string>; // voterId -> candidateId
+  result: string | null; // Result message (or null if not showing results)
 }
 
 export interface NetworkService {
