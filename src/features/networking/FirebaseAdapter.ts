@@ -153,19 +153,14 @@ export class FirebaseAdapter implements NetworkService {
     set(lineRef, { fileId, line });
   }
 
-  sendChatMessage(text: string): void {
+  sendChatMessage(text: string, playerName: string): void {
     if (!this.roomCode) return;
     const chatRef = this.getRoomRef('meeting/chat');
-    // Using a simple name fetch would be ideal, but for now we rely on the store or passed name.
-    // Since this method doesn't take name, we'll assume the UI handles it or we fetched it.
-    // Actually, we can't easily get our own name here without storing it.
-    // Let's assume the consumer of the message (UI) knows who we are, OR we store `this.playerName`.
-    // For now, let's just use "Player" + ID snippet as fallback if we don't store it.
 
     push(chatRef, {
       id: uuidv4(),
       playerId: this.playerId,
-      playerName: this.playerName || 'Unknown',
+      playerName: playerName, // Use passed name from UI (Store)
       text,
       timestamp: Date.now()
     });

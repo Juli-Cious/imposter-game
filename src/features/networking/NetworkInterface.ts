@@ -50,7 +50,7 @@ export interface NetworkService {
 
   // Chat
   playerId: string; // Expose ID for UI
-  sendChatMessage(text: string): void;
+  sendChatMessage(text: string, playerName: string): void;
   subscribeToChat(callback: (messages: ChatMessage[]) => void): void;
   updatePlayerCustomization(skin: string, tint: number): void;
 }

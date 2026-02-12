@@ -204,7 +204,10 @@ export const MeetingUI = () => {
     const handleSendChat = (e: React.FormEvent) => {
         e.preventDefault();
         if (!chatInput.trim() || !network) return;
-        network.sendChatMessage(chatInput.trim());
+
+        // Find my name from store
+        const myName = players.find(p => p.id === playerId)?.name || "Unknown";
+        network.sendChatMessage(chatInput.trim(), myName);
         setChatInput('');
     };
 
