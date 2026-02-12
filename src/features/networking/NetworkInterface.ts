@@ -18,9 +18,9 @@ export interface MeetingState {
   callerId: string | null;
   meetingEndTime: number;
   presenterId: string | null;
-  highlightedLine: { fileId: string, line: number } | null; // Changed from number | null
+  highlightedLine: { fileId: string, line: number } | null;
   votes: Record<string, string>; // voterId -> candidateId
-  result: string | null; // Result message (or null if not showing results)
+  result: string | null;
 }
 
 export interface NetworkService {

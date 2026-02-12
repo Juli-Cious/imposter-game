@@ -1,4 +1,4 @@
-import type { NetworkService, PlayerState } from "./NetworkInterface";
+import type { NetworkService, PlayerState, MeetingState, ChatMessage } from "./NetworkInterface";
 import { db } from "../../firebaseConfig";
 import { ref, onValue, set, update, onDisconnect, push } from "firebase/database";
 import type { DatabaseReference } from "firebase/database";
@@ -94,7 +94,7 @@ export class FirebaseAdapter implements NetworkService {
 
   // --- Meeting Implementation ---
 
-  subscribeToMeeting(callback: (state: import("./NetworkInterface").MeetingState) => void): void {
+  subscribeToMeeting(callback: (state: MeetingState) => void): void {
     if (!this.roomCode) return;
     const meetingRef = this.getRoomRef('meeting');
     onValue(meetingRef, (snapshot) => {
@@ -166,7 +166,7 @@ export class FirebaseAdapter implements NetworkService {
     });
   }
 
-  subscribeToChat(callback: (messages: import("./NetworkInterface").ChatMessage[]) => void): void {
+  subscribeToChat(callback: (messages: ChatMessage[]) => void): void {
     if (!this.roomCode) return;
     const chatRef = this.getRoomRef('meeting/chat');
     onValue(chatRef, (snapshot) => {
