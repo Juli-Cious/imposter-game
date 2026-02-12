@@ -421,9 +421,13 @@ export const MeetingUI = () => {
 
                             {votes[playerId!] && (() => {
                                 const myVotedPlayerId = votes[playerId!];
+                                console.log('DEBUG: My vote:', myVotedPlayerId);
+                                console.log('DEBUG: Result message:', result);
+                                console.log('DEBUG: Players:', players);
 
                                 // Skip vote
                                 if (myVotedPlayerId === 'skip') {
+                                    console.log('DEBUG: Showing skip message');
                                     return (
                                         <div className="text-2xl font-black italic p-4 rounded-xl mb-4 bg-gray-900/20 text-gray-400 border border-gray-400/50">
                                             PLAYED IT SAFE 💨
@@ -433,7 +437,10 @@ export const MeetingUI = () => {
 
                                 // Check if voted player was the imposter by parsing result message
                                 const votedPlayer = players.find(p => p.id === myVotedPlayerId);
+                                console.log('DEBUG: Voted player:', votedPlayer);
                                 const wasImposter = votedPlayer && result?.includes(`${votedPlayer.name} was the Imposter!`);
+                                console.log('DEBUG: Was imposter?', wasImposter);
+                                console.log('DEBUG: Checking for string:', `${votedPlayer?.name} was the Imposter!`);
 
                                 return (
                                     <div className={`text-2xl font-black italic p-4 rounded-xl mb-4
