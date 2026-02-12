@@ -19,7 +19,10 @@ import { BootLoader } from "./features/ui/BootLoader";
 import { AnimatePresence, motion } from "framer-motion";
 import { SabotageMenu } from "./features/ui/SabotageMenu";
 import { usePlayerRole } from "./hooks/usePlayerRole";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
+import { GameTimer } from "./features/ui/GameTimer";
+import { DeployTerminal } from "./features/ui/DeployTerminal";
+import { JailOverlay } from "./features/ui/JailOverlay";
 
 import { ChallengeMonitor } from "./features/game/ChallengeMonitor";
 import { usePlayerProgress } from "./stores/usePlayerProgress";
@@ -54,8 +57,9 @@ function App() {
     if (!network || gameState !== 'GAME') return;
 
     // Subscribe to game status and team challenge completed count
-    network.subscribeToGameStatus((status, teamChallenges) => {
-      setTeamChallengesCompleted(teamChallenges);
+    // Subscribe to game status and team challenge completed count
+    network.subscribeToGameStatus((status) => {
+      // setTeamChallengesCompleted(teamChallenges); // REMOVED
 
       if (status === 'VICTORY_CREW' || status === 'VICTORY_IMPOSTER') {
         setMultiplayerVictoryStatus(status);
@@ -66,6 +70,22 @@ function App() {
     network.subscribeToPlayers((playerList) => {
       setPlayers(playerList);
     });
+
+    // Subscribe to Global Notifications
+    network.subscribeToNotifications((message, type) => {
+      switch (type) {
+        case 'success':
+          toast.success(message);
+          break;
+        case 'error':
+          toast.error(message);
+          break;
+        default:
+          toast(message, { icon: '📢' });
+          break;
+      }
+    });
+
   }, [network, gameState]);
 
   // Check for victory condition
@@ -229,6 +249,9 @@ function App() {
       </AnimatePresence>
 
       <Toaster position="top-right" />
+      <GameTimer />
+      <DeployTerminal />
+      <JailOverlay />
 
       {/* Global Sabotage Menu for Imposters */}
       {gameState === 'GAME' && playerRole === 'imposter' && roomCode && playerId && (

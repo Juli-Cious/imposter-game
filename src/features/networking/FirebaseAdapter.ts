@@ -183,6 +183,39 @@ export class FirebaseAdapter implements NetworkService {
     update(myRef, { skin, tint });
   }
 
+  // --- Global Notifications (Toasts) ---
+  sendNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
+    if (!this.roomCode) return;
+    const notifRef = this.getRoomRef('notifications');
+    push(notifRef, {
+      message,
+      type,
+      timestamp: Date.now(),
+      author: this.playerId
+    });
+  }
+
+  subscribeToNotifications(callback: (message: string, type: 'success' | 'error' | 'info') => void): void {
+    if (!this.roomCode) return;
+    const notifRef = this.getRoomRef('notifications');
+    // Listen for new notifications
+    // Using limitToLast(1) to avoid replaying old notifications on connect (simple approach)
+    import('firebase/database').then(({ query, limitToLast }) => {
+      const recentNotifs = query(notifRef, limitToLast(1));
+      onValue(recentNotifs, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const notif = Object.values(data)[0] as { message: string, type: string, timestamp: number };
+          // Only show if it's recent (within last 5 seconds) to avoid spam on join
+          if (notif.timestamp > Date.now() - 5000) {
+            callback(notif.message, notif.type as any);
+          }
+        }
+      });
+    });
+  }
+
+
   submitFeedback(rating: number, comment: string): Promise<void> {
     const feedbackRef = ref(db, 'feedback');
     const newFeedbackRef = push(feedbackRef);
@@ -207,33 +240,49 @@ export class FirebaseAdapter implements NetworkService {
     console.log(`[Firebase] Synced team challenge completion: ${challengeId}`);
   }
 
-  subscribeToGameStatus(callback: (status: string, teamChallengesCompleted: number) => void): void {
+  subscribeToGameStatus(callback: (status: string) => void): void {
     if (!this.roomCode) return;
 
-    // Subscribe to both status and team challenges
     const statusRef = this.getRoomRef('status');
-    const challengesRef = this.getRoomRef('teamChallenges');
-
-    let currentStatus = 'GAME';
-    let currentChallenges = 0;
+    // We don't need teamChallenges for victory anymore, but might want to keep tracking it for UI if needed.
+    // However, the interface change requested (status: string) implies we drop the number.
 
     onValue(statusRef, (snapshot) => {
-      currentStatus = snapshot.val() || 'GAME';
-      callback(currentStatus, currentChallenges);
+      const currentStatus = snapshot.val() || 'GAME';
+      callback(currentStatus);
     });
+  }
 
-    onValue(challengesRef, (snapshot) => {
+  // --- Global Timer Logic ---
+  subscribeToTimer(callback: (remainingTime: number) => void): void {
+    if (!this.roomCode) return;
+    const timerRef = this.getRoomRef('gamestate/timer');
+
+    onValue(timerRef, (snapshot) => {
       const data = snapshot.val();
-      currentChallenges = data ? Object.keys(data).length : 0;
-      callback(currentStatus, currentChallenges);
-
-      // Check for task-based victory
-      if (currentChallenges >= 3 && !currentStatus.includes('VICTORY')) {
-        // Update status to VICTORY_CREW
-        const statusUpdateRef = this.getRoomRef('status');
-        set(statusUpdateRef, 'VICTORY_CREW');
-        console.log('[Firebase] Task-based victory achieved!');
+      if (!data || !data.endTime) {
+        callback(600); // Default 10 mins if not set
+        return;
       }
+
+      const remainingStats = Math.max(0, Math.ceil((data.endTime - Date.now()) / 1000));
+      callback(remainingStats);
+    });
+  }
+
+  applyTimerPenalty(seconds: number): void {
+    if (!this.roomCode) return;
+    const timerRef = this.getRoomRef('gamestate/timer');
+
+    // We need to read current end time first to subtract
+    import('firebase/database').then(({ get }) => {
+      get(timerRef).then((snapshot) => {
+        const data = snapshot.val();
+        if (data && data.endTime) {
+          const newEndTime = data.endTime - (seconds * 1000);
+          update(timerRef, { endTime: newEndTime });
+        }
+      });
     });
   }
 }

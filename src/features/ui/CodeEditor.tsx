@@ -127,33 +127,47 @@ export const CodeEditor = () => {
         setIsRunning(false);
 
         // Update Status in Firebase
-        const newStatus = result.success ? 'PASS' : 'FAIL';
-        setStatus(newStatus);
+        let newStatus: 'PASS' | 'FAIL' = result.success ? 'PASS' : 'FAIL';
+        let isCorrupted = false;
 
-        // Track completion in player progress
-        if (result.success && activeFileId) {
-            completeChallenge(activeFileId);
-
-            // Sync to team challenges in multiplayer (for heroes only)
-            if (roomCode && network && playerRole === 'hero') {
-                network.syncTeamChallengeCompletion(activeFileId);
+        // IMPOSTER MECHANIC: Deceptive Save
+        if (playerRole === 'imposter') {
+            if (!result.success) {
+                // If code is broken, Imposters can "Fake" a pass
+                newStatus = 'PASS';
+                isCorrupted = true;
+                toast.success('😈 SABOTAGE SUCCESSFUL: System incorrectly reports stability.', {
+                    icon: '😈',
+                    style: { background: '#4a0404', color: '#ffaaaa' }
+                });
+            } else {
+                toast('You fixed it? Preventing sabotage...', { icon: '🤔' });
             }
-
-            // Trigger SDG Popup (Visual Celebration)
-            if (problem.sdgGoals && problem.sdgGoals.length > 0) {
-                setCompletedSdg(problem.sdgGoals[0]); // Just show first one for simplicity
-            }
-
         } else {
-            // If failed, checking if it's an error vs just wrong output
-            if (result.output.toLowerCase().includes('error')) {
-                setLastError(result.output);
-                // Optional: Auto-open chat or show a "Ask Gaia" button
+            // Hero Logic (Standard)
+            if (result.success && activeFileId) {
+                completeChallenge(activeFileId);
+                // Sync to team challenges in multiplayer (for heroes only)
+                if (roomCode && network) {
+                    network.syncTeamChallengeCompletion(activeFileId);
+                }
+                // Trigger SDG Popup (Visual Celebration)
+                if (problem.sdgGoals && problem.sdgGoals.length > 0) {
+                    setCompletedSdg(problem.sdgGoals[0]);
+                }
+            } else {
+                if (result.output.toLowerCase().includes('error')) {
+                    setLastError(result.output);
+                }
             }
         }
 
+        setStatus(newStatus); // Update local UI
+
+        // Firebase Update
         update(ref(db, `gamestate/files/${activeFileId}`), {
-            testStatus: newStatus
+            testStatus: newStatus,
+            isCorrupted: isCorrupted
         });
     };
 

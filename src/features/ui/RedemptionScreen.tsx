@@ -12,8 +12,8 @@ export const RedemptionScreen = () => {
 
     const handleHighlightError = () => {
         // Logic to help heroes: Insert a "HINT" in the global chat or highlight a line
-        // For now, let's just send a chat message as "SYSTEM"
-        network?.sendChatMessage("The Reformed Imposter has revealed a hint! Check line 10 in oxygen.py!", "SYSTEM");
+        // Now using global notifications
+        network?.sendNotification("💡 REFORMED HINT: Creating functions without calling them is useless!", "info");
         // Or trigger a specific visual aid
     };
 

@@ -10,7 +10,8 @@ export interface PlayerState {
   // Imposter Mode fields
   role?: 'hero' | 'imposter' | 'reformed';
   isAlive?: boolean;
-  status?: 'active' | 'ejected' | 'reformed';
+  status?: 'active' | 'ejected' | 'reformed' | 'jailed';
+  jailEndTime?: number;
 }
 
 export interface MeetingState {
@@ -59,9 +60,19 @@ export interface NetworkService {
   subscribeToChat(callback: (messages: ChatMessage[]) => void): void;
   updatePlayerCustomization(skin: string, tint: number): void;
 
+  // Notifications
+  sendNotification(message: string, type?: 'success' | 'error' | 'info'): void;
+  subscribeToNotifications(callback: (message: string, type: 'success' | 'error' | 'info') => void): void;
+
+
   // Team Challenge Tracking & Victory
   syncTeamChallengeCompletion(challengeId: string): void;
-  subscribeToGameStatus(callback: (status: string, teamChallengesCompleted: number) => void): void;
+  // REMOVED LEGACY: subscribeToGameStatus(callback: (status: string, teamChallengesCompleted: number) => void): void;
+  subscribeToGameStatus(callback: (status: string) => void): void; // Simplified wrapper
+
+  // Global Timer
+  subscribeToTimer(callback: (remainingTime: number) => void): void;
+  applyTimerPenalty(seconds: number): void;
 }
 
 export interface ChatMessage {

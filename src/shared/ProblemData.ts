@@ -18,6 +18,7 @@ export interface CodingChallenge {
     content: string;
     expectedOutput: string;
     testStatus: 'PENDING' | 'PASS' | 'FAIL';
+    isCorrupted?: boolean;
 
     // Hints (progressive)
     hints: string[];

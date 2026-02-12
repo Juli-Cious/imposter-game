@@ -5,6 +5,7 @@ import { ref, onValue, update } from 'firebase/database';
 import { PlanetDashboard } from './PlanetDashboard';
 import { RoleRevealModal } from './RoleRevealModal';
 import { assignRoles, syncRolesToFirebase, getPlayerRole } from '../../utils/RoleManager';
+import { LEVEL_1_PROBLEMS } from '../../shared/ProblemData';
 
 import { usePlayerStore } from '../../stores/usePlayerStore';
 // // import { FirebaseAdapter } from '../../features/networking/FirebaseAdapter'; <--- MOVED TO COMMENT OR REMOVED
@@ -117,8 +118,16 @@ export const LobbyScreen = () => {
             // 2. Sync roles to Firebase
             await syncRolesToFirebase(roomCode, roleAssignments);
 
-            // 3. Set status to PLAYING
-            await update(ref(db, `rooms/${roomCode}`), { status: 'PLAYING' });
+            // 3. Set status to PLAYING, Initialize Timer, and Reset Level
+            await update(ref(db, `rooms/${roomCode}`), {
+                status: 'PLAYING',
+                gamestate: {
+                    timer: {
+                        endTime: Date.now() + 600000 // 10 minutes
+                    },
+                    files: LEVEL_1_PROBLEMS // Reset environment
+                }
+            });
 
             console.log("[Lobby] Roles assigned and game started successfully");
         } catch (error) {

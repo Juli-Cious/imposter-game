@@ -145,9 +145,9 @@ export const MeetingUI = () => {
 
             // Redemption Arc: If Imposter, they become Reformed
             if (ejectedPlayer.role === 'imposter') {
-                finalResultMsg = `${ejectedPlayer.name} was the Imposter! They are now Reformed.`;
+                finalResultMsg = `${ejectedPlayer.name} was the Imposter! They are JAILED for 60s.`;
             } else {
-                finalResultMsg = `${ejectedPlayer.name} was NOT the Imposter.`;
+                finalResultMsg = `${ejectedPlayer.name} was NOT the Imposter. They are JAILED for 60s.`;
             }
         }
 
@@ -164,28 +164,13 @@ export const MeetingUI = () => {
         // 4. Update Firebase
         const globalUpdates: any = {};
         if (ejectedPlayer && outcomeState.ejectedId) {
-            globalUpdates[`rooms/${roomCode}/players/${ejectedPlayer.id}/isAlive`] = false;
-            if (ejectedPlayer.role === 'imposter') {
-                globalUpdates[`rooms/${roomCode}/players/${ejectedPlayer.id}/status`] = 'reformed';
-                globalUpdates[`rooms/${roomCode}/players/${ejectedPlayer.id}/role`] = 'reformed';
-            } else {
-                globalUpdates[`rooms/${roomCode}/players/${ejectedPlayer.id}/status`] = 'ejected';
-            }
+            // JAIL LOGIC (Instead of Eject/Kill)
+            const jailTime = 60000; // 60 seconds
+            globalUpdates[`rooms/${roomCode}/players/${ejectedPlayer.id}/status`] = 'jailed';
+            globalUpdates[`rooms/${roomCode}/players/${ejectedPlayer.id}/jailEndTime`] = Date.now() + jailTime;
 
-            // --- WIN CONDITION CHECK ---
-            const remainingPlayers = players.filter((p: PlayerState) => p.isAlive && p.id !== ejectedPlayer.id);
-            // Count ONLY active imposters (not reformed)
-            const imposterCount = remainingPlayers.filter((p: PlayerState) => p.role === 'imposter').length;
-            // Count heroes (exclude reformed imposters too)
-            const heroCount = remainingPlayers.filter((p: PlayerState) => p.role === 'hero').length;
-
-            if (imposterCount === 0) {
-                // All imposters voted out or reformed
-                globalUpdates[`rooms/${roomCode}/status`] = 'VICTORY_CREW';
-            } else if (imposterCount >= heroCount) {
-                // Imposters equal or outnumber heroes
-                globalUpdates[`rooms/${roomCode}/status`] = 'VICTORY_IMPOSTER';
-            }
+            // Note: We do NOT set isAlive to false. They are alive, just jailed.
+            // We also do NOT trigger Victory here anymore. Deployment is the only way (or timer).
         }
 
         update(ref(db), globalUpdates);

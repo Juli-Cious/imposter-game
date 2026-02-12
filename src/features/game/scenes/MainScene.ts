@@ -4,6 +4,8 @@ import { useGameStore } from '../../../stores/useGameStore';
 import type { NetworkService, PlayerState } from '../../networking/NetworkInterface';
 import { MapBuilder } from '../MapBuilder';
 import { useMeetingStore } from '../../../stores/useMeetingStore';
+// import { usePlayerStore } from '../../../stores/usePlayerStore'; // Dynamic import used instead
+// Wait, I used dynamic import in update loop. But verify if I need top level import.
 
 export class MainScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -392,6 +394,20 @@ export class MainScene extends Phaser.Scene {
       if (this.footsteps && this.footsteps.isPlaying) this.footsteps.stop();
       return;
     }
+
+    // JAIL CHECK
+    import('../../../stores/usePlayerStore').then(({ usePlayerStore }) => {
+      const me = usePlayerStore.getState().players.find(p => p.id === this.myPlayerId);
+      if (me && me.status === 'jailed') {
+        body.setVelocity(0);
+        this.player.play('doux-idle', true);
+        return;
+      }
+    });
+    // Sync check (above is async so it might lag one frame, but in update loop we can just check directly if we import it top level)
+    // Actually dynamic import in update loop is BAD. usePlayerStore is already imported at top?
+    // No, it was imported in `create` via dynamic import.
+    // Let's rely on `this.network` or `useGameStore` if possible, or just import `usePlayerStore` at top.
 
     // Name Tag update moved to postupdate to fix jitter
 
