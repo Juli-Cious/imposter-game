@@ -14,9 +14,7 @@ export const VictoryScreen = ({ status, players, teamChallengesCompleted, onRetu
     const { isHost } = useGameStore();
     const isHeroesWin = status === 'VICTORY_CREW';
 
-    // Determine win reason
-    const imposters = players.filter(p => p.role === 'imposter' || p.role === 'reformed');
-    const heroes = players.filter(p => p.role === 'hero');
+
 
     let winReason = '';
     if (isHeroesWin) {
@@ -35,8 +33,8 @@ export const VictoryScreen = ({ status, players, teamChallengesCompleted, onRetu
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className={`max-w-4xl w-full mx-4 rounded-3xl p-8 shadow-2xl border-4 ${isHeroesWin
-                        ? 'bg-gradient-to-br from-blue-900 to-green-900 border-green-500'
-                        : 'bg-gradient-to-br from-red-900 to-gray-900 border-red-500'
+                    ? 'bg-gradient-to-br from-blue-900 to-green-900 border-green-500'
+                    : 'bg-gradient-to-br from-red-900 to-gray-900 border-red-500'
                     }`}
             >
                 {/* Header */}
@@ -82,15 +80,15 @@ export const VictoryScreen = ({ status, players, teamChallengesCompleted, onRetu
                             <div
                                 key={player.id}
                                 className={`p-3 rounded-lg border-2 ${player.role === 'imposter' || player.role === 'reformed'
-                                        ? 'bg-red-900/30 border-red-500'
-                                        : 'bg-blue-900/30 border-blue-500'
+                                    ? 'bg-red-900/30 border-red-500'
+                                    : 'bg-blue-900/30 border-blue-500'
                                     }`}
                             >
                                 <div className="flex items-center justify-between">
                                     <span className="text-white font-bold">{player.name}</span>
                                     <span className={`text-sm font-bold px-2 py-1 rounded ${player.role === 'imposter' || player.role === 'reformed'
-                                            ? 'bg-red-600 text-white'
-                                            : 'bg-blue-600 text-white'
+                                        ? 'bg-red-600 text-white'
+                                        : 'bg-blue-600 text-white'
                                         }`}>
                                         {player.role === 'reformed' ? '😇 REFORMED' :
                                             player.role === 'imposter' ? '😈 IMPOSTER' : '🦸 HERO'}
