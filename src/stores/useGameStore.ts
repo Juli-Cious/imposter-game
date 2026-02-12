@@ -38,13 +38,7 @@ interface GameStore {
     setIsHost: (isHost: boolean) => void;
     setGameState: (state: 'MENU' | 'LOBBY' | 'GAME') => void;
 
-    // Game Mode
-    gameMode: 'MULTIPLAYER' | 'SINGLE_PLAYER';
-    setGameMode: (mode: 'MULTIPLAYER' | 'SINGLE_PLAYER') => void;
 
-    // Difficulty
-    difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-    setDifficulty: (diff: 'EASY' | 'MEDIUM' | 'HARD') => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -107,9 +101,5 @@ export const useGameStore = create<GameStore>((set) => ({
     setIsHost: (isHost) => set({ isHost }),
     setGameState: (gameState) => set({ gameState }),
 
-    gameMode: 'MULTIPLAYER',
-    setGameMode: (gameMode) => set({ gameMode }),
 
-    difficulty: 'EASY',
-    setDifficulty: (difficulty) => set({ difficulty })
 }));

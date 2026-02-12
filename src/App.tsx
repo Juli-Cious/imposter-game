@@ -13,7 +13,7 @@ import { TutorialOverlay } from "./features/ui/TutorialOverlay";
 import { VictoryAnimation } from "./features/ui/VictoryAnimation";
 import { LoginScreen } from "./features/ui/LoginScreen";
 import { RedemptionScreen } from "./features/ui/RedemptionScreen";
-import { AIImposterService } from "./services/AIImposterService";
+
 import { ChallengeMonitor } from "./features/game/ChallengeMonitor";
 import { usePlayerProgress } from "./stores/usePlayerProgress";
 import { useAuthStore } from "./stores/useAuthStore";
@@ -27,18 +27,7 @@ function App() {
   const { isAuthenticated, isLoading, initialize } = useAuthStore();
   const [showVictory, setShowVictory] = useState(false);
 
-  // AI Imposter Lifecycle
-  useEffect(() => {
-    if (gameState === 'GAME' && useGameStore.getState().gameMode === 'SINGLE_PLAYER') {
-      AIImposterService.getInstance().start();
-    } else {
-      AIImposterService.getInstance().stop();
-    }
 
-    return () => {
-      AIImposterService.getInstance().stop();
-    }
-  }, [gameState]);
 
   // Initialize Firebase auth on mount (skip if demo mode)
   useEffect(() => {
