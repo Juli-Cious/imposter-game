@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import type { PlayerState } from '../networking/NetworkInterface';
 import { useMeetingStore } from '../../stores/useMeetingStore';
 import { useGameStore } from '../../stores/useGameStore';
 import { usePlayerStore } from '../../stores/usePlayerStore';
@@ -79,7 +80,6 @@ export const MeetingUI = () => {
     const handleMeetingEnd = async () => {
         if (!roomCode) return;
 
-        // 1. Tally Votes
         const voteCounts: Record<string, number> = {};
         let skipCount = 0;
 
@@ -118,10 +118,19 @@ export const MeetingUI = () => {
 
         // 3. Apply Result
         let finalResultMsg = "";
-        const ejectedPlayer = candidate ? players.find((p: any) => p.id === candidate) : null;
+        let outcomeState: any = {
+            ejectedId: null,
+            wasImposter: false,
+            reason: 'VOTE_SKIP'
+        };
+
+        const ejectedPlayer = candidate ? players.find((p: PlayerState) => p.id === candidate) : null;
 
         // Skip if: skip votes are higher than max, OR there's a tie, OR no valid candidate
         if (skipCount > maxVotes || isTie || !candidate) {
+            outcomeState.reason = isTie ? 'VOTE_TIE' : 'VOTE_SKIP';
+            outcomeState.ejectedId = null;
+
             if (skipCount > maxVotes) {
                 finalResultMsg = `Vote Skipped (Skip votes won with ${skipCount} votes).`;
             } else if (isTie) {
@@ -130,6 +139,10 @@ export const MeetingUI = () => {
                 finalResultMsg = `Vote Skipped (No votes cast).`;
             }
         } else if (ejectedPlayer) {
+            outcomeState.ejectedId = ejectedPlayer.id;
+            outcomeState.wasImposter = ejectedPlayer.role === 'imposter';
+            outcomeState.reason = 'VOTE_EJECT';
+
             // Redemption Arc: If Imposter, they become Reformed
             if (ejectedPlayer.role === 'imposter') {
                 finalResultMsg = `${ejectedPlayer.name} was the Imposter! They are now Reformed.`;
@@ -141,7 +154,7 @@ export const MeetingUI = () => {
         // Add Vote Summary to message
         const voteSummary = Object.entries(voteCounts)
             .map(([id, count]) => {
-                const name = players.find((p: any) => p.id === id)?.name || "Unknown";
+                const name = players.find((p: PlayerState) => p.id === id)?.name || "Unknown";
                 return `${name}: ${count}`;
             })
             .join(", ") + (skipCount > 0 ? ` (Skip: ${skipCount})` : "");
@@ -150,7 +163,7 @@ export const MeetingUI = () => {
 
         // 4. Update Firebase
         const globalUpdates: any = {};
-        if (ejectedPlayer && finalResultMsg.includes(ejectedPlayer.name)) {
+        if (ejectedPlayer && outcomeState.ejectedId) {
             globalUpdates[`rooms/${roomCode}/players/${ejectedPlayer.id}/isAlive`] = false;
             if (ejectedPlayer.role === 'imposter') {
                 globalUpdates[`rooms/${roomCode}/players/${ejectedPlayer.id}/status`] = 'reformed';
@@ -160,11 +173,11 @@ export const MeetingUI = () => {
             }
 
             // --- WIN CONDITION CHECK ---
-            const remainingPlayers = players.filter((p: any) => p.isAlive && p.id !== ejectedPlayer.id);
+            const remainingPlayers = players.filter((p: PlayerState) => p.isAlive && p.id !== ejectedPlayer.id);
             // Count ONLY active imposters (not reformed)
-            const imposterCount = remainingPlayers.filter((p: any) => p.role === 'imposter').length;
+            const imposterCount = remainingPlayers.filter((p: PlayerState) => p.role === 'imposter').length;
             // Count heroes (exclude reformed imposters too)
-            const heroCount = remainingPlayers.filter((p: any) => p.role === 'hero').length;
+            const heroCount = remainingPlayers.filter((p: PlayerState) => p.role === 'hero').length;
 
             if (imposterCount === 0) {
                 // All imposters voted out or reformed
@@ -178,7 +191,8 @@ export const MeetingUI = () => {
         update(ref(db), globalUpdates);
         update(ref(db, `rooms/${roomCode}/meeting`), {
             status: 'RESULTS',
-            result: fullResultMsg
+            result: fullResultMsg,
+            outcome: outcomeState
         });
 
         // No auto-close - user must manually close
@@ -190,7 +204,8 @@ export const MeetingUI = () => {
             status: 'IDLE',
             votes: {},
             highlightedLine: null,
-            result: null
+            result: null,
+            outcome: null
         });
     };
 
@@ -468,19 +483,44 @@ export const MeetingUI = () => {
                                     );
                                 }
 
-                                // Check if voted player was the imposter by parsing result message
-                                const votedPlayer = players.find(p => p.id === myVotedPlayerId);
-                                const wasImposter = votedPlayer && result?.includes(`${votedPlayer.name} was the Imposter!`);
+                                // 3. Use Outcome Object for Feedback (Reliable)
+                                const { outcome } = useMeetingStore.getState(); // or use hook directly if subscribed
 
-                                return (
-                                    <div className={`text-2xl font-black italic p-4 rounded-xl mb-4
-                                        ${wasImposter
-                                            ? 'bg-green-900/20 text-green-500 border border-green-500/50'
-                                            : 'bg-red-900/20 text-red-500 border border-red-500/50'}
-                                    `}>
-                                        {wasImposter ? "CORRECT VOTE! ✅" : "INCORRECT VOTE! ❌"}
-                                    </div>
-                                );
+                                // If I voted for someone
+                                if (outcome && outcome.ejectedId) {
+                                    // Did I vote for the ejected person?
+                                    if (myVotedPlayerId === outcome.ejectedId) {
+                                        // Was it a good vote? (They were imposter)
+                                        if (outcome.wasImposter) {
+                                            return (
+                                                <div className="bg-green-900/20 text-green-500 border border-green-500/50 text-2xl font-black italic p-4 rounded-xl mb-4">
+                                                    CORRECT VOTE! ✅
+                                                </div>
+                                            );
+                                        } else {
+                                            return (
+                                                <div className="bg-red-900/20 text-red-500 border border-red-500/50 text-2xl font-black italic p-4 rounded-xl mb-4">
+                                                    INCORRECT VOTE! ❌
+                                                </div>
+                                            );
+                                        }
+                                    } else {
+                                        // I voted for someone else (not the ejected person)
+                                        return (
+                                            <div className="bg-gray-900/20 text-gray-500 border border-gray-500/50 text-xl font-bold p-4 rounded-xl mb-4">
+                                                Result: {outcome.wasImposter ? "Imposter Caught" : "Innocent Ejected"}
+                                            </div>
+                                        );
+                                    }
+                                } else if (outcome?.reason === 'VOTE_SKIP' || outcome?.reason === 'VOTE_TIE') {
+                                    return (
+                                        <div className="bg-gray-900/20 text-gray-400 border border-gray-400/50 text-xl font-bold p-4 rounded-xl mb-4">
+                                            No one was ejected.
+                                        </div>
+                                    );
+                                }
+
+                                return null;
                             })()}
 
                             {!isHost && (

@@ -15,6 +15,8 @@ export class MainScene extends Phaser.Scene {
   private wallLayer!: Phaser.Tilemaps.TilemapLayer;
   private doorTiles: { x: number, y: number }[] = [];
   private dbZone!: Phaser.GameObjects.Rectangle;
+
+  // Define interface for WASD keys
   private wasd!: {
     W: Phaser.Input.Keyboard.Key;
     A: Phaser.Input.Keyboard.Key;
@@ -22,11 +24,12 @@ export class MainScene extends Phaser.Scene {
     D: Phaser.Input.Keyboard.Key;
     M: Phaser.Input.Keyboard.Key; // Debug: Meeting
   };
+
   private logicZone!: Phaser.GameObjects.Rectangle;
   private hubZone!: Phaser.GameObjects.Rectangle;
-  private bgm!: Phaser.Sound.BaseSound;
-  private meetingBgm!: Phaser.Sound.BaseSound;
-  private footsteps!: Phaser.Sound.BaseSound;
+  private bgm!: Phaser.Sound.BaseSound | Phaser.Sound.WebAudioSound | Phaser.Sound.HTML5AudioSound;
+  private meetingBgm!: Phaser.Sound.BaseSound | Phaser.Sound.WebAudioSound | Phaser.Sound.HTML5AudioSound;
+  private footsteps!: Phaser.Sound.BaseSound | Phaser.Sound.WebAudioSound | Phaser.Sound.HTML5AudioSound;
 
   private zoneTimer: number = 0;
   private pendingZoneId: string | null = null;
@@ -136,9 +139,9 @@ export class MainScene extends Phaser.Scene {
 
     // Subscribe to Volume Changes
     useGameStore.subscribe((state) => {
-      if (this.bgm && 'setVolume' in this.bgm) (this.bgm as any).setVolume(state.bgmVolume);
-      if (this.meetingBgm && 'setVolume' in this.meetingBgm) (this.meetingBgm as any).setVolume(state.bgmVolume);
-      if (this.footsteps && 'setVolume' in this.footsteps) (this.footsteps as any).setVolume(state.sfxVolume);
+      if (this.bgm && 'setVolume' in this.bgm) (this.bgm as Phaser.Sound.WebAudioSound).setVolume(state.bgmVolume);
+      if (this.meetingBgm && 'setVolume' in this.meetingBgm) (this.meetingBgm as Phaser.Sound.WebAudioSound).setVolume(state.bgmVolume);
+      if (this.footsteps && 'setVolume' in this.footsteps) (this.footsteps as Phaser.Sound.WebAudioSound).setVolume(state.sfxVolume);
     });
 
     // Subscribe to Meeting State

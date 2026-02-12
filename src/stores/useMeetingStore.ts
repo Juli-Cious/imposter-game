@@ -11,6 +11,11 @@ interface MeetingState {
     votes: Record<string, string>; // voterId -> candidateId (or 'skip')
     chatMessages: import('../features/networking/NetworkInterface').ChatMessage[];
     result: string | null;
+    outcome?: {
+        ejectedId: string | null;
+        wasImposter: boolean;
+        reason: 'VOTE_TIE' | 'VOTE_SKIP' | 'VOTE_EJECT' | 'TASK_WIN' | 'IMPOSTER_WIN';
+    } | null;
 
     // Actions (Local updates from Subscriber)
     setMeetingState: (newState: Partial<MeetingState>) => void;
@@ -28,6 +33,7 @@ export const useMeetingStore = create<MeetingState & { setMeetingState: (s: Part
     votes: {},
     chatMessages: [],
     result: null,
+    outcome: null,
 
     setMeetingState: (newState) => set((state) => ({ ...state, ...newState })),
 
@@ -40,6 +46,7 @@ export const useMeetingStore = create<MeetingState & { setMeetingState: (s: Part
         highlightedLine: null,
         votes: {},
         chatMessages: [],
-        result: null
+        result: null,
+        outcome: null
     })
 }));

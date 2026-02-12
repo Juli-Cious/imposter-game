@@ -21,6 +21,11 @@ export interface MeetingState {
   highlightedLine: { fileId: string, line: number } | null;
   votes: Record<string, string>; // voterId -> candidateId
   result: string | null;
+  outcome?: {
+    ejectedId: string | null;
+    wasImposter: boolean;
+    reason: 'VOTE_TIE' | 'VOTE_SKIP' | 'VOTE_EJECT' | 'TASK_WIN' | 'IMPOSTER_WIN';
+  };
 }
 
 export interface NetworkService {

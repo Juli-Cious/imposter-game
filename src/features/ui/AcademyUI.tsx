@@ -121,7 +121,7 @@ export const AcademyUI = () => {
             // Finished Academy -> Start Challenge
             closeTerminal();
             // Map academy type to challenge ID
-            const challengeMap: Record<string, string> = {
+            const challengeMap: Record<string, 'file_sum' | 'file_loop' | 'file_cpp_hello'> = {
                 'solar': 'file_sum',
                 'waste': 'file_loop',
                 'oxygen': 'file_cpp_hello'

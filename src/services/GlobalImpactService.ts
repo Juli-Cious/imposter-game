@@ -58,11 +58,12 @@ export async function addToGlobalImpact(impact: {
 export async function registerPlayer(playerId: string): Promise<void> {
     try {
         const playerRef = ref(database, `players/${playerId}`);
+        const globalRef = ref(database, GLOBAL_IMPACT_PATH);
+
         const snapshot = await get(playerRef);
 
         if (!snapshot.exists()) {
             // New player - increment global count
-            const globalRef = ref(database, GLOBAL_IMPACT_PATH);
             await update(globalRef, {
                 totalPlayers: increment(1)
             });
