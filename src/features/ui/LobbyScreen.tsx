@@ -22,17 +22,18 @@ export const LobbyScreen = () => {
     const { setPlayers: setGlobalPlayers } = usePlayerStore();
 
     // Services
-    const [adapter] = useState(() => new FirebaseAdapter());
+    // Use the shared network adapter from the store
+    // const [adapter] = useState(() => new FirebaseAdapter()); <--- REMOVED
 
     // Sync network players
     useEffect(() => {
-        if (!roomCode) return;
+        if (!roomCode || !network) return;
 
-        adapter.subscribeToPlayers((updatedPlayers: PlayerState[]) => {
+        network.subscribeToPlayers((updatedPlayers: PlayerState[]) => {
             setLocalPlayers(updatedPlayers);
             setGlobalPlayers(updatedPlayers);
         });
-    }, [roomCode, adapter, setGlobalPlayers]);
+    }, [roomCode, network, setGlobalPlayers]);
 
     const [showRoleReveal, setShowRoleReveal] = useState(false);
     const [playerRole, setPlayerRole] = useState<'hero' | 'imposter' | 'reformed' | null>(null);

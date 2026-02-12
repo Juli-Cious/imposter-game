@@ -248,7 +248,10 @@ export const usePlayerProgress = create<PlayerProgress>((set, get) => ({
             hasSeenVictory: cloudData.hasSeenVictory || false,
             completedChallenges: cloudData.completedChallenges || [],
             achievements: cloudData.achievements || [],
-            totalImpact: cloudData.totalImpact || initialState.totalImpact,
+            totalImpact: {
+                ...initialState.totalImpact,
+                ...(cloudData.totalImpact || {})
+            },
             currentTutorialStep: cloudData.currentTutorialStep || 0,
             tutorialCompleted: cloudData.tutorialCompleted || false,
             firstPlayedAt: cloudData.firstPlayedAt || Date.now(),

@@ -208,7 +208,7 @@ export const PlanetDashboard = () => {
             {/* SDG Badges */}
             <div className="bg-gray-900/50 rounded-lg p-4 flex items-center gap-4">
                 <span className="text-gray-500 text-xs font-bold uppercase whitespace-nowrap">Your SDG Goals:</span>
-                <SDGBadgeGroup goals={totalImpact.sdgsContributed} size="small" />
+                <SDGBadgeGroup goals={totalImpact.sdgsContributed || []} size="small" />
                 {totalImpact.sdgsContributed.length === 0 && (
                     <span className="text-gray-600 text-sm italic">Complete missions to contribute to UN Goals.</span>
                 )}
