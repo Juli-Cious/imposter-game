@@ -7,7 +7,7 @@ import { RoleRevealModal } from './RoleRevealModal';
 import { assignRoles, syncRolesToFirebase, getPlayerRole } from '../../utils/RoleManager';
 
 import { usePlayerStore } from '../../stores/usePlayerStore';
-import { FirebaseAdapter } from '../../features/networking/FirebaseAdapter';
+// import { FirebaseAdapter } from '../../features/networking/FirebaseAdapter'; <--- MOVED TO COMMENT OR REMOVED
 import type { PlayerState } from '../../features/networking/NetworkInterface';
 
 export const LobbyScreen = () => {
