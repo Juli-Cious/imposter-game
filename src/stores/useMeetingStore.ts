@@ -10,6 +10,7 @@ interface MeetingState {
     highlightedLine: { fileId: string, line: number } | null;
     votes: Record<string, string>; // voterId -> candidateId (or 'skip')
     chatMessages: import('../features/networking/NetworkInterface').ChatMessage[];
+    result: string | null;
 
     // Actions (Local updates from Subscriber)
     setMeetingState: (newState: Partial<MeetingState>) => void;
@@ -26,6 +27,7 @@ export const useMeetingStore = create<MeetingState & { setMeetingState: (s: Part
     highlightedLine: null,
     votes: {},
     chatMessages: [],
+    result: null,
 
     setMeetingState: (newState) => set((state) => ({ ...state, ...newState })),
 
@@ -37,6 +39,7 @@ export const useMeetingStore = create<MeetingState & { setMeetingState: (s: Part
         presenterId: null,
         highlightedLine: null,
         votes: {},
-        chatMessages: []
+        chatMessages: [],
+        result: null
     })
 }));

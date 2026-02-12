@@ -15,7 +15,7 @@ declare global {
 }
 
 export const MeetingUI = () => {
-    const { status, meetingEndTime, presenterId, highlightedLine, chatMessages, votes } = useMeetingStore();
+    const { status, meetingEndTime, presenterId, highlightedLine, chatMessages, votes, result } = useMeetingStore();
     const { network, playerId, isHost, roomCode } = useGameStore();
     const { players } = usePlayerStore();
 
@@ -24,7 +24,6 @@ export const MeetingUI = () => {
     const [timeLeft, setTimeLeft] = useState(0);
     const [chatInput, setChatInput] = useState('');
     const [hasVoted, setHasVoted] = useState(false);
-    const [resultMessage, setResultMessage] = useState<string | null>(null);
 
     // Editor Ref
     const editorRef = React.useRef<any>(null);
@@ -38,7 +37,6 @@ export const MeetingUI = () => {
     useEffect(() => {
         if (status === 'IDLE') {
             setTimeLeft(0);
-            setResultMessage(null);
             return;
         }
 
@@ -106,9 +104,15 @@ export const MeetingUI = () => {
         });
 
         // 3. Apply Result
+        let finalResultMsg = "";
+
         if (skipCount >= maxVotes || isTie || !candidate) {
             // Skip
-            update(ref(db, `rooms/${roomCode}/meeting`), { status: 'RESULTS', result: 'Skipped' });
+            finalResultMsg = "Vote Skipped (Tie/Skip)";
+            update(ref(db, `rooms/${roomCode}/meeting`), {
+                status: 'RESULTS',
+                result: finalResultMsg
+            });
         } else {
             // Eject
             const ejectedPlayer = players.find(p => p.id === candidate);
@@ -121,17 +125,17 @@ export const MeetingUI = () => {
                 if (ejectedPlayer.role === 'imposter') {
                     updates[`rooms/${roomCode}/players/${candidate}/status`] = 'reformed';
                     updates[`rooms/${roomCode}/players/${candidate}/role`] = 'reformed';
-                    setResultMessage(`${ejectedPlayer.name} was the Imposter! They are now Reformed.`);
+                    finalResultMsg = `${ejectedPlayer.name} was the Imposter! They are now Reformed.`;
                 } else {
                     updates[`rooms/${roomCode}/players/${candidate}/status`] = 'ejected';
-                    setResultMessage(`${ejectedPlayer.name} was NOT the Imposter.`);
+                    finalResultMsg = `${ejectedPlayer.name} was NOT the Imposter.`;
                 }
 
                 update(ref(db), updates);
 
                 update(ref(db, `rooms/${roomCode}/meeting`), {
                     status: 'RESULTS',
-                    result: ejectedPlayer.role === 'imposter' ? 'IMPOSTER CAUGHT' : 'INNOCENT EJECTED'
+                    result: finalResultMsg
                 });
             }
         }
@@ -141,7 +145,8 @@ export const MeetingUI = () => {
             update(ref(db, `rooms/${roomCode}/meeting`), {
                 status: 'IDLE',
                 votes: {},
-                highlightedLine: null
+                highlightedLine: null,
+                result: null
             });
         }, 5000); // 5s result screen
     };
@@ -359,11 +364,11 @@ export const MeetingUI = () => {
                 {/* RESULTS OVERLAY */}
                 {status === 'RESULTS' && (
                     <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center animate-fadeIn">
-                        <h1 className="text-6xl font-black text-white mb-8 tracking-tighter">
-                            {resultMessage || "VOTING COMPLETE"}
+                        <h1 className="text-4xl text-center md:text-6xl font-black text-white mb-8 tracking-tighter px-4">
+                            {result || "VOTING COMPLETE"}
                         </h1>
                         <div className="text-2xl text-gray-400 animate-pulse">
-                            Procedding...
+                            Proceeding...
                         </div>
                     </div>
                 )}

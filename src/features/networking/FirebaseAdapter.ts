@@ -108,7 +108,8 @@ export class FirebaseAdapter implements NetworkService {
           meetingEndTime: 0,
           presenterId: null,
           highlightedLine: null,
-          votes: {}
+          votes: {},
+          result: null
         });
       }
     });
@@ -135,7 +136,8 @@ export class FirebaseAdapter implements NetworkService {
       callerId: null,
       presenterId: null,
       highlightedLine: null,
-      votes: {}
+      votes: {},
+      result: null
     });
   }
 
