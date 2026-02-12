@@ -64,6 +64,19 @@ export const MeetingUI = () => {
         }
     }, [votes, playerId]);
 
+    // Host Logic: Auto-End when everyone voted
+    useEffect(() => {
+        if (!isHost || status !== 'DISCUSSION') return;
+
+        const alivePlayers = players.filter(p => p.isAlive);
+        const voteCount = Object.keys(votes).length;
+
+        // If everyone alive has voted (and there's at least one player), end it.
+        if (alivePlayers.length > 0 && voteCount >= alivePlayers.length) {
+            handleMeetingEnd();
+        }
+    }, [votes, players, isHost, status]);
+
     // Host Logic: Calculate Results
     const handleMeetingEnd = async () => {
         if (!roomCode) return;

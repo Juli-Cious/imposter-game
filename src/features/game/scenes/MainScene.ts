@@ -148,9 +148,9 @@ export class MainScene extends Phaser.Scene {
       useMeetingStore.getState().setMeetingState(state);
 
       // React to State Changes
-      if (prevStatus === 'IDLE' && state.status === 'DISCUSSION') {
+      if (prevStatus === 'IDLE' && state.status !== 'IDLE') {
         this.startMeeting();
-      } else if (prevStatus === 'DISCUSSION' && state.status === 'IDLE') {
+      } else if (prevStatus !== 'IDLE' && state.status === 'IDLE') {
         this.endMeeting();
       }
       prevStatus = state.status;
