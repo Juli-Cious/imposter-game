@@ -157,15 +157,17 @@ export const MeetingUI = () => {
             result: fullResultMsg
         });
 
-        // 4. Reset after delay
-        setTimeout(() => {
-            update(ref(db, `rooms/${roomCode}/meeting`), {
-                status: 'IDLE',
-                votes: {},
-                highlightedLine: null,
-                result: null
-            });
-        }, 5000); // 5s result screen
+        // No auto-close - user must manually close
+    };
+
+    const handleCloseResults = () => {
+        if (!roomCode || !isHost) return;
+        update(ref(db, `rooms/${roomCode}/meeting`), {
+            status: 'IDLE',
+            votes: {},
+            highlightedLine: null,
+            result: null
+        });
     };
 
     const handleVote = (candidateId: string) => {
@@ -391,6 +393,17 @@ export const MeetingUI = () => {
                         >
                             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-600 via-white to-red-600 animate-pulse"></div>
 
+                            {/* Close Button - Only for host */}
+                            {isHost && (
+                                <button
+                                    onClick={handleCloseResults}
+                                    className="absolute top-4 right-4 w-10 h-10 bg-red-600 hover:bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-xl transition-all hover:scale-110 z-10"
+                                    title="Close Results"
+                                >
+                                    ✕
+                                </button>
+                            )}
+
                             <h1 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tight leading-tight whitespace-pre-wrap">
                                 {result?.split('\n\n')[0] || "VOTING COMPLETE"}
                             </h1>
@@ -421,13 +434,9 @@ export const MeetingUI = () => {
 
                             {votes[playerId!] && (() => {
                                 const myVotedPlayerId = votes[playerId!];
-                                console.log('DEBUG: My vote:', myVotedPlayerId);
-                                console.log('DEBUG: Result message:', result);
-                                console.log('DEBUG: Players:', players);
 
                                 // Skip vote
                                 if (myVotedPlayerId === 'skip') {
-                                    console.log('DEBUG: Showing skip message');
                                     return (
                                         <div className="text-2xl font-black italic p-4 rounded-xl mb-4 bg-gray-900/20 text-gray-400 border border-gray-400/50">
                                             PLAYED IT SAFE 💨
@@ -437,10 +446,7 @@ export const MeetingUI = () => {
 
                                 // Check if voted player was the imposter by parsing result message
                                 const votedPlayer = players.find(p => p.id === myVotedPlayerId);
-                                console.log('DEBUG: Voted player:', votedPlayer);
                                 const wasImposter = votedPlayer && result?.includes(`${votedPlayer.name} was the Imposter!`);
-                                console.log('DEBUG: Was imposter?', wasImposter);
-                                console.log('DEBUG: Checking for string:', `${votedPlayer?.name} was the Imposter!`);
 
                                 return (
                                     <div className={`text-2xl font-black italic p-4 rounded-xl mb-4
@@ -453,9 +459,11 @@ export const MeetingUI = () => {
                                 );
                             })()}
 
-                            <div className="text-lg text-gray-500 animate-pulse font-bold tracking-widest">
-                                RETURNING TO STATION...
-                            </div>
+                            {!isHost && (
+                                <div className="text-lg text-gray-500 font-bold tracking-widest">
+                                    Waiting for host to continue...
+                                </div>
+                            )}
                         </motion.div>
                     </div>
                 )}
