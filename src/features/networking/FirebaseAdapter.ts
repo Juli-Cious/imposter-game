@@ -37,7 +37,11 @@ export class FirebaseAdapter implements NetworkService {
         name: playerName,
         isOnline: true,
         skin: skin,
-        tint: tint
+        tint: tint,
+        // Imposter Mode fields (will be set when game starts)
+        role: null,
+        isAlive: true,
+        status: 'active'
       });
       console.log('[Firebase] Player write success');
     } catch (e) {

@@ -12,6 +12,8 @@ import { IntroAnimation } from "./features/ui/IntroAnimation";
 import { TutorialOverlay } from "./features/ui/TutorialOverlay";
 import { VictoryAnimation } from "./features/ui/VictoryAnimation";
 import { LoginScreen } from "./features/ui/LoginScreen";
+import { RedemptionScreen } from "./features/ui/RedemptionScreen";
+import { AIImposterService } from "./services/AIImposterService";
 import { usePlayerProgress } from "./stores/usePlayerProgress";
 import { useAuthStore } from "./stores/useAuthStore";
 import { useState, useEffect } from "react";
@@ -23,6 +25,19 @@ function App() {
   const { shouldShowIntro, shouldShowTutorial, shouldShowVictory, completedChallenges, hasSeenVictory } = usePlayerProgress();
   const { isAuthenticated, isLoading, initialize } = useAuthStore();
   const [showVictory, setShowVictory] = useState(false);
+
+  // AI Imposter Lifecycle
+  useEffect(() => {
+    if (gameState === 'GAME' && useGameStore.getState().gameMode === 'SINGLE_PLAYER') {
+      AIImposterService.getInstance().start();
+    } else {
+      AIImposterService.getInstance().stop();
+    }
+
+    return () => {
+      AIImposterService.getInstance().stop();
+    }
+  }, [gameState]);
 
   // Initialize Firebase auth on mount (skip if demo mode)
   useEffect(() => {
@@ -89,6 +104,7 @@ function App() {
 
           {/* Meeting Overlay (Handles its own visibility) */}
           <MeetingUI />
+          <RedemptionScreen />
 
           {/* The 4 UI Types */}
           {isTerminalOpen && terminalType === 'editor' && <CodeEditor />}

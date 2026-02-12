@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../../stores/useGameStore';
 import { db } from '../../firebaseConfig';
 import { ref, onValue, set, update } from 'firebase/database';
@@ -12,14 +12,22 @@ import { usePlayerProgress } from '../../stores/usePlayerProgress';
 import { aiChallengeService } from '../../services/AIChallengeService';
 import { SDGPopup } from './SDGPopup';
 import { CodeReviewModal } from './CodeReviewModal';
+import { SabotageMenu } from './SabotageMenu';
+import { usePlayerRole } from '../../hooks/usePlayerRole';
+import toast, { Toaster } from 'react-hot-toast';
 
 export const CodeEditor = () => {
-    const { activeFileId, closeTerminal } = useGameStore();
-    const { completeChallenge } = usePlayerProgress();
+    const { activeFileId, closeTerminal, roomCode, playerId } = useGameStore();
+    const { completeChallenge, completedChallenges } = usePlayerProgress();
     const [code, setCode] = useState('');
     const [output, setOutput] = useState('');
     const [isRunning, setIsRunning] = useState(false);
     const [status, setStatus] = useState<'PENDING' | 'PASS' | 'FAIL'>('PENDING');
+    const [showGlitchEffect, setShowGlitchEffect] = useState(false);
+    const previousCodeRef = useRef('');
+
+    // Get player's role
+    const playerRole = usePlayerRole(roomCode, playerId);
 
     // AI Review State
     const [aiFeedback, setAiFeedback] = useState<{ rating: number, feedback: string, tip: string } | null>(null);
@@ -48,16 +56,38 @@ export const CodeEditor = () => {
             const data = snapshot.val();
             if (data) {
                 setStatus(data.testStatus || 'PENDING');
-                // Only update local text if we aren't currently typing (simple lock)
-                // For a prototype, simply overwriting is fine
+
+                // Detect sabotage
+                const newCode = data.content || '';
+                const wasSabotaged = data.lastSabotage &&
+                    data.lastSabotage.timestamp > Date.now() - 3000; // Last 3 seconds
+
+                if (wasSabotaged && playerRole === 'hero') {
+                    // Show glitch effect and notification
+                    setShowGlitchEffect(true);
+                    setTimeout(() => setShowGlitchEffect(false), 1000);
+
+                    toast.error('⚠️ ALERT: Code Sabotaged! Fix it quickly!', {
+                        duration: 4000,
+                        icon: '🚨',
+                        style: {
+                            background: '#7f1d1d',
+                            color: '#fff',
+                            fontWeight: 'bold'
+                        }
+                    });
+                }
+
+                // Only update local text if we aren't currently typing
                 if (document.activeElement?.tagName !== 'TEXTAREA') {
-                    setCode(data.content);
+                    setCode(newCode);
+                    previousCodeRef.current = newCode;
                 }
             }
         });
 
         return () => unsubscribe();
-    }, [activeFileId]);
+    }, [activeFileId, playerRole]);
 
     // Listen for ESC key
     useEffect(() => {
@@ -214,8 +244,14 @@ export const CodeEditor = () => {
         });
     };
 
+    // Calculate task progress
+    const totalChallenges = Object.keys(LEVEL_1_PROBLEMS).length;
+    const completedCount = completedChallenges.length;
+    const progressPercent = Math.round((completedCount / totalChallenges) * 100);
+
     return (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-50 p-10">
+        <div className={`absolute inset-0 flex items-center justify-center bg-black/80 z-50 p-10 ${showGlitchEffect ? 'glitch-effect' : ''}`}>
+            <Toaster position="top-center" />
             <div className="bg-[#1e1e1e] w-full h-full max-w-6xl border border-gray-600 flex flex-col shadow-2xl relative">
 
                 {/* Header (VS Code Style) */}
@@ -236,12 +272,25 @@ export const CodeEditor = () => {
                         )}
                     </div>
                     <div className="flex gap-2 items-center">
+                        {/* Task Progress for Heroes */}
+                        {playerRole === 'hero' && (
+                            <div className="px-3 py-1 bg-blue-900/50 border border-blue-700 rounded text-xs flex items-center gap-2">
+                                <span className="text-blue-300 font-bold">Progress:</span>
+                                <span className="text-white">{completedCount}/{totalChallenges}</span>
+                                <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-500"
+                                        style={{ width: `${progressPercent}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )}
                         <button
                             onClick={handleRequestReview}
                             disabled={isReviewing || status !== 'PASS'}
                             className={`px-3 py-1 text-xs rounded flex items-center gap-1 transition-colors ${status === 'PASS' && !isReviewing
-                                    ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                                    : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                                 }`}
                             title={status !== 'PASS' ? 'Pass the challenge first!' : 'Get AI code review'}
                         >
@@ -366,6 +415,54 @@ export const CodeEditor = () => {
                 tip={aiFeedback?.tip || ''}
                 isLoading={isReviewing}
             />
+
+            {/* Sabotage Menu for Imposters */}
+            {playerRole === 'imposter' && roomCode && playerId && activeFileId && (
+                <SabotageMenu
+                    roomCode={roomCode}
+                    playerId={playerId}
+                    targetFileId={activeFileId}
+                    onSabotageComplete={() => {
+                        toast.success('Sabotage successful! 😈', {
+                            duration: 2000,
+                            icon: '🔪',
+                            style: {
+                                background: '#1f2937',
+                                color: '#dc2626',
+                                fontWeight: 'bold'
+                            }
+                        });
+                    }}
+                />
+            )}
+
+            {/* Glitch Effect CSS */}
+            <style>{`
+                @keyframes glitch {
+                    0% { transform: translate(0); }
+                    20% { transform: translate(-2px, 2px); }
+                    40% { transform: translate(-2px, -2px); }
+                    60% { transform: translate(2px, 2px); }
+                    80% { transform: translate(2px, -2px); }
+                    100% { transform: translate(0); }
+                }
+                
+                .glitch-effect {
+                    animation: glitch 0.3s infinite;
+                }
+                
+                .glitch-effect::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(220, 38, 38, 0.1);
+                    pointer-events: none;
+                    z-index: 1;
+                }
+            `}</style>
         </div>
     );
 };

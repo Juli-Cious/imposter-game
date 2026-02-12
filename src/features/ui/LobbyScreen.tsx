@@ -3,10 +3,41 @@ import { useGameStore } from '../../stores/useGameStore';
 import { db } from '../../firebaseConfig';
 import { ref, onValue, update } from 'firebase/database';
 import { PlanetDashboard } from './PlanetDashboard';
+import { RoleRevealModal } from './RoleRevealModal';
+import { assignRoles, syncRolesToFirebase, getPlayerRole } from '../../utils/RoleManager';
+
+import { usePlayerStore } from '../../stores/usePlayerStore';
+import { useAuthStore } from '../../stores/useAuthStore'; // Assuming this import is needed for useAuthStore
+import { FirebaseAdapter } from '../../services/FirebaseAdapter'; // Assuming this import is needed for FirebaseAdapter
 
 export const LobbyScreen = () => {
-    const { roomCode, isHost, playerId, network, setGameState, playerSkin, playerTint } = useGameStore();
-    const [players, setPlayers] = useState<any[]>([]);
+    const {
+        roomCode, playerId, isHost,
+        playerSkin, playerTint,
+        setRoomCode, setPlayerId, setIsHost, setGameState
+    } = useGameStore();
+
+    // Local state for UI
+    const [players, setLocalPlayers] = useState<PlayerState[]>([]);
+    const { setPlayers: setGlobalPlayers } = usePlayerStore();
+    const { isAuthenticated, user } = useAuthStore();
+    const [isJoining, setIsJoining] = useState(false);
+
+    // Services
+    const [adapter] = useState(() => new FirebaseAdapter());
+
+    // Sync network players to both local state (for rendering here) and global store (for MeetingUI)
+    useEffect(() => {
+        if (!roomCode) return;
+
+        adapter.subscribeToPlayers((updatedPlayers) => {
+            setLocalPlayers(updatedPlayers);
+            setGlobalPlayers(updatedPlayers);
+        });
+    }, [roomCode, adapter, setGlobalPlayers]);
+    const [showRoleReveal, setShowRoleReveal] = useState(false);
+    const [playerRole, setPlayerRole] = useState<'hero' | 'imposter' | null>(null);
+    const [assignmentError, setAssignmentError] = useState<string | null>(null);
 
     // Sync Customization to LocalStorage
     useEffect(() => {
@@ -44,12 +75,24 @@ export const LobbyScreen = () => {
 
         // Listen for Game Start
         const statusRef = ref(db, `rooms/${roomCode}/status`);
-        const unsubStatus = onValue(statusRef, (snapshot) => {
+        const unsubStatus = onValue(statusRef, async (snapshot) => {
             const val = snapshot.val();
             console.log("[Lobby] Status update:", val);
             if (val === 'PLAYING') {
-                console.log("[Lobby] Status is PLAYING, switching state...");
-                setGameState('GAME');
+                console.log("[Lobby] Status is PLAYING, fetching role and switching state...");
+
+                // Fetch the player's role from Firebase
+                if (playerId && roomCode) {
+                    try {
+                        const role = await getPlayerRole(roomCode, playerId);
+                        if (role) {
+                            setPlayerRole(role);
+                            setShowRoleReveal(true);
+                        }
+                    } catch (error) {
+                        console.error("[Lobby] Failed to fetch player role:", error);
+                    }
+                }
             }
         });
 
@@ -57,13 +100,44 @@ export const LobbyScreen = () => {
             unsub();
             unsubStatus();
         };
-    }, [roomCode, setGameState]);
+    }, [roomCode, setGameState, playerId]);
 
     const handleStartGame = async () => {
         if (!roomCode) return;
+
+        setAssignmentError(null);
+
+        // Validate minimum players
+        if (players.length < 3) {
+            setAssignmentError('Need at least 3 players to start Imposter Mode!');
+            return;
+        }
+
         console.log("[Lobby] Host starting game...");
-        // set status to PLAYING
-        await update(ref(db, `rooms/${roomCode}`), { status: 'PLAYING' });
+
+        try {
+            // 1. Assign roles
+            const playerIds = players.map(p => p.id);
+            const roleAssignments = assignRoles(playerIds);
+
+            // 2. Sync roles to Firebase
+            await syncRolesToFirebase(roomCode, roleAssignments);
+
+            // 3. Set status to PLAYING
+            await update(ref(db, `rooms/${roomCode}`), { status: 'PLAYING' });
+
+            console.log("[Lobby] Roles assigned and game started successfully");
+        } catch (error) {
+            console.error("[Lobby] Error starting game:", error);
+            if (error instanceof Error) {
+                setAssignmentError(error.message);
+            }
+        }
+    };
+
+    const handleRoleRevealClose = () => {
+        setShowRoleReveal(false);
+        setGameState('GAME');
     };
 
     const copyCode = () => {
@@ -95,6 +169,11 @@ export const LobbyScreen = () => {
                                 START GAME
                                 <span className="text-3xl">🚀</span>
                             </button>
+                            {assignmentError && (
+                                <div className="mt-4 bg-red-600/20 border-2 border-red-500 rounded-lg p-3 text-red-200 text-center font-bold">
+                                    ⚠️ {assignmentError}
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -268,6 +347,14 @@ export const LobbyScreen = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Role Reveal Modal */}
+            {showRoleReveal && playerRole && (
+                <RoleRevealModal
+                    playerRole={playerRole}
+                    onClose={handleRoleRevealClose}
+                />
+            )}
         </div>
     );
 };

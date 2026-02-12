@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { VICTORY_SCENES } from '../../shared/StoryContent';
 import { usePlayerProgress } from '../../stores/usePlayerProgress';
+import { useGameStore } from '../../stores/useGameStore';
+import { usePlayerStore } from '../../stores/usePlayerStore';
 import { SDGBadgeGroup } from './SDGBadge';
 
 interface VictoryAnimationProps {
@@ -159,6 +161,19 @@ export const VictoryAnimation = ({ onClose }: VictoryAnimationProps) => {
                                     </p>
                                 </>
                             )}
+
+                            {/* Redemption Badge */}
+                            {useGameStore.getState().playerSkin === 'reformed_skin_placeholder' || /* Check role logic here properly */
+                                usePlayerStore.getState().players.find(p => p.id === useGameStore.getState().playerId)?.role === 'reformed' && (
+                                    <div className="mt-4 pt-4 border-t border-yellow-500/30">
+                                        <p className="text-xl md:text-2xl font-bold text-purple-300 mb-1">
+                                            😇 Reformed Hero
+                                        </p>
+                                        <p className="text-sm md:text-base text-gray-300 leading-relaxed">
+                                            You turned a new leaf and helped save the station!
+                                        </p>
+                                    </div>
+                                )}
                         </div>
                     </div>
 

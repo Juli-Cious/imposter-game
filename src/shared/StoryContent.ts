@@ -14,21 +14,21 @@ export interface StoryScene {
 
 export const INTRO_SCENES: StoryScene[] = [
     {
-        id: 'virus-alert',
-        duration: 3500,
-        background: 'linear-gradient(135deg, #dc2626 0%, #7f1d1d 100%)',
-        visual: '🦠💻🚨',
-        text: 'ALERT! A mysterious virus is attacking Earth\'s environmental systems!',
-        narration: 'The planet\'s defenses are failing!',
+        id: 'virus-threat',
+        duration: 4000,
+        background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
+        visual: '🦠💻⚠️',
+        text: 'ALERT! A digital virus is threatening Earth\'s critical systems!',
+        narration: 'The world\'s infrastructure is under attack...',
         animation: 'shake'
     },
     {
-        id: 'guardian-calls',
-        duration: 3500,
-        background: 'linear-gradient(135deg, #1e3a8a 0%, #312e81 100%)',
-        visual: '✨🧙‍♀️🌍',
-        text: 'Professor Gaia calls upon brave CODERS to fix the systems and save Earth!',
-        narration: 'Young heroes answer the call!',
+        id: 'professor-gaia-call',
+        duration: 4000,
+        background: 'linear-gradient(135deg, #1e40af 0%, #312e81 100%)',
+        visual: '✨🧙‍♀️📞',
+        text: 'Professor Gaia calls upon the world\'s brightest CODERS to fix the crisis!',
+        narration: 'Will you answer the call to save humanity?',
         animation: 'sparkle'
     },
     {
@@ -36,26 +36,26 @@ export const INTRO_SCENES: StoryScene[] = [
         duration: 4500,
         background: 'linear-gradient(135deg, #7c2d12 0%, #1c1917 100%)',
         visual: '🕵️❓🎭',
-        text: 'But BEWARE! One coder among you is secretly a SABOTEUR!',
-        narration: 'Someone is trying to stop you from saving the planet...',
+        text: 'WARNING: Intelligence reports that one coder among you is a SABOTEUR!',
+        narration: 'Trust no one... someone wants the mission to fail...',
         animation: 'shake'
     },
     {
         id: 'dual-mission',
-        duration: 4000,
-        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        duration: 4500,
+        background: 'linear-gradient(135deg, #059669 0%, #065f46 100%)',
         visual: '🦸‍♀️🔍💻',
-        text: 'HEROES: Fix the code, complete challenges, find the saboteur! SABOTEUR: Stay hidden!',
-        narration: 'Work together... but trust carefully!',
+        text: 'HEROES: Fix the code and find the saboteur!\nIMPOSTER: Sabotage without getting caught!',
+        narration: 'Two missions. One outcome. Who will prevail?',
         animation: 'pulse'
     },
     {
         id: 'adventure-begins',
         duration: 4000,
         background: 'linear-gradient(135deg, #3b82f6 0%, #f59e0b 100%)',
-        visual: '🎉🚀🌍',
-        text: 'Are you ready to solve this mystery and save the world?',
-        narration: 'The detective adventure begins NOW!',
+        visual: '🚀🌍🎮',
+        text: 'The detective adventure begins NOW! Can you save the world?',
+        narration: 'Good luck, agent. The fate of the world is in your hands...',
         animation: 'bounce'
     }
 ];

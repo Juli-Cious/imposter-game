@@ -1,0 +1,199 @@
+import { db } from '../firebaseConfig';
+import { ref, update, get } from 'firebase/database';
+
+export type SabotageType = 'syntax_error' | 'logic_swap' | 'clear_line';
+
+export interface SabotageResult {
+    success: boolean;
+    newCode: string;
+    description: string;
+}
+
+/**
+ * Apply syntax error sabotage to code
+ * Randomly removes a semicolon or adds a mismatched bracket
+ */
+export function applySyntaxError(code: string): SabotageResult {
+    const lines = code.split('\n');
+    const nonEmptyLines = lines
+        .map((line, index) => ({ line, index }))
+        .filter(({ line }) => line.trim().length > 0);
+
+    if (nonEmptyLines.length === 0) {
+        return { success: false, newCode: code, description: 'No code to sabotage' };
+    }
+
+    const randomLine = nonEmptyLines[Math.floor(Math.random() * nonEmptyLines.length)];
+    const lineIndex = randomLine.index;
+    const line = randomLine.line;
+
+    // Strategy 1: Remove semicolon if present
+    if (line.includes(';')) {
+        const sabotaged = line.replace(/;/, '');
+        lines[lineIndex] = sabotaged;
+        return {
+            success: true,
+            newCode: lines.join('\n'),
+            description: 'Removed semicolon'
+        };
+    }
+
+    // Strategy 2: Add mismatched bracket
+    const bracketType = Math.random() > 0.5 ? '(' : '{';
+    lines[lineIndex] = line + bracketType;
+    return {
+        success: true,
+        newCode: lines.join('\n'),
+        description: `Added mismatched ${bracketType === '(' ? 'parenthesis' : 'brace'}`
+    };
+}
+
+/**
+ * Apply logic swap sabotage to code
+ * Swaps operators like true/false, +/-, </>
+ */
+export function applyLogicSwap(code: string): SabotageResult {
+    const swaps = [
+        { from: 'true', to: 'false', desc: 'Swapped true → false' },
+        { from: 'false', to: 'true', desc: 'Swapped false → true' },
+        { from: ' + ', to: ' - ', desc: 'Swapped + → -' },
+        { from: ' - ', to: ' + ', desc: 'Swapped - → +' },
+        { from: ' < ', to: ' > ', desc: 'Swapped < → >' },
+        { from: ' > ', to: ' < ', desc: 'Swapped > → <' },
+        { from: '++', to: '--', desc: 'Swapped ++ → --' },
+        { from: '--', to: '++', desc: 'Swapped -- → ++' }
+    ];
+
+    // Shuffle swaps to try random order
+    const shuffled = swaps.sort(() => Math.random() - 0.5);
+
+    for (const swap of shuffled) {
+        if (code.includes(swap.from)) {
+            // Only swap first occurrence to be subtle
+            const newCode = code.replace(swap.from, swap.to);
+            return {
+                success: true,
+                newCode,
+                description: swap.desc
+            };
+        }
+    }
+
+    return { success: false, newCode: code, description: 'No suitable operators to swap' };
+}
+
+/**
+ * Apply clear line sabotage to code
+ * Deletes a random non-empty line
+ */
+export function applyClearLine(code: string): SabotageResult {
+    const lines = code.split('\n');
+    const nonEmptyLines = lines
+        .map((line, index) => ({ line, index }))
+        .filter(({ line }) => line.trim().length > 0);
+
+    if (nonEmptyLines.length === 0) {
+        return { success: false, newCode: code, description: 'No lines to delete' };
+    }
+
+    const randomLine = nonEmptyLines[Math.floor(Math.random() * nonEmptyLines.length)];
+    lines.splice(randomLine.index, 1);
+
+    return {
+        success: true,
+        newCode: lines.join('\n'),
+        description: `Deleted line ${randomLine.index + 1}`
+    };
+}
+
+/**
+ * Main sabotage function
+ * Applies sabotage and syncs to Firebase
+ */
+export async function triggerSabotage(
+    type: SabotageType,
+    targetPlayerId: string,
+    roomCode: string,
+    fileId: string
+): Promise<SabotageResult> {
+    try {
+        // Get current code from Firebase
+        const fileRef = ref(db, `gamestate/files/${fileId}/content`);
+        const snapshot = await get(fileRef);
+        const currentCode = snapshot.val() || '';
+
+        // Apply sabotage based on type
+        let result: SabotageResult;
+        switch (type) {
+            case 'syntax_error':
+                result = applySyntaxError(currentCode);
+                break;
+            case 'logic_swap':
+                result = applyLogicSwap(currentCode);
+                break;
+            case 'clear_line':
+                result = applyClearLine(currentCode);
+                break;
+            default:
+                return { success: false, newCode: currentCode, description: 'Unknown sabotage type' };
+        }
+
+        if (!result.success) {
+            return result;
+        }
+
+        // Sync sabotaged code to Firebase
+        await update(ref(db, `gamestate/files/${fileId}`), {
+            content: result.newCode,
+            lastSabotage: {
+                type,
+                timestamp: Date.now(),
+                targetPlayerId
+            }
+        });
+
+        // Update sabotage cooldown in room
+        await update(ref(db, `rooms/${roomCode}/sabotage`), {
+            lastAction: Date.now(),
+            cooldownEnd: Date.now() + 30000 // 30 seconds
+        });
+
+        console.log(`[Sabotage] ${type} applied to ${fileId}:`, result.description);
+        return result;
+
+    } catch (error) {
+        console.error('[Sabotage] Error:', error);
+        return {
+            success: false,
+            newCode: '',
+            description: 'Failed to apply sabotage'
+        };
+    }
+}
+
+/**
+ * Check if sabotage is on cooldown
+ */
+export async function isSabotageOnCooldown(roomCode: string): Promise<boolean> {
+    const cooldownRef = ref(db, `rooms/${roomCode}/sabotage/cooldownEnd`);
+    const snapshot = await get(cooldownRef);
+    const cooldownEnd = snapshot.val();
+
+    if (!cooldownEnd) return false;
+
+    return Date.now() < cooldownEnd;
+}
+
+/**
+ * Get remaining cooldown time in seconds
+ */
+export async function getRemainingCooldown(roomCode: string): Promise<number> {
+    const cooldownRef = ref(db, `rooms/${roomCode}/sabotage/cooldownEnd`);
+    const snapshot = await get(cooldownRef);
+    const cooldownEnd = snapshot.val();
+
+    if (!cooldownEnd) return 0;
+
+    const remaining = Math.max(0, Math.ceil((cooldownEnd - Date.now()) / 1000));
+    return remaining;
+}

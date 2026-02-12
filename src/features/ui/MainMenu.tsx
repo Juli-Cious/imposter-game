@@ -77,6 +77,7 @@ export const MainMenu = () => {
         setPlayerName(name);
         setRoomCode(code);
         setIsHost(true);
+        useGameStore.getState().setGameMode('MULTIPLAYER');
         setGameState('LOBBY');
     };
 
@@ -112,6 +113,7 @@ export const MainMenu = () => {
         setPlayerName(name);
         setRoomCode(code);
         setIsHost(false);
+        useGameStore.getState().setGameMode('MULTIPLAYER');
         setGameState('LOBBY');
     };
 
@@ -195,6 +197,7 @@ export const MainMenu = () => {
         setPlayerName(playerName);
         setRoomCode(code);
         setIsHost(true);
+        useGameStore.getState().setGameMode('SINGLE_PLAYER');
         setGameState('GAME'); // Go directly to game
     };
 
@@ -247,6 +250,22 @@ export const MainMenu = () => {
                     </div>
 
                     <div className="border-t border-gray-700 pt-6">
+                        {/* Difficulty Selector */}
+                        <div className="flex gap-2 mb-4 justify-center">
+                            {(['EASY', 'MEDIUM', 'HARD'] as const).map((diff) => (
+                                <button
+                                    key={diff}
+                                    onClick={() => useGameStore.getState().setDifficulty(diff)}
+                                    className={`px-3 py-1 text-xs font-bold rounded border ${useGameStore.getState().difficulty === diff
+                                            ? 'bg-blue-600 border-blue-400 text-white'
+                                            : 'bg-gray-700 border-gray-600 text-gray-400 hover:bg-gray-600'
+                                        }`}
+                                >
+                                    {diff}
+                                </button>
+                            ))}
+                        </div>
+
                         <button
                             onClick={handleQuickStart}
                             className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-lg font-bold text-lg transition-all transform hover:scale-[1.02] shadow-lg mb-6 flex items-center justify-center gap-2"

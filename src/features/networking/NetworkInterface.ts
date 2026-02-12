@@ -7,6 +7,10 @@ export interface PlayerState {
   isOnline?: boolean;
   skin?: string;
   tint?: number;
+  // Imposter Mode fields
+  role?: 'hero' | 'imposter';
+  isAlive?: boolean;
+  status?: 'active' | 'ejected' | 'reformed';
 }
 
 export interface MeetingState {
