@@ -152,6 +152,10 @@ function App() {
                 useGameStore.getState().setGameState('MENU');
                 setMultiplayerVictoryStatus(null);
               }}
+              onContinuePlaying={() => {
+                // Just hide the victory screen, letting them play in the background
+                setMultiplayerVictoryStatus(null);
+              }}
             />
           )}
         </>

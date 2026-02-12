@@ -8,9 +8,10 @@ interface VictoryScreenProps {
     teamChallengesCompleted: number;
     onReturnToLobby?: () => void;
     onLeaveGame?: () => void;
+    onContinuePlaying?: () => void;
 }
 
-export const VictoryScreen = ({ status, players, teamChallengesCompleted, onReturnToLobby, onLeaveGame }: VictoryScreenProps) => {
+export const VictoryScreen = ({ status, players, teamChallengesCompleted, onReturnToLobby, onLeaveGame, onContinuePlaying }: VictoryScreenProps) => {
     const { isHost } = useGameStore();
     const isHeroesWin = status === 'VICTORY_CREW';
 
@@ -114,6 +115,18 @@ export const VictoryScreen = ({ status, players, teamChallengesCompleted, onRetu
                             🔄 Return to Lobby
                         </motion.button>
                     )}
+
+                    {onContinuePlaying && (
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={onContinuePlaying}
+                            className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg rounded-xl transition-colors"
+                        >
+                            ▶️ Continue Playing
+                        </motion.button>
+                    )}
+
                     {onLeaveGame && (
                         <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -125,7 +138,7 @@ export const VictoryScreen = ({ status, players, teamChallengesCompleted, onRetu
                         </motion.button>
                     )}
                 </div>
-            </motion.div>
-        </div>
+            </motion.div >
+        </div >
     );
 };
