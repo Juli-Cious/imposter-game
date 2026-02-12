@@ -162,7 +162,7 @@ export const PlanetDashboard = () => {
                                     </div>
                                     <div className="text-right">
                                         <div className="text-cyan-200 text-sm font-bold">
-                                            ≈ {Math.round(globalImpact.totalCO2Prevented * 50)} trees
+                                            ≈ {Math.round((globalImpact.totalCO2Prevented || 0) * 50)} trees
                                         </div>
                                     </div>
                                 </div>
@@ -177,7 +177,7 @@ export const PlanetDashboard = () => {
                                     </div>
                                     <div className="text-right">
                                         <div className="text-green-200 text-sm font-bold">
-                                            ≈ {(globalImpact.totalWasteRecycled * 0.5).toFixed(1)}t plastic saved
+                                            ≈ {((globalImpact.totalWasteRecycled || 0) * 0.5).toFixed(1)}t plastic saved
                                         </div>
                                     </div>
                                 </div>
@@ -189,7 +189,7 @@ export const PlanetDashboard = () => {
                                             <div className="text-yellow-300 font-mono text-2xl">
                                                 {globalImpact.totalPeopleProtected > 1000000000
                                                     ? `${(globalImpact.totalPeopleProtected / 1000000000).toFixed(1)}B`
-                                                    : globalImpact.totalPeopleProtected.toLocaleString()}
+                                                    : (globalImpact.totalPeopleProtected || 0).toLocaleString()}
                                             </div>
                                             <div className="text-gray-400 text-xs">People Protected</div>
                                         </div>

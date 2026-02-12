@@ -24,7 +24,11 @@ export function useGlobalImpact() {
                 setLoading(true);
                 const data = await getGlobalImpact();
                 if (mounted) {
-                    setGlobalImpact(data);
+                    // Safety merge with defaults to prevent undefined fields
+                    setGlobalImpact(prev => ({
+                        ...prev,
+                        ...data
+                    }));
                     setError(null);
                 }
             } catch (err) {
