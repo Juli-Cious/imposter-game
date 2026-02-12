@@ -41,7 +41,7 @@ function App() {
 
   // Multiplayer victory state
   const [multiplayerVictoryStatus, setMultiplayerVictoryStatus] = useState<'VICTORY_CREW' | 'VICTORY_IMPOSTER' | null>(null);
-  const [teamChallengesCompleted, setTeamChallengesCompleted] = useState(0);
+  const [teamChallengesCompleted] = useState(0);
   const [players, setPlayers] = useState<PlayerState[]>([]);
 
 
