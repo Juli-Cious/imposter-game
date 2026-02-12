@@ -14,6 +14,9 @@ import { VictoryAnimation } from "./features/ui/VictoryAnimation";
 import { LoginScreen } from "./features/ui/LoginScreen";
 import { RedemptionScreen } from "./features/ui/RedemptionScreen";
 import { VictoryScreen } from "./features/ui/VictoryScreen";
+import { CyberBackground } from "./features/ui/CyberBackground";
+import { BootLoader } from "./features/ui/BootLoader";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { ChallengeMonitor } from "./features/game/ChallengeMonitor";
 import { usePlayerProgress } from "./stores/usePlayerProgress";
@@ -70,6 +73,14 @@ function App() {
     }
   }, [completedChallenges, shouldShowVictory, showVictory, hasSeenVictory]);
 
+  // Boot Loader State
+  const [isBooting, setIsBooting] = useState(true);
+
+  useEffect(() => {
+    // If in demo mode, skip boot
+    if (DEMO_MODE) setIsBooting(false);
+  }, []);
+
   // Loading state (skip if demo mode)
   if (!DEMO_MODE && isLoading) {
     return (
@@ -87,79 +98,131 @@ function App() {
     return <LoginScreen />;
   }
 
+  // Boot Sequence
+  if (isBooting && !DEMO_MODE) {
+    return <BootLoader onComplete={() => setIsBooting(false)} />;
+  }
+
   // Main game (authenticated or demo mode)
   return (
-    <div className="w-full h-full relative bg-gray-900 text-white">
+    <div className="w-full h-full relative bg-gray-900 text-white overflow-hidden">
+
+      {/* 0. GLOBAL BACKGROUND */}
+      <CyberBackground />
 
       {/* INTRO ANIMATION (First-time only) */}
-      {shouldShowIntro() && <IntroAnimation onComplete={() => { }} />}
+      <AnimatePresence>
+        {shouldShowIntro() && (
+          <motion.div
+            key="intro"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50"
+          >
+            <IntroAnimation onComplete={() => { }} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
       {/* VICTORY ANIMATION (When all challenges complete) */}
-      {showVictory && <VictoryAnimation onClose={() => setShowVictory(false)} />}
+      <AnimatePresence>
+        {showVictory && (
+          <VictoryAnimation onClose={() => setShowVictory(false)} />
+        )}
+      </AnimatePresence>
 
-      {/* 1. MAIN MENU */}
-      {gameState === 'MENU' && <MainMenu />}
+      <AnimatePresence mode="wait">
+        {/* 1. MAIN MENU */}
+        {gameState === 'MENU' && (
+          <motion.div
+            key="menu"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0"
+          >
+            <MainMenu />
+          </motion.div>
+        )}
 
-      {/* 2. LOBBY */}
-      {gameState === 'LOBBY' && (
-        <>
-          <LobbyScreen />
-          {/* TUTORIAL OVERLAY (First-time in lobby) */}
-          {shouldShowTutorial() && <TutorialOverlay />}
-        </>
-      )}
+        {/* 2. LOBBY */}
+        {gameState === 'LOBBY' && (
+          <motion.div
+            key="lobby"
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -100 }}
+            transition={{ duration: 0.4 }}
+            className="absolute inset-0"
+          >
+            <LobbyScreen />
+            {/* TUTORIAL OVERLAY (First-time in lobby) */}
+            {shouldShowTutorial() && <TutorialOverlay />}
+          </motion.div>
+        )}
 
-      {/* 3. GAME */}
-      {gameState === 'GAME' && (
-        <>
-          <GameComponent />
-          <ChallengeMonitor />
+        {/* 3. GAME */}
+        {gameState === 'GAME' && (
+          <motion.div
+            key="game"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0"
+          >
+            <GameComponent />
+            <ChallengeMonitor />
 
-          <TaskBoard /> {/* Always visible to user */}
-          <LevelManager /> {/* <--- The Reset Button */}
+            <TaskBoard /> {/* Always visible to user */}
+            <LevelManager /> {/* <--- The Reset Button */}
 
-          {/* Meeting Overlay (Handles its own visibility) */}
-          <MeetingUI />
-          <RedemptionScreen />
+            {/* Meeting Overlay (Handles its own visibility) */}
+            <MeetingUI />
+            <RedemptionScreen />
 
-          {/* The 4 UI Types */}
-          {isTerminalOpen && terminalType === 'editor' && <CodeEditor />}
-          {isTerminalOpen && terminalType === 'hub' && <CentralTerminal />}
-          {isTerminalOpen && terminalType === 'academy' && <AcademyUI />}
+            {/* The 4 UI Types */}
+            {isTerminalOpen && terminalType === 'editor' && <CodeEditor />}
+            {isTerminalOpen && terminalType === 'hub' && <CentralTerminal />}
+            {isTerminalOpen && terminalType === 'academy' && <AcademyUI />}
 
-          {/* Multiplayer Victory Screen */}
-          {multiplayerVictoryStatus && (
-            <VictoryScreen
-              status={multiplayerVictoryStatus}
-              players={players}
-              teamChallengesCompleted={teamChallengesCompleted}
-              onReturnToLobby={isHost ? () => {
-                // Host can reset game to lobby
-                if (network && roomCode) {
-                  import('firebase/database').then(({ ref, set }) => {
-                    import('./firebaseConfig').then(({ db }) => {
-                      set(ref(db, `rooms/${roomCode}/status`), 'LOBBY');
-                      setMultiplayerVictoryStatus(null);
+            {/* Multiplayer Victory Screen */}
+            {multiplayerVictoryStatus && (
+              <VictoryScreen
+                status={multiplayerVictoryStatus}
+                players={players}
+                teamChallengesCompleted={teamChallengesCompleted}
+                onReturnToLobby={isHost ? () => {
+                  // Host can reset game to lobby
+                  if (network && roomCode) {
+                    import('firebase/database').then(({ ref, set }) => {
+                      import('./firebaseConfig').then(({ db }) => {
+                        set(ref(db, `rooms/${roomCode}/status`), 'LOBBY');
+                        setMultiplayerVictoryStatus(null);
+                      });
                     });
-                  });
-                }
-              } : undefined}
-              onLeaveGame={() => {
-                // Leave the game (disconnect)
-                if (network) {
-                  network.disconnect();
-                }
-                useGameStore.getState().setGameState('MENU');
-                setMultiplayerVictoryStatus(null);
-              }}
-              onContinuePlaying={() => {
-                // Just hide the victory screen, letting them play in the background
-                setMultiplayerVictoryStatus(null);
-              }}
-            />
-          )}
-        </>
-      )}
+                  }
+                } : undefined}
+                onLeaveGame={() => {
+                  // Leave the game (disconnect)
+                  if (network) {
+                    network.disconnect();
+                  }
+                  useGameStore.getState().setGameState('MENU');
+                  setMultiplayerVictoryStatus(null);
+                }}
+                onContinuePlaying={() => {
+                  // Just hide the victory screen, letting them play in the background
+                  setMultiplayerVictoryStatus(null);
+                }}
+              />
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
