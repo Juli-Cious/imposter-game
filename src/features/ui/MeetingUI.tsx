@@ -419,17 +419,32 @@ export const MeetingUI = () => {
                                 {result?.split('\n\n')[1]}
                             </div>
 
-                            {votes[playerId!] && (
-                                <div className={`text-2xl font-black italic p-4 rounded-xl mb-4
-                                    ${(players.find(p => p.id === votes[playerId!])?.role === 'imposter')
-                                        ? 'bg-green-900/20 text-green-500 border border-green-500/50'
-                                        : 'bg-red-900/20 text-red-500 border border-red-500/50'}
-                                `}>
-                                    {(players.find(p => p.id === votes[playerId!])?.role === 'imposter')
-                                        ? "CORRECT VOTE! ✅"
-                                        : votes[playerId!] === 'skip' ? "PLAYED IT SAFE 💨" : "INCORRECT VOTE! ❌"}
-                                </div>
-                            )}
+                            {votes[playerId!] && (() => {
+                                const myVotedPlayerId = votes[playerId!];
+
+                                // Skip vote
+                                if (myVotedPlayerId === 'skip') {
+                                    return (
+                                        <div className="text-2xl font-black italic p-4 rounded-xl mb-4 bg-gray-900/20 text-gray-400 border border-gray-400/50">
+                                            PLAYED IT SAFE 💨
+                                        </div>
+                                    );
+                                }
+
+                                // Check if voted player was the imposter by parsing result message
+                                const votedPlayer = players.find(p => p.id === myVotedPlayerId);
+                                const wasImposter = votedPlayer && result?.includes(`${votedPlayer.name} was the Imposter!`);
+
+                                return (
+                                    <div className={`text-2xl font-black italic p-4 rounded-xl mb-4
+                                        ${wasImposter
+                                            ? 'bg-green-900/20 text-green-500 border border-green-500/50'
+                                            : 'bg-red-900/20 text-red-500 border border-red-500/50'}
+                                    `}>
+                                        {wasImposter ? "CORRECT VOTE! ✅" : "INCORRECT VOTE! ❌"}
+                                    </div>
+                                );
+                            })()}
 
                             <div className="text-lg text-gray-500 animate-pulse font-bold tracking-widest">
                                 RETURNING TO STATION...
