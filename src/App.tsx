@@ -200,6 +200,9 @@ function App() {
           >
             <GameComponent />
             <ChallengeMonitor />
+            <GameTimer />
+            <DeployTerminal />
+            <JailOverlay />
 
             <TaskBoard /> {/* Always visible to user */}
             <LevelManager /> {/* <--- The Reset Button */}
@@ -249,9 +252,7 @@ function App() {
       </AnimatePresence>
 
       <Toaster position="top-right" />
-      <GameTimer />
-      <DeployTerminal />
-      <JailOverlay />
+
 
       {/* Global Sabotage Menu for Imposters */}
       {gameState === 'GAME' && playerRole === 'imposter' && roomCode && playerId && (
