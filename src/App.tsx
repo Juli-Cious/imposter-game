@@ -34,7 +34,7 @@ import { DEMO_MODE } from "./config/demoMode";
 
 function App() {
   const { isTerminalOpen, terminalType, gameState, network, roomCode, isHost, playerId, activeFileId } = useGameStore();
-  const { shouldShowIntro, shouldShowTutorial, shouldShowVictory, completedChallenges, hasSeenVictory } = usePlayerProgress();
+  const { shouldShowIntro, shouldShowTutorial } = usePlayerProgress();
   const { isAuthenticated, isLoading, initialize } = useAuthStore();
   const [showVictory, setShowVictory] = useState(false);
   const playerRole = usePlayerRole(roomCode, playerId);
