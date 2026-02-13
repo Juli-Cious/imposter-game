@@ -112,7 +112,7 @@ export const VictoryScreen = ({ status, players, teamChallengesCompleted, onRetu
                             onClick={onReturnToLobby}
                             className="px-8 py-3 bg-green-600 hover:bg-green-500 text-white font-bold text-lg rounded-xl transition-colors"
                         >
-                            🔄 Return to Lobby
+                            🔄 Play Again
                         </motion.button>
                     )}
 
@@ -123,7 +123,7 @@ export const VictoryScreen = ({ status, players, teamChallengesCompleted, onRetu
                             onClick={onContinuePlaying}
                             className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg rounded-xl transition-colors"
                         >
-                            ▶️ Continue Playing
+                            ▶️ Stay Here
                         </motion.button>
                     )}
 
@@ -134,7 +134,7 @@ export const VictoryScreen = ({ status, players, teamChallengesCompleted, onRetu
                             onClick={onLeaveGame}
                             className="px-8 py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold text-lg rounded-xl transition-colors"
                         >
-                            👋 Leave Game
+                            👋 Exit Game
                         </motion.button>
                     )}
                 </div>

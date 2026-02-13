@@ -4,7 +4,7 @@ import { db } from '../../firebaseConfig';
 import { ref, onValue, update } from 'firebase/database';
 import { PlanetDashboard } from './PlanetDashboard';
 import { RoleRevealModal } from './RoleRevealModal';
-import { assignRoles, syncRolesToFirebase, getPlayerRole } from '../../utils/RoleManager';
+import { assignRoles, getPlayerRole } from '../../utils/RoleManager';
 import { LEVEL_1_PROBLEMS } from '../../shared/ProblemData';
 
 import { usePlayerStore } from '../../stores/usePlayerStore';
@@ -115,8 +115,23 @@ export const LobbyScreen = () => {
             const playerIds = players.map(p => p.id);
             const roleAssignments = assignRoles(playerIds);
 
-            // 2. Sync roles to Firebase
-            await syncRolesToFirebase(roomCode, roleAssignments);
+            // 2. Sync roles to Firebase AND Reset Player State
+            const updates: Record<string, any> = {};
+
+            // Clear previous game data
+            updates[`rooms/${roomCode}/meeting`] = null; // Clear meeting data
+            updates[`rooms/${roomCode}/gamestate/hacks`] = null; // Clear sabotage history
+
+            // Assign roles and reset player status
+            for (const { playerId, role } of roleAssignments) {
+                updates[`rooms/${roomCode}/players/${playerId}/role`] = role;
+                updates[`rooms/${roomCode}/players/${playerId}/isAlive`] = true;
+                updates[`rooms/${roomCode}/players/${playerId}/status`] = 'active';
+                updates[`rooms/${roomCode}/players/${playerId}/x`] = 400; // Reset position (optional)
+                updates[`rooms/${roomCode}/players/${playerId}/y`] = 300;
+            }
+
+            await update(ref(db), updates);
 
             // 3. Set status to PLAYING, Initialize Timer, and Reset Level
             await update(ref(db, `rooms/${roomCode}`), {

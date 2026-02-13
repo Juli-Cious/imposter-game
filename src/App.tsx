@@ -63,6 +63,9 @@ function App() {
 
       if (status === 'VICTORY_CREW' || status === 'VICTORY_IMPOSTER') {
         setMultiplayerVictoryStatus(status);
+      } else if (status === 'LOBBY') {
+        setMultiplayerVictoryStatus(null);
+        useGameStore.getState().setGameState('LOBBY');
       }
     });
 
