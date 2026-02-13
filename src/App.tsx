@@ -91,14 +91,14 @@ function App() {
 
   }, [network, gameState]);
 
-  // Check for victory condition
-  useEffect(() => {
-    const shouldShow = shouldShowVictory();
-    if (shouldShow && !showVictory) {
-      console.log('Victory condition met! Showing victory animation...');
-      setShowVictory(true);
-    }
-  }, [completedChallenges, shouldShowVictory, showVictory, hasSeenVictory]);
+  // Check for victory condition (REMOVED: Victory is now manual via DeployTerminal)
+  // useEffect(() => {
+  //   const shouldShow = shouldShowVictory();
+  //   if (shouldShow && !showVictory) {
+  //     console.log('Victory condition met! Showing victory animation...');
+  //     setShowVictory(true);
+  //   }
+  // }, [completedChallenges, shouldShowVictory, showVictory, hasSeenVictory]);
 
   // Boot Loader State
   const [isBooting, setIsBooting] = useState(true);
