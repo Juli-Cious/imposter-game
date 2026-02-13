@@ -184,6 +184,8 @@ export async function triggerSabotage(
         } else {
             updates[`gamestate/files/${fileId}`] = {
                 content: result.newCode,
+                // Critical: Mark as corrupted so Deploy Terminal detects it!
+                isCorrupted: true,
                 lastSabotage: {
                     type,
                     timestamp: Date.now(),

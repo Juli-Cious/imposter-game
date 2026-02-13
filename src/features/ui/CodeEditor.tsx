@@ -12,6 +12,8 @@ import { usePlayerProgress } from '../../stores/usePlayerProgress';
 import { aiChallengeService } from '../../services/AIChallengeService';
 import { SDGPopup } from './SDGPopup';
 import { CodeReviewModal } from './CodeReviewModal';
+import { GreenCoderScoreModal } from './GreenCoderScoreModal';
+import type { GreenCoderScore } from '../../types/ai-levels';
 
 import { usePlayerRole } from '../../hooks/usePlayerRole';
 import toast, { Toaster } from 'react-hot-toast';
@@ -33,6 +35,10 @@ export const CodeEditor = () => {
     const [aiFeedback, setAiFeedback] = useState<{ rating: number, feedback: string, tip: string } | null>(null);
     const [isReviewing, setIsReviewing] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
+
+    // Green Coder Score State
+    const [greenScore, setGreenScore] = useState<GreenCoderScore | null>(null);
+    const [showGreenScoreModal, setShowGreenScoreModal] = useState(false);
 
     // SDG Popup State
     const [completedSdg, setCompletedSdg] = useState<number | null>(null);
@@ -176,24 +182,45 @@ export const CodeEditor = () => {
         setShowMentorChat(true);
     };
 
-    // Request AI Code Review
+    // Request AI Green Code Analysis
     const handleRequestReview = async () => {
         if (!activeFileId || !problem || code.length < 10) return;
 
         setIsReviewing(true);
-        setShowReviewModal(true);
+        setGreenScore(null);
         setAiFeedback(null);
 
-        const review = await aiChallengeService.submitForReview(activeFileId, code);
+        try {
+            // Priority: Try Green Coder Analysis first (The "Impact" Feature)
+            const solution = problem.solutionCode || "";
+            const greenResult = await aiChallengeService.getGreenCoderScore(
+                code,
+                problem.description,
+                solution,
+                problem.language
+            );
 
-        if (review.success) {
-            setAiFeedback({
-                rating: review.rating,
-                feedback: review.feedback,
-                tip: review.tip
-            });
+            if (greenResult.success && greenResult.score) {
+                setGreenScore(greenResult.score);
+                setShowGreenScoreModal(true);
+            } else {
+                // Fallback to standard review if Green Coder fails
+                const review = await aiChallengeService.submitForReview(activeFileId, code);
+                if (review.success) {
+                    setAiFeedback({
+                        rating: review.rating,
+                        feedback: review.feedback,
+                        tip: review.tip
+                    });
+                    setShowReviewModal(true);
+                }
+            }
+        } catch (error) {
+            console.error("Review failed:", error);
+            toast.error("Could not analyze code impact.");
+        } finally {
+            setIsReviewing(false);
         }
-        setIsReviewing(false);
     };
 
 
@@ -308,12 +335,12 @@ export const CodeEditor = () => {
                             onClick={handleRequestReview}
                             disabled={isReviewing || status !== 'PASS'}
                             className={`px-3 py-1 text-xs rounded flex items-center gap-1 transition-colors ${status === 'PASS' && !isReviewing
-                                ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                                ? 'bg-teal-600 hover:bg-teal-500 text-white'
                                 : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                                 }`}
-                            title={status !== 'PASS' ? 'Pass the challenge first!' : 'Get AI code review'}
+                            title={status !== 'PASS' ? 'Pass the challenge first!' : 'Analyze Environmental Impact'}
                         >
-                            {isReviewing ? '⏳ Reviewing...' : '🎓 Get Code Review'}
+                            {isReviewing ? '⏳ Analyzing...' : '🌱 Check Green Score'}
                         </button>
                         <button
                             onClick={handleOpenMentorChat}
@@ -353,6 +380,12 @@ export const CodeEditor = () => {
                             <span className="text-green-400 text-[10px] font-bold">💚 IMPACT: </span>
                             <span className="text-gray-300 text-[10px]">{problem.environmentalImpact}</span>
                         </div>
+                        {problem.failureConsequence && (
+                            <div className="mt-2 bg-red-900/20 rounded px-2 py-1 border-l-2 border-red-500 flex items-center gap-2">
+                                <span className="text-red-400 text-[10px] font-bold">⚠️ STAKES: </span>
+                                <span className="text-red-200 text-[10px] italic">{problem.failureConsequence}</span>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -416,14 +449,16 @@ export const CodeEditor = () => {
             />
 
             {/* SDG Achievement Popup */}
-            {completedSdg && problem && (
-                <SDGPopup
-                    sdgId={completedSdg}
-                    title="Goal Progress!"
-                    description={`Great work! Your code for ${problem.name} contributed to this global goal.`}
-                    onClose={() => setCompletedSdg(null)}
-                />
-            )}
+            {
+                completedSdg && problem && (
+                    <SDGPopup
+                        sdgId={completedSdg}
+                        title="Goal Progress!"
+                        description={`Great work! Your code for ${problem.name} contributed to this global goal.`}
+                        onClose={() => setCompletedSdg(null)}
+                    />
+                )
+            }
 
             {/* Code Review Modal */}
             <CodeReviewModal
@@ -434,6 +469,21 @@ export const CodeEditor = () => {
                 tip={aiFeedback?.tip || ''}
                 isLoading={isReviewing}
             />
+
+            {/* Green Coder Score Modal (The Impact Feature) */}
+            {
+                greenScore && problem && (
+                    <GreenCoderScoreModal
+                        isVisible={showGreenScoreModal}
+                        onClose={() => setShowGreenScoreModal(false)}
+                        score={greenScore}
+                        stakes={{
+                            success: problem.successReward || "Optimization Complete!",
+                            failure: problem.failureConsequence || "Needs Optimization."
+                        }}
+                    />
+                )
+            }
 
 
 
@@ -464,6 +514,6 @@ export const CodeEditor = () => {
                     z-index: 1;
                 }
             `}</style>
-        </div>
+        </div >
     );
 };
