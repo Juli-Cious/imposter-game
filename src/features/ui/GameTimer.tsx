@@ -23,17 +23,18 @@ export const GameTimer = () => {
             const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
             setDisplayTime(remaining);
 
-            // Host Victory Check
-            if (remaining <= 0 && isHost && roomCode) {
-                // Ensure we only trigger this once by checking if we haven't already
-                // For safety, we can rely on the server/other clients to also see this,
-                // but strictly only one person needs to trigger it.
-                // We'll throttle this check or trust the idempotent set.
+            // Victory Check (Any player can trigger this if time is up, to handle host disconnections)
+            if (remaining <= 0 && roomCode && displayTime !== remaining) {
+                // Note: displayTime check prevents spamming in loop if we didn't update state yet,
+                // but better is to rely on the firebase check below.
+
                 import('firebase/database').then(({ ref, get, set }) => {
                     import('../../firebaseConfig').then(({ db }) => {
                         const statusRef = ref(db, `rooms/${roomCode}/status`);
                         get(statusRef).then(snap => {
+                            // Only trigger if game is still strictly PLAYING
                             if (snap.val() === 'PLAYING') {
+                                console.log("[GameTimer] Time up! Triggering VICTORY_IMPOSTER");
                                 set(statusRef, 'VICTORY_IMPOSTER');
                             }
                         });
