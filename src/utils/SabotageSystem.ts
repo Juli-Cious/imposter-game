@@ -1,7 +1,7 @@
 import { db } from '../firebaseConfig';
 import { ref, update, get } from 'firebase/database';
 
-export type SabotageType = 'syntax_error' | 'logic_swap' | 'clear_line' | 'power_cut';
+export type SabotageType = 'syntax_error' | 'logic_swap' | 'clear_line' | 'power_cut' | 'seal_doors' | 'lock_terminals';
 
 export interface SabotageResult {
     success: boolean;
@@ -123,7 +123,7 @@ export async function triggerSabotage(
             const fileRef = ref(db, `gamestate/files/${fileId}/content`);
             const snapshot = await get(fileRef);
             currentCode = snapshot.val() || '';
-        } else if (type !== 'power_cut') {
+        } else if (type !== 'power_cut' && type !== 'seal_doors' && type !== 'lock_terminals') {
             return { success: false, newCode: '', description: 'Target file required for this sabotage' };
         }
 
@@ -143,6 +143,12 @@ export async function triggerSabotage(
                 // Power cut doesn't modify code, just triggers global state
                 result = { success: true, newCode: currentCode, description: 'Power grid cut!' };
                 break;
+            case 'seal_doors':
+                result = { success: true, newCode: currentCode, description: 'Doors sealed!' };
+                break;
+            case 'lock_terminals':
+                result = { success: true, newCode: currentCode, description: 'Terminals locked!' };
+                break;
             default:
                 return { success: false, newCode: currentCode, description: 'Unknown sabotage type' };
         }
@@ -158,8 +164,22 @@ export async function triggerSabotage(
             updates[`rooms/${roomCode}/gamestate/power`] = {
                 status: 'OFF',
                 timestamp: Date.now(),
-                failureTime: Date.now() + 61000, // 60 seconds + 1s buffer
-                triggeredBy: targetPlayerId // In this context it's the imposter
+                failureTime: Date.now() + 60000 + 1000, // 60s + 1s buffer
+                triggeredBy: targetPlayerId
+            };
+        } else if (type === 'seal_doors') {
+            updates[`rooms/${roomCode}/gamestate/doors`] = {
+                status: 'SEALED',
+                timestamp: Date.now(),
+                endTime: Date.now() + 30000, // 30s duration
+                triggeredBy: targetPlayerId
+            };
+        } else if (type === 'lock_terminals') {
+            updates[`rooms/${roomCode}/gamestate/terminals`] = {
+                status: 'LOCKED',
+                timestamp: Date.now(),
+                endTime: Date.now() + 30000, // 30s duration
+                triggeredBy: targetPlayerId
             };
         } else {
             updates[`gamestate/files/${fileId}`] = {

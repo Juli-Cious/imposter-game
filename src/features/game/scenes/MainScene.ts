@@ -51,6 +51,11 @@ export class MainScene extends Phaser.Scene {
   private powerFailureTime: number = 0;
   private powerFailureText!: Phaser.GameObjects.Text;
 
+  // Sabotage States
+  private isDoorsSealed: boolean = false;
+  private isTerminalsLocked: boolean = false;
+  private terminalLockText!: Phaser.GameObjects.Text;
+
   constructor() {
     super('MainScene');
   }
@@ -178,6 +183,7 @@ export class MainScene extends Phaser.Scene {
     if (roomCode) {
       import('firebase/database').then(({ ref, onValue }) => {
         import('../../../firebaseConfig').then(({ db }) => {
+          // Power
           const powerRef = ref(db, `rooms/${roomCode}/gamestate/power`);
           onValue(powerRef, (snapshot) => {
             const powerData = snapshot.val();
@@ -185,6 +191,50 @@ export class MainScene extends Phaser.Scene {
             const failureTime = powerData?.failureTime || 0;
             if (powerOut !== this.isPowerOut || (powerOut && failureTime !== this.powerFailureTime)) {
               this.togglePower(powerOut, failureTime);
+            }
+          });
+
+          // Doors
+          const doorsRef = ref(db, `rooms/${roomCode}/gamestate/doors`);
+          onValue(doorsRef, (snapshot) => {
+            const data = snapshot.val();
+            const isSealed = data?.status === 'SEALED' && data.endTime > Date.now();
+            if (isSealed !== this.isDoorsSealed) {
+              this.isDoorsSealed = isSealed;
+              this.toggleDoor(!isSealed); // Sealed = Closed (!Open)
+              if (isSealed) {
+                this.cameras.main.shake(200, 0.005);
+                // Auto-clear after time
+                setTimeout(() => {
+                  if (Date.now() > data.endTime) {
+                    this.isDoorsSealed = false;
+                    this.toggleDoor(true);
+                  }
+                }, data.endTime - Date.now());
+              }
+            }
+          });
+
+          // Terminals
+          const terminalsRef = ref(db, `rooms/${roomCode}/gamestate/terminals`);
+          onValue(terminalsRef, (snapshot) => {
+            const data = snapshot.val();
+            const isLocked = data?.status === 'LOCKED' && data.endTime > Date.now();
+            this.isTerminalsLocked = isLocked;
+            if (this.terminalLockText) this.terminalLockText.setVisible(isLocked);
+
+            if (isLocked) {
+              // Force close if open
+              const { isTerminalOpen, closeTerminal } = useGameStore.getState();
+              if (isTerminalOpen) closeTerminal();
+
+              // Auto-clear
+              setTimeout(() => {
+                if (Date.now() > data.endTime) {
+                  this.isTerminalsLocked = false;
+                  if (this.terminalLockText) this.terminalLockText.setVisible(false);
+                }
+              }, data.endTime - Date.now());
             }
           });
         });
@@ -208,6 +258,15 @@ export class MainScene extends Phaser.Scene {
       color: '#ff0000',
       stroke: '#000000',
       strokeThickness: 6,
+      resolution: 2,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(1000).setVisible(false);
+
+    this.terminalLockText = this.add.text(400, 150, "⚠️ TERMINALS LOCKED BY SABOTAGE ⚠️", {
+      fontSize: '24px',
+      fontFamily: 'Courier',
+      color: '#ffff00',
+      backgroundColor: '#000000',
+      padding: { x: 10, y: 5 },
       resolution: 2,
     }).setOrigin(0.5).setScrollFactor(0).setDepth(1000).setVisible(false);
 
@@ -399,6 +458,17 @@ export class MainScene extends Phaser.Scene {
     import('../../../stores/usePlayerStore').then(({ usePlayerStore }) => {
       const me = usePlayerStore.getState().players.find(p => p.id === this.myPlayerId);
       if (me && me.status === 'jailed') {
+        // Enforce Jail Position (Bottom Right Corner: 1400, 1400)
+        const jailX = 1400;
+        const jailY = 1400;
+
+        // Initial Teleport
+        if (Phaser.Math.Distance.Between(this.player.x, this.player.y, jailX, jailY) > 100) {
+          this.player.setPosition(jailX, jailY);
+          // Verify we aren't stuck in a wall (Jail cell should be open or we set collision off for jail area)
+          // For now, 1400,1400 is void space, so it's fine.
+        }
+
         body.setVelocity(0);
         this.player.play('doux-idle', true);
         return;
@@ -500,11 +570,16 @@ export class MainScene extends Phaser.Scene {
       this.zoneProgressBar.fillRect(this.player.x - 20, this.player.y + 20, 40 * progress, 6);
 
       if (this.zoneTimer >= 700) {
-        this.currentZone = activeZoneId;
-        openEditor(activeZoneId);
-        this.zoneProgressBar.clear();
-        this.zoneTimer = 0;
-        this.pendingZoneId = null;
+        if (this.isTerminalsLocked) {
+          this.cameras.main.shake(100, 0.005);
+          this.zoneTimer = 0;
+        } else {
+          this.currentZone = activeZoneId;
+          openEditor(activeZoneId);
+          this.zoneProgressBar.clear();
+          this.zoneTimer = 0;
+          this.pendingZoneId = null;
+        }
       }
     }
     // 2. If we are in an academy zone
@@ -522,10 +597,16 @@ export class MainScene extends Phaser.Scene {
       this.zoneProgressBar.fillRect(this.player.x - 20, this.player.y + 20, 40 * progress, 6);
 
       if (this.zoneTimer >= 700) {
-        openAcademy(acadType);
-        this.zoneProgressBar.clear();
-        this.zoneTimer = 0;
-        this.pendingZoneId = null;
+        if (this.isTerminalsLocked) {
+          // Shake or deny
+          this.cameras.main.shake(100, 0.005);
+          this.zoneTimer = 0;
+        } else {
+          openAcademy(acadType);
+          this.zoneProgressBar.clear();
+          this.zoneTimer = 0;
+          this.pendingZoneId = null;
+        }
       }
     }
     // 3. Reset logic
@@ -721,6 +802,15 @@ export class MainScene extends Phaser.Scene {
           const nameTag = other.getData('nameTag');
           if (nameTag) {
             nameTag.setPosition(p.x, p.y - 30);
+          }
+
+          // JAIL TELEPORT HANDLED BY SERVER POS (p.x/p.y), 
+          // BUT IF LOCAL CLIENT SEES STATUS 'JAILED', FORCE RENDER IN JAIL?
+          // No, trusting p.x/p.y is better, assuming the jailed client enforces it (which it does above).
+          // However, to be safe, if we see them jailed, we can optionally snap them.
+          if (p.status === 'jailed') {
+            other.setPosition(1400, 1400); // Visual snap
+            if (nameTag) nameTag.setPosition(1400, 1400 - 30);
           }
 
           // Simple animation for remote players

@@ -32,8 +32,8 @@ export const GameTimer = () => {
                     import('../../firebaseConfig').then(({ db }) => {
                         const statusRef = ref(db, `rooms/${roomCode}/status`);
                         get(statusRef).then(snap => {
-                            // Only trigger if game is still strictly PLAYING
-                            if (snap.val() === 'PLAYING') {
+                            // Only trigger if game is still strictly PLAYING AND I AM HOST
+                            if (snap.val() === 'PLAYING' && isHost) {
                                 console.log("[GameTimer] Time up! Triggering VICTORY_IMPOSTER");
                                 set(statusRef, 'VICTORY_IMPOSTER');
                             }

@@ -18,7 +18,7 @@ export const SabotageMenu = ({ roomCode, playerId, targetFileId, onSabotageCompl
         if (!canSabotage || isSabotaging) return;
 
         // If it's a code sabotage but we don't have a target file, we can't do it
-        if (type !== 'power_cut' && !targetFileId) {
+        if (!['power_cut', 'seal_doors', 'lock_terminals'].includes(type) && !targetFileId) {
             console.warn(`[SabotageMenu] ${name} requires a target file!`);
             return;
         }
@@ -102,6 +102,20 @@ export const SabotageMenu = ({ roomCode, playerId, targetFileId, onSabotageCompl
                             desc="Blackout the station"
                             isUltimate
                             onClick={() => handleSabotage('power_cut', 'Power Cut')}
+                        />
+                        <SabotageOption
+                            icon="🚪"
+                            title="Seal Doors"
+                            desc="Lock everyone in rooms (30s)"
+                            isUltimate
+                            onClick={() => handleSabotage('seal_doors', 'Seal Doors')}
+                        />
+                        <SabotageOption
+                            icon="🔒"
+                            title="Lock Terminals"
+                            desc="Prevent coding for 30s"
+                            isUltimate
+                            onClick={() => handleSabotage('lock_terminals', 'Lock Terminals')}
                         />
                     </div>
                 </div>
