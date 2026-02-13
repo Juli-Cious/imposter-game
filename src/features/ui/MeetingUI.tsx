@@ -118,7 +118,7 @@ export const MeetingUI = () => {
 
         // 3. Apply Result
         let finalResultMsg = "";
-        let outcomeState: any = {
+        const outcomeState: any = {
             ejectedId: null,
             wasImposter: false,
             reason: 'VOTE_SKIP'
