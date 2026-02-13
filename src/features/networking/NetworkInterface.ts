@@ -71,7 +71,7 @@ export interface NetworkService {
   subscribeToGameStatus(callback: (status: string) => void): void; // Simplified wrapper
 
   // Global Timer
-  subscribeToTimer(callback: (remainingTime: number) => void): void;
+  subscribeToTimer(callback: (endTime: number) => void): void;
   applyTimerPenalty(seconds: number): void;
 }
 

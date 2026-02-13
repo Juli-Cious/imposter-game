@@ -102,9 +102,9 @@ export const LobbyScreen = () => {
         console.log("[Lobby] handleStartGame called. Players:", players.length, players);
 
         // Validate minimum players
-        if (players.length < 3) {
+        if (players.length < 1) {
             console.warn("[Lobby] Not enough players:", players.length);
-            setAssignmentError(`Need at least 3 players to start Imposter Mode! (Current: ${players.length})`);
+            setAssignmentError(`Need at least 1 players to start Imposter Mode! (Current: ${players.length})`);
             return;
         }
 

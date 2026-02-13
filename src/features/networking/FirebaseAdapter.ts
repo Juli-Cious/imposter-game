@@ -254,19 +254,17 @@ export class FirebaseAdapter implements NetworkService {
   }
 
   // --- Global Timer Logic ---
-  subscribeToTimer(callback: (remainingTime: number) => void): void {
+  subscribeToTimer(callback: (endTime: number) => void): void {
     if (!this.roomCode) return;
     const timerRef = this.getRoomRef('gamestate/timer');
 
     onValue(timerRef, (snapshot) => {
       const data = snapshot.val();
       if (!data || !data.endTime) {
-        callback(600); // Default 10 mins if not set
+        callback(Date.now() + 600000); // Default 10 mins from now if not set
         return;
       }
-
-      const remainingStats = Math.max(0, Math.ceil((data.endTime - Date.now()) / 1000));
-      callback(remainingStats);
+      callback(data.endTime);
     });
   }
 
