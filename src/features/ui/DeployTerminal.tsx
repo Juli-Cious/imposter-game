@@ -56,7 +56,7 @@ export const DeployTerminal = () => {
     return (
         <>
             {/* Trigger Button (Always visible near bottom-right or spawn) */}
-            <div className="fixed bottom-8 right-8 z-40">
+            <div className="fixed bottom-32 right-4 z-40">
                 <button
                     onClick={() => setIsOpen(true)}
                     className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-6 rounded-full shadow-lg border-2 border-blue-400 animate-pulse flex items-center gap-2"
