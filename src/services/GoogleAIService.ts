@@ -8,24 +8,33 @@ import '../utils/debugGoogleAI';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY;
 
-// Model fallback priority: Best → Smallest
-const GEMMA_MODELS = [
-    'gemma-3-27b-it',  // Most capable (27B parameters)
-    'gemma-3-12b-it',  // Good balance (12B parameters)
-    'gemma-3-4b-it',   // Faster (4B parameters)
-    'gemma-3-2b-it'    // Fastest/Fallback (2B parameters)
+// Model fallback priorities for different AI features
+
+// Chaos Engine & Green Code Analyzer: Prioritize intelligence (27B first)
+const CHAOS_ENGINE_MODELS = [
+    'gemma-3-27b-it',  // Most capable for complex bug generation
+    'gemma-3-12b-it',  // Good balance
+    'gemma-3-4b-it',   // Faster
+    'gemma-3-2b-it'    // Fastest/Fallback
+];
+
+// Professor Gaia: Prioritize speed (12B first for faster hints)
+const PROFESSOR_GAIA_MODELS = [
+    'gemma-3-12b-it',  // Faster responses for real-time hints
+    'gemma-3-4b-it',   // Even faster
+    'gemma-3-2b-it'    // Fastest/Fallback
 ];
 
 const API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 /**
- * Try API call with model fallback
+ * Generic API call with custom model priority list
  * Attempts models in order until one succeeds
  */
-async function callGemmaWithFallback(prompt: string, config: any): Promise<any> {
+async function callGemmaWithModelList(prompt: string, config: any, modelList: string[]): Promise<any> {
     let lastError: Error | null = null;
 
-    for (const model of GEMMA_MODELS) {
+    for (const model of modelList) {
         try {
             const url = `${API_BASE_URL}/${model}:generateContent?key=${API_KEY}`;
 
@@ -56,7 +65,21 @@ async function callGemmaWithFallback(prompt: string, config: any): Promise<any> 
     }
 
     // All models failed
-    throw lastError || new Error('All Gemma models failed');
+    throw lastError || new Error('All models failed');
+}
+
+/**
+ * Chaos Engine fallback (27B → 12B → 4B → 2B)
+ */
+async function callChaosEngine(prompt: string, config: any): Promise<any> {
+    return callGemmaWithModelList(prompt, config, CHAOS_ENGINE_MODELS);
+}
+
+/**
+ * Professor Gaia fallback (12B → 4B → 2B)
+ */
+async function callProfessorGaia(prompt: string, config: any): Promise<any> {
+    return callGemmaWithModelList(prompt, config, PROFESSOR_GAIA_MODELS);
 }
 
 // Enhanced debugging for API key issues
@@ -134,7 +157,7 @@ export async function getHint(request: HintRequest): Promise<HintResponse> {
     try {
         const prompt = buildPrompt(request);
 
-        const data = await callGemmaWithFallback(prompt, {
+        const data = await callProfessorGaia(prompt, {
             temperature: 0.7,
             maxOutputTokens: 500,
         });
@@ -170,7 +193,7 @@ export async function chatWithMentor(request: ChatRequest): Promise<ChatResponse
     try {
         const prompt = buildChatPrompt(request);
 
-        const data = await callGemmaWithFallback(prompt, {
+        const data = await callProfessorGaia(prompt, {
             temperature: 0.8,
             maxOutputTokens: 400,
         });
@@ -350,7 +373,7 @@ export async function explainError(request: ErrorExplanationRequest): Promise<Er
     try {
         const prompt = buildErrorPrompt(request);
 
-        const data = await callGemmaWithFallback(prompt, {
+        const data = await callProfessorGaia(prompt, {
             temperature: 0.6, // Lower temperature for more precise error explanations
             maxOutputTokens: 300,
         });
@@ -445,7 +468,7 @@ export async function generateSabotage(request: SabotageRequest): Promise<Sabota
         
         Ensure the sabotaged code is syntactically valid enough to "run" but fail logic or loop forever, unless the concept is "syntax error".`;
 
-        const data = await callGemmaWithFallback(prompt, {
+        const data = await callChaosEngine(prompt, {
             temperature: 0.9,
             maxOutputTokens: 1000
         });
@@ -510,7 +533,7 @@ export async function reviewCode(request: ReviewRequest): Promise<ReviewResponse
             "tip": "One cool coding tip to make it even better next time"
         }`;
 
-        const data = await callGemmaWithFallback(prompt, {
+        const data = await callProfessorGaia(prompt, {
             temperature: 0.7
         });
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -556,7 +579,7 @@ export async function generateDynamicLevel(request: DynamicLevelRequest): Promis
     try {
         const prompt = buildChaosEnginePrompt(request);
 
-        const data = await callGemmaWithFallback(prompt, {
+        const data = await callChaosEngine(prompt, {
             temperature: 0.9, // Higher creativity for varied levels
             maxOutputTokens: 1500
         });
@@ -646,7 +669,7 @@ export async function analyzeGreenCode(request: GreenCoderRequest): Promise<Gree
     try {
         const prompt = buildGreenCoderPrompt(request);
 
-        const data = await callGemmaWithFallback(prompt, {
+        const data = await callChaosEngine(prompt, {
             temperature: 0.6, // Lower temp for consistent analysis
             maxOutputTokens: 1200
         });
