@@ -1,5 +1,6 @@
 import { db } from '../firebaseConfig';
 import { ref, update, get } from 'firebase/database';
+import { APP_CONSTANTS } from './AppConstants';
 
 export type SabotageType = 'syntax_error' | 'logic_swap' | 'clear_line' | 'power_cut' | 'seal_doors' | 'lock_terminals';
 
@@ -122,7 +123,7 @@ export async function triggerSabotage(
         if (fileId) {
             const fileRef = ref(db, `gamestate/files/${fileId}/content`);
             const snapshot = await get(fileRef);
-            currentCode = snapshot.val() || '';
+            currentCode = (snapshot.val() as string) || '';
         } else if (type !== 'power_cut' && type !== 'seal_doors' && type !== 'lock_terminals') {
             return { success: false, newCode: '', description: 'Target file required for this sabotage' };
         }
@@ -158,7 +159,7 @@ export async function triggerSabotage(
         }
 
         // Sync sabotaged code to Firebase
-        const updates: any = {};
+        const updates: Record<string, unknown> = {};
 
         if (type === 'power_cut') {
             updates[`rooms/${roomCode}/gamestate/power`] = {
@@ -197,12 +198,13 @@ export async function triggerSabotage(
         // Update sabotage cooldown in room
         updates[`rooms/${roomCode}/sabotage`] = {
             lastAction: Date.now(),
-            cooldownEnd: Date.now() + 30000 // 30 seconds
+
+            cooldownEnd: Date.now() + APP_CONSTANTS.GAME.SABOTAGE_COOLDOWN
         };
 
         await update(ref(db), updates);
 
-        console.log(`[Sabotage] ${type} applied:`, result.description);
+        // console.log(`[Sabotage] ${type} applied:`, result.description);
         return result;
 
     } catch (error) {

@@ -25,7 +25,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                 // @ts-ignore - We know it exists but interface might not be updated yet in TS
                 await (network as any).submitFeedback(rating, comment);
             } else {
-                console.log('Feedback submitted (simulated):', { rating, comment });
+                // console.log('Feedback submitted (simulated):', { rating, comment });
                 // Fallback for dev/no-network
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
@@ -97,8 +97,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                                 type="submit"
                                 disabled={rating === 0 || isSubmitting}
                                 className={`w-full py-3 rounded font-bold transition-all ${rating > 0
-                                        ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg transform hover:scale-[1.02]'
-                                        : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg transform hover:scale-[1.02]'
+                                    : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                                     }`}
                             >
                                 {isSubmitting ? 'Sending...' : 'Submit Feedback'}

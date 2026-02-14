@@ -34,7 +34,7 @@ export const GameTimer = () => {
                         get(statusRef).then(snap => {
                             // Only trigger if game is still strictly PLAYING AND I AM HOST
                             if (snap.val() === 'PLAYING' && isHost) {
-                                console.log("[GameTimer] Time up! Triggering VICTORY_IMPOSTER");
+                                // console.log("[GameTimer] Time up! Triggering VICTORY_IMPOSTER");
                                 set(statusRef, 'VICTORY_IMPOSTER');
                             }
                         });

@@ -41,7 +41,6 @@ function App() {
 
   // Multiplayer victory state
   const [multiplayerVictoryStatus, setMultiplayerVictoryStatus] = useState<'VICTORY_CREW' | 'VICTORY_IMPOSTER' | null>(null);
-  const [teamChallengesCompleted] = useState(0);
   const [players, setPlayers] = useState<PlayerState[]>([]);
 
 
@@ -58,8 +57,8 @@ function App() {
 
     // Subscribe to game status and team challenge completed count
     // Subscribe to game status and team challenge completed count
-    network.subscribeToGameStatus((status) => {
-      // setTeamChallengesCompleted(teamChallenges); // REMOVED
+    network.subscribeToGameStatus((status: string) => {
+
 
       if (status === 'VICTORY_CREW' || status === 'VICTORY_IMPOSTER') {
         setMultiplayerVictoryStatus(status);
@@ -70,12 +69,12 @@ function App() {
     });
 
     // Subscribe to players to show in victory screen
-    network.subscribeToPlayers((playerList) => {
+    network.subscribeToPlayers((playerList: PlayerState[]) => {
       setPlayers(playerList);
     });
 
     // Subscribe to Global Notifications
-    network.subscribeToNotifications((message, type) => {
+    network.subscribeToNotifications((message: string, type: 'success' | 'error' | 'info') => {
       switch (type) {
         case 'success':
           toast.success(message);
@@ -91,14 +90,7 @@ function App() {
 
   }, [network, gameState]);
 
-  // Check for victory condition (REMOVED: Victory is now manual via DeployTerminal)
-  // useEffect(() => {
-  //   const shouldShow = shouldShowVictory();
-  //   if (shouldShow && !showVictory) {
-  //     console.log('Victory condition met! Showing victory animation...');
-  //     setShowVictory(true);
-  //   }
-  // }, [completedChallenges, shouldShowVictory, showVictory, hasSeenVictory]);
+
 
   // Boot Loader State
   const [isBooting, setIsBooting] = useState(true);
@@ -224,7 +216,7 @@ function App() {
               <VictoryScreen
                 status={multiplayerVictoryStatus}
                 players={players}
-                teamChallengesCompleted={teamChallengesCompleted}
+                teamChallengesCompleted={0} // Fixed to 0 as tracking was removed from App.tsx
                 onReturnToLobby={isHost ? () => {
                   // Host can reset game to lobby
                   if (network && roomCode) {

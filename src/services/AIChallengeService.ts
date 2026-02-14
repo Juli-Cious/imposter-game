@@ -17,7 +17,7 @@ class AIChallengeService {
     async prepareSabotage(challengeId: string, baseCode: string, concept: string): Promise<void> {
         if (this.cache.has(challengeId)) return;
 
-        console.log(`[AI] Preparing sabotage for ${challengeId}...`);
+        // console.log(`[AI] Preparing sabotage for ${challengeId}...`);
         const result = await generateSabotage({
             baseCode,
             level: 'medium',
@@ -32,7 +32,7 @@ class AIChallengeService {
                 type: result.sabotageType,
                 timestamp: Date.now()
             });
-            console.log(`[AI] Sabotage ready: ${result.sabotageType}`);
+            // console.log(`[AI] Sabotage ready: ${result.sabotageType}`);
         }
     }
 

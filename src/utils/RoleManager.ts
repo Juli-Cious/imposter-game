@@ -68,7 +68,7 @@ export async function syncRolesToFirebase(
     }
 
     await update(ref(db), updates);
-    console.log('[RoleManager] Roles synced to Firebase:', roleAssignments);
+    // console.log('[RoleManager] Roles synced to Firebase:', roleAssignments);
 }
 
 /**

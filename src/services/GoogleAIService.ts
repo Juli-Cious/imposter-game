@@ -4,7 +4,7 @@
  */
 
 // Debug helper for API key troubleshooting
-import '../utils/debugGoogleAI';
+
 
 const API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY;
 
@@ -27,11 +27,35 @@ const PROFESSOR_GAIA_MODELS = [
 
 const API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
+interface GenerationConfig {
+    temperature?: number;
+    topK?: number;
+    topP?: number;
+    maxOutputTokens?: number;
+    stopSequences?: string[];
+}
+
+interface GeminiPart {
+    text: string;
+}
+
+interface GeminiContent {
+    parts: GeminiPart[];
+}
+
+interface GeminiCandidate {
+    content: GeminiContent;
+}
+
+interface GeminiResponse {
+    candidates?: GeminiCandidate[];
+}
+
 /**
  * Generic API call with custom model priority list
  * Attempts models in order until one succeeds
  */
-async function callGemmaWithModelList(prompt: string, config: any, modelList: string[]): Promise<any> {
+async function callGemmaWithModelList(prompt: string, config: GenerationConfig, modelList: string[]): Promise<GeminiResponse> {
     let lastError: Error | null = null;
 
     for (const model of modelList) {
@@ -49,7 +73,7 @@ async function callGemmaWithModelList(prompt: string, config: any, modelList: st
 
             if (response.ok) {
                 const data = await response.json();
-                console.log(`✅ Success using model: ${model}`);
+                // console.log(`✅ Success using model: ${model}`);
                 return data;
             }
 
@@ -71,14 +95,14 @@ async function callGemmaWithModelList(prompt: string, config: any, modelList: st
 /**
  * Chaos Engine fallback (27B → 12B → 4B → 2B)
  */
-async function callChaosEngine(prompt: string, config: any): Promise<any> {
+async function callChaosEngine(prompt: string, config: GenerationConfig): Promise<GeminiResponse> {
     return callGemmaWithModelList(prompt, config, CHAOS_ENGINE_MODELS);
 }
 
 /**
  * Professor Gaia fallback (12B → 4B → 2B)
  */
-async function callProfessorGaia(prompt: string, config: any): Promise<any> {
+async function callProfessorGaia(prompt: string, config: GenerationConfig): Promise<GeminiResponse> {
     return callGemmaWithModelList(prompt, config, PROFESSOR_GAIA_MODELS);
 }
 
@@ -103,8 +127,8 @@ if (!API_KEY) {
         Object.keys(import.meta.env).filter(key => key.startsWith('VITE_'))
     );
 } else {
-    console.log('✅ Gemini API Key loaded successfully');
-    console.log('🔑 Key preview:', API_KEY.substring(0, 10) + '...' + API_KEY.substring(API_KEY.length - 4));
+    // console.log('✅ Gemini API Key loaded successfully');
+    // console.log('🔑 Key preview:', API_KEY.substring(0, 10) + '...' + API_KEY.substring(API_KEY.length - 4));
 }
 
 interface HintRequest {
@@ -475,6 +499,7 @@ export async function generateSabotage(request: SabotageRequest): Promise<Sabota
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
         // Clean markdown code blocks if present to get pure JSON
+        if (!text) throw new Error('No content generated');
         const jsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
         const result = JSON.parse(jsonText);
 
@@ -537,6 +562,7 @@ export async function reviewCode(request: ReviewRequest): Promise<ReviewResponse
             temperature: 0.7
         });
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error('No content generated');
         const jsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
         const result = JSON.parse(jsonText);
 
@@ -598,7 +624,7 @@ export async function generateDynamicLevel(request: DynamicLevelRequest): Promis
             throw new Error('Invalid level structure from AI');
         }
 
-        console.log(`[AI] Generated dynamic level: ${level.title} (${level.bug_type})`);
+        // console.log(`[AI] Generated dynamic level: ${level.title} (${level.bug_type})`);
 
         return {
             success: true,
@@ -683,7 +709,7 @@ export async function analyzeGreenCode(request: GreenCoderRequest): Promise<Gree
         const jsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
         const score: GreenCoderScore = JSON.parse(jsonText);
 
-        console.log(`[AI] Green Coder Score: ${score.green_coder_score}/100`);
+        // console.log(`[AI] Green Coder Score: ${score.green_coder_score}/100`);
 
         return {
             success: true,

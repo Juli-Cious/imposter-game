@@ -4,14 +4,19 @@ import { useGameStore } from '../../../stores/useGameStore';
 import type { NetworkService, PlayerState } from '../../networking/NetworkInterface';
 import { MapBuilder } from '../MapBuilder';
 import { useMeetingStore } from '../../../stores/useMeetingStore';
-// import { usePlayerStore } from '../../../stores/usePlayerStore'; // Dynamic import used instead
-// Wait, I used dynamic import in update loop. But verify if I need top level import.
+import { usePlayerStore } from '../../../stores/usePlayerStore';
+import { ref, onValue, set } from 'firebase/database';
+
+import { db } from '../../../firebaseConfig';
+
+
 
 export class MainScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
   private otherPlayers: Map<string, Phaser.GameObjects.Sprite> = new Map();
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private network!: NetworkService;
+  private unsubscribers: (() => void)[] = [];
   private myPlayerId: string | null = null;
   private currentZone: string | null = null;
   private wallLayer!: Phaser.Tilemaps.TilemapLayer;
@@ -76,9 +81,7 @@ export class MainScene extends Phaser.Scene {
     this.load.audio('meeting_bgm', 'assets/sounds/music/meeting_background_music.wav');
     this.load.audio('footsteps', 'assets/sounds/sfx/walking.mp3');
 
-    this.load.on('filecomplete', (key: string) => {
-      console.log(`Loaded: ${key}`);
-    });
+
     this.load.on('loaderror', (file: any) => {
       console.warn(`Error loading: ${file.key} from ${file.url}`);
     });
@@ -111,7 +114,7 @@ export class MainScene extends Phaser.Scene {
       // Production: Use existing connection passed from Menu/Lobby
       this.network = network;
       this.myPlayerId = playerId;
-      console.log(`[MainScene] Reusing Network: Room ${roomCode}, Player ${playerId}`);
+      // console.log(`[MainScene] Reusing Network: Room ${roomCode}, Player ${playerId}`);
     } else if (roomCode && playerId && playerName) {
       // Re-connect using existing credentials (e.g. after refresh if state persisted, or race condition)
       console.warn('[MainScene] Network object missing but credentials exist. Reconnecting...');
@@ -119,7 +122,7 @@ export class MainScene extends Phaser.Scene {
       useGameStore.getState().setNetwork(this.network);
       this.network.connect(roomCode, playerName).then(() => {
         this.myPlayerId = playerId;
-        console.log(`[MainScene] Reconnected to ${roomCode}`);
+        // console.log(`[MainScene] Reconnected to ${roomCode}`);
       });
     } else {
       // Fallback / Dev Mode
@@ -161,7 +164,7 @@ export class MainScene extends Phaser.Scene {
 
     // Subscribe to Meeting State
     let prevStatus = 'IDLE';
-    this.network.subscribeToMeeting((state) => {
+    const unsubMeeting = this.network.subscribeToMeeting((state) => {
       // Update Store
       useMeetingStore.getState().setMeetingState(state);
 
@@ -173,72 +176,73 @@ export class MainScene extends Phaser.Scene {
       }
       prevStatus = state.status;
     });
+    this.unsubscribers.push(unsubMeeting);
 
     // Subscribe to Chat
-    this.network.subscribeToChat((messages) => {
+    const unsubChat = this.network.subscribeToChat((messages) => {
       useMeetingStore.getState().setMeetingState({ chatMessages: messages });
     });
+    this.unsubscribers.push(unsubChat);
 
     // Subscribe to Power State
     if (roomCode) {
-      import('firebase/database').then(({ ref, onValue }) => {
-        import('../../../firebaseConfig').then(({ db }) => {
-          // Power
-          const powerRef = ref(db, `rooms/${roomCode}/gamestate/power`);
-          onValue(powerRef, (snapshot) => {
-            const powerData = snapshot.val();
-            const powerOut = powerData?.status === 'OFF';
-            const failureTime = powerData?.failureTime || 0;
-            if (powerOut !== this.isPowerOut || (powerOut && failureTime !== this.powerFailureTime)) {
-              this.togglePower(powerOut, failureTime);
-            }
-          });
-
-          // Doors
-          const doorsRef = ref(db, `rooms/${roomCode}/gamestate/doors`);
-          onValue(doorsRef, (snapshot) => {
-            const data = snapshot.val();
-            const isSealed = data?.status === 'SEALED' && data.endTime > Date.now();
-            if (isSealed !== this.isDoorsSealed) {
-              this.isDoorsSealed = isSealed;
-              this.toggleDoor(!isSealed); // Sealed = Closed (!Open)
-              if (isSealed) {
-                this.cameras.main.shake(200, 0.005);
-                // Auto-clear after time
-                setTimeout(() => {
-                  if (Date.now() > data.endTime) {
-                    this.isDoorsSealed = false;
-                    this.toggleDoor(true);
-                  }
-                }, data.endTime - Date.now());
-              }
-            }
-          });
-
-          // Terminals
-          const terminalsRef = ref(db, `rooms/${roomCode}/gamestate/terminals`);
-          onValue(terminalsRef, (snapshot) => {
-            const data = snapshot.val();
-            const isLocked = data?.status === 'LOCKED' && data.endTime > Date.now();
-            this.isTerminalsLocked = isLocked;
-            if (this.terminalLockText) this.terminalLockText.setVisible(isLocked);
-
-            if (isLocked) {
-              // Force close if open
-              const { isTerminalOpen, closeTerminal } = useGameStore.getState();
-              if (isTerminalOpen) closeTerminal();
-
-              // Auto-clear
-              setTimeout(() => {
-                if (Date.now() > data.endTime) {
-                  this.isTerminalsLocked = false;
-                  if (this.terminalLockText) this.terminalLockText.setVisible(false);
-                }
-              }, data.endTime - Date.now());
-            }
-          });
-        });
+      // Power
+      const powerRef = ref(db, `rooms/${roomCode}/gamestate/power`);
+      const unsubPower = onValue(powerRef, (snapshot) => {
+        const powerData = snapshot.val();
+        const powerOut = powerData?.status === 'OFF';
+        const failureTime = powerData?.failureTime || 0;
+        if (powerOut !== this.isPowerOut || (powerOut && failureTime !== this.powerFailureTime)) {
+          this.togglePower(powerOut, failureTime);
+        }
       });
+      this.unsubscribers.push(unsubPower);
+
+      // Doors
+      const doorsRef = ref(db, `rooms/${roomCode}/gamestate/doors`);
+      const unsubDoors = onValue(doorsRef, (snapshot) => {
+        const data = snapshot.val();
+        const isSealed = data?.status === 'SEALED' && data.endTime > Date.now();
+        if (isSealed !== this.isDoorsSealed) {
+          this.isDoorsSealed = isSealed;
+          this.toggleDoor(!isSealed); // Sealed = Closed (!Open)
+          if (isSealed) {
+            this.cameras.main.shake(200, 0.005);
+            // Auto-clear after time
+            setTimeout(() => {
+              if (Date.now() > data.endTime) {
+                this.isDoorsSealed = false;
+                this.toggleDoor(true);
+              }
+            }, data.endTime - Date.now());
+          }
+        }
+      });
+      this.unsubscribers.push(unsubDoors);
+
+      // Terminals
+      const terminalsRef = ref(db, `rooms/${roomCode}/gamestate/terminals`);
+      const unsubTerminals = onValue(terminalsRef, (snapshot) => {
+        const data = snapshot.val();
+        const isLocked = data?.status === 'LOCKED' && data.endTime > Date.now();
+        this.isTerminalsLocked = isLocked;
+        if (this.terminalLockText) this.terminalLockText.setVisible(isLocked);
+
+        if (isLocked) {
+          // Force close if open
+          const { isTerminalOpen, closeTerminal } = useGameStore.getState();
+          if (isTerminalOpen) closeTerminal();
+
+          // Auto-clear
+          setTimeout(() => {
+            if (Date.now() > data.endTime) {
+              this.isTerminalsLocked = false;
+              if (this.terminalLockText) this.terminalLockText.setVisible(false);
+            }
+          }, data.endTime - Date.now());
+        }
+      });
+      this.unsubscribers.push(unsubTerminals);
     }
 
     // Enable Lights
@@ -419,16 +423,18 @@ export class MainScene extends Phaser.Scene {
     }
 
     // 6. Handle Other Players
-    this.network.subscribeToPlayers((players: PlayerState[]) => {
+    const unsubPlayers = this.network.subscribeToPlayers((players: PlayerState[]) => {
       this.updateOtherPlayers(players);
       // Sync to Global Store (CRITICAL for UI)
-      import('../../../stores/usePlayerStore').then(({ usePlayerStore }) => {
-        usePlayerStore.getState().setPlayers(players);
-      });
+      usePlayerStore.getState().setPlayers(players);
     });
+    this.unsubscribers.push(unsubPlayers);
 
     // 7. Cleanup
     this.events.on('destroy', () => {
+      this.unsubscribers.forEach(unsub => unsub());
+      this.unsubscribers = [];
+
       if (this.network) this.network.disconnect();
       if (this.bgm) this.bgm.stop();
       if (this.meetingBgm) this.meetingBgm.stop();
@@ -436,7 +442,7 @@ export class MainScene extends Phaser.Scene {
     });
 
     // Add Atmospheric Lights
-    // Removed as per request (replaced by uniform ceiling lights)
+
   }
 
   update(_time: number, delta: number) {
@@ -455,29 +461,21 @@ export class MainScene extends Phaser.Scene {
     }
 
     // JAIL CHECK
-    import('../../../stores/usePlayerStore').then(({ usePlayerStore }) => {
-      const me = usePlayerStore.getState().players.find(p => p.id === this.myPlayerId);
-      if (me && me.status === 'jailed') {
-        // Enforce Jail Position (Bottom Right Corner: 1400, 1400)
-        const jailX = 1400;
-        const jailY = 1400;
+    const me = usePlayerStore.getState().players.find(p => p.id === this.myPlayerId);
+    if (me && me.status === 'jailed') {
+      // Enforce Jail Position (Bottom Right Corner: 1400, 1400)
+      const jailX = 1400;
+      const jailY = 1400;
 
-        // Initial Teleport
-        if (Phaser.Math.Distance.Between(this.player.x, this.player.y, jailX, jailY) > 100) {
-          this.player.setPosition(jailX, jailY);
-          // Verify we aren't stuck in a wall (Jail cell should be open or we set collision off for jail area)
-          // For now, 1400,1400 is void space, so it's fine.
-        }
-
-        body.setVelocity(0);
-        this.player.play('doux-idle', true);
-        return;
+      // Initial Teleport
+      if (Phaser.Math.Distance.Between(this.player.x, this.player.y, jailX, jailY) > 100) {
+        this.player.setPosition(jailX, jailY);
       }
-    });
-    // Sync check (above is async so it might lag one frame, but in update loop we can just check directly if we import it top level)
-    // Actually dynamic import in update loop is BAD. usePlayerStore is already imported at top?
-    // No, it was imported in `create` via dynamic import.
-    // Let's rely on `this.network` or `useGameStore` if possible, or just import `usePlayerStore` at top.
+
+      body.setVelocity(0);
+      this.player.play('doux-idle', true);
+      return;
+    }
 
     // Name Tag update moved to postupdate to fix jitter
 
@@ -659,13 +657,9 @@ export class MainScene extends Phaser.Scene {
         // Restore Power
         const { roomCode } = useGameStore.getState();
         if (roomCode) {
-          import('firebase/database').then(({ ref, set }) => {
-            import('../../../firebaseConfig').then(({ db }) => {
-              set(ref(db, `rooms/${roomCode}/gamestate/power`), {
-                status: 'ON',
-                timestamp: Date.now()
-              });
-            });
+          set(ref(db, `rooms/${roomCode}/gamestate/power`), {
+            status: 'ON',
+            timestamp: Date.now()
           });
         }
         this.powerFixTimer = 0;
@@ -688,15 +682,11 @@ export class MainScene extends Phaser.Scene {
         this.powerFailureText.clearTint();
       }
 
-      // Check for failure (Any player can detect it, but we only set it if it's not already a victory)
+      // Check for failure (Only HOST triggers victory to prevent race conditions)
       if (remaining === 0) {
-        const { roomCode, gameState } = useGameStore.getState();
-        if (roomCode && gameState === 'GAME') {
-          import('firebase/database').then(({ ref, set }) => {
-            import('../../../firebaseConfig').then(({ db }) => {
-              set(ref(db, `rooms/${roomCode}/status`), 'VICTORY_IMPOSTER');
-            });
-          });
+        const { roomCode, gameState, isHost } = useGameStore.getState();
+        if (isHost && roomCode && gameState === 'GAME') {
+          set(ref(db, `rooms/${roomCode}/status`), 'VICTORY_IMPOSTER');
         }
       }
     }

@@ -30,10 +30,12 @@ export const LobbyScreen = () => {
     useEffect(() => {
         if (!roomCode || !network) return;
 
-        network.subscribeToPlayers((updatedPlayers: PlayerState[]) => {
+        const unsubscribe = network.subscribeToPlayers((updatedPlayers: PlayerState[]) => {
             setLocalPlayers(updatedPlayers);
             setGlobalPlayers(updatedPlayers);
         });
+
+        return () => unsubscribe();
     }, [roomCode, network, setGlobalPlayers]);
 
     const [showRoleReveal, setShowRoleReveal] = useState(false);
@@ -64,15 +66,15 @@ export const LobbyScreen = () => {
             return;
         }
 
-        console.log(`[Lobby] Subscribing to rooms/${roomCode}`);
+        // console.log(`[Lobby] Subscribing to rooms/${roomCode}`);
 
         // Listen for Game Start
         const statusRef = ref(db, `rooms/${roomCode}/status`);
         const unsubStatus = onValue(statusRef, async (snapshot) => {
             const val = snapshot.val();
-            console.log("[Lobby] Status update:", val);
+            // console.log("[Lobby] Status update:", val);
             if (val === 'PLAYING') {
-                console.log("[Lobby] Status is PLAYING, fetching role and switching state...");
+                // console.log("[Lobby] Status is PLAYING, fetching role and switching state...");
 
                 // Fetch the player's role from Firebase
                 if (playerId && roomCode) {
@@ -99,7 +101,7 @@ export const LobbyScreen = () => {
 
         setAssignmentError(null);
 
-        console.log("[Lobby] handleStartGame called. Players:", players.length, players);
+        // console.log("[Lobby] handleStartGame called. Players:", players.length, players);
 
         // Validate minimum players
         if (players.length < 1) {
@@ -108,7 +110,7 @@ export const LobbyScreen = () => {
             return;
         }
 
-        console.log("[Lobby] Host starting game...");
+        // console.log("[Lobby] Host starting game...");
 
         try {
             // 1. Assign roles
@@ -144,7 +146,7 @@ export const LobbyScreen = () => {
                 }
             });
 
-            console.log("[Lobby] Roles assigned and game started successfully");
+            // console.log("[Lobby] Roles assigned and game started successfully");
         } catch (error) {
             console.error("[Lobby] Error starting game:", error);
             if (error instanceof Error) {

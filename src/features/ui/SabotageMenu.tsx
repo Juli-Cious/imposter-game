@@ -29,7 +29,7 @@ export const SabotageMenu = ({ roomCode, playerId, targetFileId, onSabotageCompl
         const result = await triggerSabotage(type, playerId, roomCode, targetFileId || '');
 
         if (result.success) {
-            console.log(`[SabotageMenu] ${name} successful:`, result.description);
+            // console.log(`[SabotageMenu] ${name} successful:`, result.description);
             onSabotageComplete?.();
         } else {
             console.warn(`[SabotageMenu] ${name} failed:`, result.description);

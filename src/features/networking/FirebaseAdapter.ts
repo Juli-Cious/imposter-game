@@ -1,8 +1,9 @@
 import type { NetworkService, PlayerState, MeetingState, ChatMessage } from "./NetworkInterface";
 import { db } from "../../firebaseConfig";
-import { ref, onValue, set, update, onDisconnect, push } from "firebase/database";
+import { ref, onValue, set, update, onDisconnect, push, query, limitToLast, get, DataSnapshot } from "firebase/database";
 import type { DatabaseReference } from "firebase/database";
 import { v4 as uuidv4 } from 'uuid';
+import toast from "react-hot-toast";
 
 export class FirebaseAdapter implements NetworkService {
   public playerId: string;
@@ -23,7 +24,7 @@ export class FirebaseAdapter implements NetworkService {
     this.roomCode = roomCode;
     this.playerName = playerName;
     this.playerId = existingPlayerId || this.playerId;
-    console.log(`[Firebase] Connecting to room ${roomCode} as ${playerName} (${this.playerId})`);
+    // console.log(`[Firebase] Connecting to room ${roomCode} as ${playerName} (${this.playerId})`);
 
     const myRef = this.getRoomRef(`players/${this.playerId}`);
 
@@ -43,13 +44,12 @@ export class FirebaseAdapter implements NetworkService {
         isAlive: true,
         status: 'active'
       });
-      console.log('[Firebase] Player write success');
-    } catch (e) {
-      console.error('[Firebase] Player write failed', e);
-    }
 
-    // 2. Auto-remove player if they close the tab
-    // onDisconnect(myRef).remove(); // OLD WAY: Delete player
+      // console.log('[Firebase] Player write success');
+    } catch (e: any) {
+      console.error('[Firebase] Player write failed', e);
+      toast.error('Failed to save player data. Please check your connection.');
+    }
 
     // NEW WAY: Mark as offline (Ghost Mode)
     const myPresenceRef = this.getRoomRef(`players/${this.playerId}/isOnline`);
@@ -66,10 +66,10 @@ export class FirebaseAdapter implements NetworkService {
     }
   }
 
-  subscribeToPlayers(callback: (players: PlayerState[]) => void): void {
-    if (!this.roomCode) return;
+  subscribeToPlayers(callback: (players: PlayerState[]) => void): () => void {
+    if (!this.roomCode) return () => { };
     const playersRef = this.getRoomRef('players');
-    onValue(playersRef, (snapshot) => {
+    return onValue(playersRef, (snapshot: DataSnapshot) => {
       const data = snapshot.val();
       const playerList = data ? Object.values(data) as PlayerState[] : [];
       callback(playerList);
@@ -94,10 +94,10 @@ export class FirebaseAdapter implements NetworkService {
 
   // --- Meeting Implementation ---
 
-  subscribeToMeeting(callback: (state: MeetingState) => void): void {
-    if (!this.roomCode) return;
+  subscribeToMeeting(callback: (state: MeetingState) => void): () => void {
+    if (!this.roomCode) return () => { };
     const meetingRef = this.getRoomRef('meeting');
-    onValue(meetingRef, (snapshot) => {
+    return onValue(meetingRef, (snapshot: DataSnapshot) => {
       const data = snapshot.val();
       if (data) {
         callback(data);
@@ -166,10 +166,10 @@ export class FirebaseAdapter implements NetworkService {
     });
   }
 
-  subscribeToChat(callback: (messages: ChatMessage[]) => void): void {
-    if (!this.roomCode) return;
+  subscribeToChat(callback: (messages: ChatMessage[]) => void): () => void {
+    if (!this.roomCode) return () => { };
     const chatRef = this.getRoomRef('meeting/chat');
-    onValue(chatRef, (snapshot) => {
+    return onValue(chatRef, (snapshot: DataSnapshot) => {
       const data = snapshot.val();
       const messages = data ? Object.values(data) as import("./NetworkInterface").ChatMessage[] : [];
       messages.sort((a, b) => a.timestamp - b.timestamp);
@@ -195,23 +195,21 @@ export class FirebaseAdapter implements NetworkService {
     });
   }
 
-  subscribeToNotifications(callback: (message: string, type: 'success' | 'error' | 'info') => void): void {
-    if (!this.roomCode) return;
+  subscribeToNotifications(callback: (message: string, type: 'success' | 'error' | 'info') => void): () => void {
+    if (!this.roomCode) return () => { };
     const notifRef = this.getRoomRef('notifications');
     // Listen for new notifications
     // Using limitToLast(1) to avoid replaying old notifications on connect (simple approach)
-    import('firebase/database').then(({ query, limitToLast }) => {
-      const recentNotifs = query(notifRef, limitToLast(1));
-      onValue(recentNotifs, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          const notif = Object.values(data)[0] as { message: string, type: string, timestamp: number };
-          // Only show if it's recent (within last 5 seconds) to avoid spam on join
-          if (notif.timestamp > Date.now() - 5000) {
-            callback(notif.message, notif.type as any);
-          }
+    const recentNotifs = query(notifRef, limitToLast(1));
+    return onValue(recentNotifs, (snapshot: DataSnapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const notif = Object.values(data)[0] as { message: string, type: string, timestamp: number };
+        // Only show if it's recent (within last 5 seconds) to avoid spam on join
+        if (notif.timestamp > Date.now() - 5000) {
+          callback(notif.message, notif.type as any);
         }
-      });
+      }
     });
   }
 
@@ -237,28 +235,28 @@ export class FirebaseAdapter implements NetworkService {
     const challengeRef = this.getRoomRef(`teamChallenges/${challengeId}`);
     set(challengeRef, true);
 
-    console.log(`[Firebase] Synced team challenge completion: ${challengeId}`);
+    // console.log(`[Firebase] Synced team challenge completion: ${challengeId}`);
   }
 
-  subscribeToGameStatus(callback: (status: string) => void): void {
-    if (!this.roomCode) return;
+  subscribeToGameStatus(callback: (status: string) => void): () => void {
+    if (!this.roomCode) return () => { };
 
     const statusRef = this.getRoomRef('status');
     // We don't need teamChallenges for victory anymore, but might want to keep tracking it for UI if needed.
     // However, the interface change requested (status: string) implies we drop the number.
 
-    onValue(statusRef, (snapshot) => {
+    return onValue(statusRef, (snapshot: DataSnapshot) => {
       const currentStatus = snapshot.val() || 'GAME';
       callback(currentStatus);
     });
   }
 
   // --- Global Timer Logic ---
-  subscribeToTimer(callback: (endTime: number) => void): void {
-    if (!this.roomCode) return;
+  subscribeToTimer(callback: (endTime: number) => void): () => void {
+    if (!this.roomCode) return () => { };
     const timerRef = this.getRoomRef('gamestate/timer');
 
-    onValue(timerRef, (snapshot) => {
+    return onValue(timerRef, (snapshot: DataSnapshot) => {
       const data = snapshot.val();
       if (!data || !data.endTime) {
         callback(Date.now() + 600000); // Default 10 mins from now if not set
@@ -273,14 +271,12 @@ export class FirebaseAdapter implements NetworkService {
     const timerRef = this.getRoomRef('gamestate/timer');
 
     // We need to read current end time first to subtract
-    import('firebase/database').then(({ get }) => {
-      get(timerRef).then((snapshot) => {
-        const data = snapshot.val();
-        if (data && data.endTime) {
-          const newEndTime = data.endTime - (seconds * 1000);
-          update(timerRef, { endTime: newEndTime });
-        }
-      });
+    get(timerRef).then((snapshot: DataSnapshot) => {
+      const data = snapshot.val();
+      if (data && data.endTime) {
+        const newEndTime = data.endTime - (seconds * 1000);
+        update(timerRef, { endTime: newEndTime });
+      }
     });
   }
 }

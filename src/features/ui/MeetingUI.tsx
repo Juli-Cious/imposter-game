@@ -1,5 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { PlayerState } from '../networking/NetworkInterface';
+
+interface MeetingOutcome {
+    ejectedId: string | null;
+    wasImposter: boolean;
+    reason: 'VOTE_SKIP' | 'VOTE_TIE' | 'VOTE_EJECT';
+}
 import { useMeetingStore } from '../../stores/useMeetingStore';
 import { useGameStore } from '../../stores/useGameStore';
 import { usePlayerStore } from '../../stores/usePlayerStore';
@@ -8,12 +14,16 @@ import Editor from '@monaco-editor/react';
 import { LEVEL_1_PROBLEMS } from '../../shared/ProblemData';
 import { ref, update } from 'firebase/database';
 import { db } from '../../firebaseConfig';
+import { APP_CONSTANTS } from '../../utils/AppConstants';
 
 declare global {
     interface Window {
-        monaco: any;
+        monaco: {
+            Range: new (startLine: number, startColumn: number, endLine: number, endColumn: number) => any;
+        };
     }
 }
+
 
 export const MeetingUI = () => {
     const { status, meetingEndTime, presenterId, highlightedLine, chatMessages, votes, result } = useMeetingStore();
@@ -30,54 +40,8 @@ export const MeetingUI = () => {
     const editorRef = React.useRef<any>(null);
     const decorationsRef = React.useRef<string[]>([]);
 
-    useEffect(() => {
-        selectedFileRef.current = selectedFile;
-    }, [selectedFile]);
-
-    // Timer Logic
-    useEffect(() => {
-        if (status === 'IDLE') {
-            setTimeLeft(0);
-            return;
-        }
-
-        const interval = setInterval(() => {
-            const remaining = Math.max(0, Math.ceil((meetingEndTime - Date.now()) / 1000));
-            setTimeLeft(remaining);
-
-            // Host checks for end of meeting
-            if (isHost && remaining === 0 && status === 'DISCUSSION') {
-                handleMeetingEnd();
-            }
-        }, 100);
-
-        return () => clearInterval(interval);
-    }, [status, meetingEndTime, isHost]);
-
-    // Check if I voted
-    useEffect(() => {
-        if (playerId && votes[playerId]) {
-            setHasVoted(true);
-        } else {
-            setHasVoted(false);
-        }
-    }, [votes, playerId]);
-
-    // Host Logic: Auto-End when everyone voted
-    useEffect(() => {
-        if (!isHost || status !== 'DISCUSSION') return;
-
-        const alivePlayers = players.filter(p => p.isAlive);
-        const voteCount = Object.keys(votes).length;
-
-        // If everyone alive has voted (and there's at least one player), end it.
-        if (alivePlayers.length > 0 && voteCount >= alivePlayers.length) {
-            handleMeetingEnd();
-        }
-    }, [votes, players, isHost, status]);
-
     // Host Logic: Calculate Results
-    const handleMeetingEnd = async () => {
+    const handleMeetingEnd = useCallback(async () => {
         if (!roomCode) return;
 
         const voteCounts: Record<string, number> = {};
@@ -118,7 +82,7 @@ export const MeetingUI = () => {
 
         // 3. Apply Result
         let finalResultMsg = "";
-        const outcomeState: any = {
+        const outcomeState: MeetingOutcome = {
             ejectedId: null,
             wasImposter: false,
             reason: 'VOTE_SKIP'
@@ -162,15 +126,12 @@ export const MeetingUI = () => {
         const fullResultMsg = `${finalResultMsg}\n\nVotes:\n${voteSummary}`;
 
         // 4. Update Firebase
-        const globalUpdates: any = {};
+        const globalUpdates: Record<string, unknown> = {};
         if (ejectedPlayer && outcomeState.ejectedId) {
             // JAIL LOGIC (Instead of Eject/Kill)
-            const jailTime = 60000; // 60 seconds
+            const jailTime = APP_CONSTANTS.GAME.JAIL_TIME;
             globalUpdates[`rooms/${roomCode}/players/${ejectedPlayer.id}/status`] = 'jailed';
             globalUpdates[`rooms/${roomCode}/players/${ejectedPlayer.id}/jailEndTime`] = Date.now() + jailTime;
-
-            // Note: We do NOT set isAlive to false. They are alive, just jailed.
-            // We also do NOT trigger Victory here anymore. Deployment is the only way (or timer).
         }
 
         update(ref(db), globalUpdates);
@@ -180,8 +141,52 @@ export const MeetingUI = () => {
             outcome: outcomeState
         });
 
-        // No auto-close - user must manually close
-    };
+    }, [roomCode, votes, players]); // Removed non-stable deps if possible, but keeping minimal
+
+    useEffect(() => {
+        selectedFileRef.current = selectedFile;
+    }, [selectedFile]);
+
+    // Timer Logic
+    useEffect(() => {
+        if (status === 'IDLE') {
+            setTimeLeft(0);
+            return;
+        }
+
+        const interval = setInterval(() => {
+            const remaining = Math.max(0, Math.ceil((meetingEndTime - Date.now()) / 1000));
+            setTimeLeft(remaining);
+
+            // Host checks for end of meeting
+            if (isHost && remaining === 0 && status === 'DISCUSSION') {
+                handleMeetingEnd();
+            }
+        }, 100);
+
+        return () => clearInterval(interval);
+    }, [status, meetingEndTime, isHost, handleMeetingEnd]); // Added handleMeetingEnd to deps
+
+    // Check if I voted
+    useEffect(() => {
+        if (playerId && votes[playerId]) {
+        } else {
+            setHasVoted(false);
+        }
+    }, [votes, playerId]);
+
+    // Host Logic: Auto-End when everyone voted
+    useEffect(() => {
+        if (!isHost || status !== 'DISCUSSION') return;
+
+        const alivePlayers = players.filter(p => p.isAlive);
+        const voteCount = Object.keys(votes).length;
+
+        // If everyone alive has voted (and there's at least one player), end it.
+        if (alivePlayers.length > 0 && voteCount >= alivePlayers.length) {
+            handleMeetingEnd();
+        }
+    }, [votes, players, isHost, status, handleMeetingEnd]); // Added handleMeetingEnd to deps
 
     const handleCloseResults = () => {
         if (!roomCode || !isHost) return;
