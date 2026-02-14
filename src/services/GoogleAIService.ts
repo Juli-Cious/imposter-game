@@ -655,7 +655,7 @@ export async function analyzeGreenCode(request: GreenCoderRequest): Promise<Gree
 
         const data = await callGemmaWithModelList(prompt, {
             temperature: 0.2, // Very low temp for speed/determinism
-            maxOutputTokens: 500, // Reduced to enforce brevity (enough for JSON)
+            maxOutputTokens: 1024, // Increased to prevent truncation (was 500)
         }, GREEN_CODE_MODELS);
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
@@ -668,7 +668,6 @@ export async function analyzeGreenCode(request: GreenCoderRequest): Promise<Gree
             console.error("FAILED TO PARSE JSON. Raw JSON Text:", text);
             throw new Error(`JSON Parse Failed: ${parseError}`);
         }
-
     } catch (error) {
         console.error('Error analyzing green code:', error);
         return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
@@ -697,38 +696,46 @@ function cleanJson(text: string): string {
 }
 
 /**
- * Build the Green Coder analysis prompt (Micro-optimized for speed)
+ * Build the Green Coder analysis prompt (Micro-optimized with One-Shot)
  */
 function buildGreenCoderPrompt(request: GreenCoderRequest): string {
     const { player_code, solution_code, challenge_description, language } = request;
 
-    // Extremely Concise Prompt for Sub-5s Response
-    return `Analyze Code Efficiency.
+    // One-Shot Prompt to force strict JSON and brevity
+    return `Analyze Code Efficiency. Return JSON.
+    
+EXAMPLE INPUT:
+Task: Loop to 10
+Input: javascript
+Target: \`for(let i=0;i<10;i++)\`
+Player: \`while(true){}\`
+
+EXAMPLE JSON OUTPUT:
+{
+  "green_coder_score": 10, 
+  "player_complexity": "O(infinity)",
+  "optimal_complexity": "O(1)",
+  "complexity_comparison": "Player code loops forever",
+  "energy_impact": {
+    "energy_wasted_kwh": 0.5,
+    "real_world_equivalent": "Powering a lightbulb",
+    "sdg_message": "Infinite loops waste energy"
+  },
+  "feedback": "Check your loop condition",
+  "optimization_tip": "Use a for loop",
+  "professor_gaia_message": "Energy is draining fast!"
+}
+
+ACTUAL INPUT:
 Task: ${challenge_description}
 Input: ${language}
 Target: \`${solution_code}\`
 Player: \`${player_code}\`
 
-Tasks:
+High Importance:
 1. Big-O Time.
 2. Green Score (0-100).
 3. JSON ONLY.
-
-JSON Format:
-{
-  "green_coder_score": number, 
-  "player_complexity": "O(x)",
-  "optimal_complexity": "O(x)",
-  "complexity_comparison": "max 5 words",
-  "energy_impact": {
-    "energy_wasted_kwh": number,
-    "real_world_equivalent": "max 3 words",
-    "sdg_message": "max 5 words"
-  },
-  "feedback": "max 5 words",
-  "optimization_tip": "max 5 words",
-  "professor_gaia_message": "max 5 words"
-}
 
 GENERATE JSON:`;
 }
