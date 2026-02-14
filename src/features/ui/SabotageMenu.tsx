@@ -39,7 +39,7 @@ export const SabotageMenu = ({ roomCode, playerId, targetFileId, onSabotageCompl
     };
 
     return (
-        <div className="fixed bottom-28 right-6 z-50 flex flex-col items-end pointer-events-auto">
+        <div className="fixed bottom-6 right-28 z-50 flex flex-col items-end pointer-events-auto">
             {/* Floating Sabotage Button */}
             <button
                 className={`
@@ -64,7 +64,7 @@ export const SabotageMenu = ({ roomCode, playerId, targetFileId, onSabotageCompl
 
             {/* Sabotage Options Menu */}
             {isOpen && canSabotage && (
-                <div className="absolute bottom-24 right-0 w-80 bg-gray-900/95 backdrop-blur-md rounded-xl border-2 border-red-500/50 shadow-2xl p-4 animate-slide-up origin-bottom-right">
+                <div className="absolute bottom-20 right-0 w-80 bg-gray-900/95 backdrop-blur-md rounded-xl border-2 border-red-500/50 shadow-2xl p-4 animate-slide-up origin-bottom-right">
                     <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
                         <span className="text-red-500 font-black text-xl italic tracking-wider flex items-center gap-2">
                             🕵️ SABOTAGE
