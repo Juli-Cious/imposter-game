@@ -644,9 +644,8 @@ export async function analyzeGreenCode(request: GreenCoderRequest): Promise<Gree
         const prompt = buildGreenCoderPrompt(request);
 
         const data = await callGemmaWithModelList(prompt, {
-            temperature: 0.6,
-            maxOutputTokens: 400,
-            stopSequences: ["}"]
+            temperature: 0.4, // Lower temperature to be more deterministic and concise
+            maxOutputTokens: 1024, // Increased from 400 to prevent truncation
         }, GREEN_CODE_MODELS);
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
@@ -713,17 +712,16 @@ JSON Format:
   "green_coder_score": number, 
   "player_complexity": "string",
   "optimal_complexity": "string",
-  "complexity_comparison": "brief text",
+  "complexity_comparison": "very brief comparison",
   "energy_impact": {
     "energy_wasted_kwh": number,
-    "real_world_equivalent": "short string",
-    "sdg_message": "1 sentence"
+    "real_world_equivalent": "max 5 words",
+    "sdg_message": "max 10 words"
   },
-  "feedback": "encouraging text",
-  "optimization_tip": "technical tip",
-  "professor_gaia_message": "warm closing"
+  "feedback": "max 10 words",
+  "optimization_tip": "max 10 words",
+  "professor_gaia_message": "max 10 words"
 }
 
 GENERATE JSON:`;
 }
-
