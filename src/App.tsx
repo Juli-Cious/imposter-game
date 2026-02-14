@@ -23,6 +23,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { GameTimer } from "./features/ui/GameTimer";
 import { DeployTerminal } from "./features/ui/DeployTerminal";
 import { JailOverlay } from "./features/ui/JailOverlay";
+import { GlobalMentor } from "./features/ui/GlobalMentor";
 
 import { ChallengeMonitor } from "./features/game/ChallengeMonitor";
 import { usePlayerProgress } from "./stores/usePlayerProgress";
@@ -257,6 +258,9 @@ function App() {
           targetFileId={activeFileId || undefined}
         />
       )}
+
+      {/* Global AI Mentor (Professor Gaia) */}
+      <GlobalMentor />
     </div>
   );
 }
