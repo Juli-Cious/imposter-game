@@ -175,6 +175,28 @@ export const CodeEditor = () => {
             testStatus: newStatus,
             isCorrupted: isCorrupted
         });
+
+        // BACKGROUND PRE-FETCH: If Hero passes, silently trigger Green Coder analysis
+        if (newStatus === 'PASS' && playerRole === 'hero' && activeFileId && problem) {
+            // Non-blocking trigger
+            (async () => {
+                try {
+                    const solution = problem.solutionCode || "";
+                    const greenResult = await aiChallengeService.getGreenCoderScore(
+                        code,
+                        problem.description,
+                        solution,
+                        problem.language
+                    );
+                    if (greenResult.success && greenResult.score) {
+                        setGreenScore(greenResult.score);
+                        lastReviewedCodeRef.current = code;
+                    }
+                } catch (e) {
+                    console.warn("Background analysis failed:", e);
+                }
+            })();
+        }
     };
 
     // Open Mentor Chat

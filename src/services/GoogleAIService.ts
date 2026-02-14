@@ -641,7 +641,8 @@ export async function analyzeGreenCode(request: GreenCoderRequest): Promise<Gree
 
         const data = await callGemmaWithModelList(prompt, {
             temperature: 0.6,
-            maxOutputTokens: 600
+            maxOutputTokens: 400,
+            stopSequences: ["}"]
         }, GREEN_CODE_MODELS);
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
