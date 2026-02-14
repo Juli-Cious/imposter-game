@@ -65,27 +65,7 @@ export class MainScene extends Phaser.Scene {
     super('MainScene');
   }
 
-  preload() {
-    // Load as spritesheets! (assuming 24x24 frames)
-    this.load.spritesheet('doux', 'assets/sprites/DinoSprites - doux.png', { frameWidth: 24, frameHeight: 24 });
-    this.load.spritesheet('mort', 'assets/sprites/DinoSprites - mort.png', { frameWidth: 24, frameHeight: 24 });
-    this.load.spritesheet('tard', 'assets/sprites/DinoSprites - tard.png', { frameWidth: 24, frameHeight: 24 });
-    this.load.spritesheet('vita', 'assets/sprites/DinoSprites - vita.png', { frameWidth: 24, frameHeight: 24 });
-    this.load.image('tiles', 'assets/tilesets/scifi.png');
-    this.load.image('terminal', 'assets/objects/small terminal.png');
-    this.load.image('table', 'assets/objects/large_round_table.png');
-    this.load.image('background', 'assets/background/bg.png'); // Preload background
 
-    // Audio
-    this.load.audio('bgm', 'assets/sounds/music/background.ogg');
-    this.load.audio('meeting_bgm', 'assets/sounds/music/meeting_background_music.wav');
-    this.load.audio('footsteps', 'assets/sounds/sfx/walking.mp3');
-
-
-    this.load.on('loaderror', (file: any) => {
-      console.warn(`Error loading: ${file.key} from ${file.url}`);
-    });
-  }
 
   create() {
     // 0. Set Texture Filter to Nearest (for Pixel Art)
@@ -145,9 +125,20 @@ export class MainScene extends Phaser.Scene {
       this.bgm.play();
     }
 
-    if (this.cache.audio.exists('meeting_bgm')) {
+    // Lazy load meeting BGM if not present
+    if (!this.cache.audio.exists('meeting_bgm')) {
+      console.log('[MainScene] Lazy loading meeting BGM...');
+      this.load.audio('meeting_bgm', 'assets/sounds/music/meeting_background_music.wav');
+      this.load.start();
+    } else {
       this.meetingBgm = this.sound.add('meeting_bgm', { loop: true, volume: useGameStore.getState().bgmVolume });
     }
+
+    // Listen for lazy load completion
+    this.load.on('filecomplete-audio-meeting_bgm', () => {
+      console.log('[MainScene] Meeting BGM loaded!');
+      this.meetingBgm = this.sound.add('meeting_bgm', { loop: true, volume: useGameStore.getState().bgmVolume });
+    });
 
     if (this.cache.audio.exists('footsteps')) {
       this.footsteps = this.sound.add('footsteps', { loop: true, volume: useGameStore.getState().sfxVolume });
