@@ -103,13 +103,7 @@ export const SabotageMenu = ({ roomCode, playerId, targetFileId, onSabotageCompl
                             isUltimate
                             onClick={() => handleSabotage('power_cut', 'Power Cut')}
                         />
-                        <SabotageOption
-                            icon="🚪"
-                            title="Seal Doors"
-                            desc="Lock everyone in rooms (30s)"
-                            isUltimate
-                            onClick={() => handleSabotage('seal_doors', 'Seal Doors')}
-                        />
+
                         <SabotageOption
                             icon="🔒"
                             title="Lock Terminals"

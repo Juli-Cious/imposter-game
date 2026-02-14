@@ -57,7 +57,7 @@ export class MainScene extends Phaser.Scene {
   private powerFailureText!: Phaser.GameObjects.Text;
 
   // Sabotage States
-  private isDoorsSealed: boolean = true; // Default to true so it triggers "Open" (false) via callback
+  private isDoorsSealed: boolean = false;
   private isTerminalsLocked: boolean = false;
   private terminalLockText!: Phaser.GameObjects.Text;
 
