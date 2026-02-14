@@ -25,6 +25,14 @@ const PROFESSOR_GAIA_MODELS = [
     'gemma-3-2b-it'    // Fastest/Fallback
 ];
 
+// Green Code Analyzer: Prioritize moderate models for speed
+const GREEN_CODE_MODELS = [
+    'gemma-3-12b-it',  // Good balance of logic and speed
+    'gemma-3-4b-it',   // Fast
+    'gemma-3-27b-it',  // Highly accurate but slower (fallback)
+    'gemma-3-2b-it'    // Fastest
+];
+
 const API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 interface GenerationConfig {
@@ -586,7 +594,6 @@ import type {
     DynamicLevel,
     GreenCoderRequest,
     GreenCoderResponse,
-    GreenCoderScore
 } from '../types/ai-levels';
 
 /**
@@ -695,95 +702,59 @@ export async function analyzeGreenCode(request: GreenCoderRequest): Promise<Gree
     try {
         const prompt = buildGreenCoderPrompt(request);
 
-        const data = await callChaosEngine(prompt, {
-            temperature: 0.6, // Lower temp for consistent analysis
-            maxOutputTokens: 1200
-        });
+        const data = await callGemmaWithModelList(prompt, {
+            temperature: 0.6,
+            maxOutputTokens: 600
+        }, GREEN_CODE_MODELS);
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-        if (!text) {
-            throw new Error('No response from AI');
-        }
+        if (!text) throw new Error('No response from AI');
 
-        // Clean and parse JSON
         const jsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        const score: GreenCoderScore = JSON.parse(jsonText);
-
-        // console.log(`[AI] Green Coder Score: ${score.green_coder_score}/100`);
-
-        return {
-            success: true,
-            score
-        };
+        return { success: true, score: JSON.parse(jsonText) };
 
     } catch (error) {
         console.error('Error analyzing green code:', error);
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
-        };
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
 }
 
 /**
- * Build the Green Coder analysis prompt
+ * Build the Green Coder analysis prompt (Pruned for speed)
  */
 function buildGreenCoderPrompt(request: GreenCoderRequest): string {
     const { player_code, solution_code, challenge_description, language } = request;
 
-    return `ROLE:
-You are Professor Gaia's "Green Code Analyzer," an AI system that evaluates coding efficiency and translates it into environmental impact. You analyze player solutions and calculate their "Green Coder Score" based on algorithmic efficiency.
+    return `Analyze code efficiency and environmental impact. 
+Return ONLY JSON. No markdown blocks.
 
-INPUT:
+Input:
 Challenge: ${challenge_description}
 Language: ${language}
+Optimal: \`${solution_code}\`
+Player: \`${player_code}\`
 
-Optimal Solution:
-\`\`\`${language}
-${solution_code}
-\`\`\`
+Requirements:
+1. Compare Big-O complexity (Time/Space).
+2. Calculate Green Score (0-100). (100 = Optimal).
+3. Metric: 1 watt-hour = 1 billion extra operations.
 
-Player's Solution:
-\`\`\`${language}
-${player_code}
-\`\`\`
-
-INSTRUCTIONS:
-1. Big-O Analysis: Analyze the time complexity of the player's solution
-2. Efficiency Comparison: Compare it to the optimal solution's complexity
-3. Environmental Impact: Calculate the "energy waste" of inefficient code
-4. Green Coder Score: Rate 0-100 based on efficiency (100 = optimal, 0 = extremely wasteful)
-5. Real-World Equivalency: Convert energy metrics to tangible examples
-6. Output Format: Return ONLY valid JSON. Do not use markdown code blocks.
-
-SCORING LOGIC:
-- Same Big-O as optimal solution: 100 points
-- One level worse (e.g., O(n log n) vs O(n)): 75 points
-- Two levels worse (e.g., O(n^2) vs O(n)): 50 points
-- Three+ levels worse or exponential: 25 points or less
-- Bonus/Penalty: Adjust ±10 points for code clarity, edge cases, best practices
-
-ENERGY CALCULATION:
-Estimate CPU cycles saved by using optimal vs. player's algorithm.
-Assume: 1 billion extra operations = 1 watt-hour of energy waste
-Scale based on real-world usage scenarios (e.g., "if run 1 million times per day...")
-
-JSON STRUCTURE:
+JSON Structure:
 {
-  "green_coder_score": 85,
-  "player_complexity": "O(n^2)",
-  "optimal_complexity": "O(n)",
-  "complexity_comparison": "Your solution uses nested loops, which is less efficient than the linear approach.",
+  "green_coder_score": number,
+  "player_complexity": "string",
+  "optimal_complexity": "string",
+  "complexity_comparison": "brief text",
   "energy_impact": {
-    "energy_wasted_kwh": 0.5,
-    "real_world_equivalent": "Running this code 1 million times wastes enough energy to charge 100 smartphones",
-    "sdg_message": "By optimizing this algorithm, we could save 500 kWh per day in data centers worldwide - equivalent to powering 20 homes!"
+    "energy_wasted_kwh": number,
+    "real_world_equivalent": "short string",
+    "sdg_message": "1 sentence"
   },
-  "feedback": "Great job fixing the bug! Your solution works correctly.",
-  "optimization_tip": "Try using a Set or HashMap to check for duplicates in O(1) time instead of nested loops.",
-  "professor_gaia_message": "Well done, young hero! 🌍 Your code saves the day, but we can make it even greener! ✨"
+  "feedback": "encouraging text",
+  "optimization_tip": "technical tip",
+  "professor_gaia_message": "warm closing"
 }
 
-Analyze the code now:`;
+Analyze now:`;
 }
 

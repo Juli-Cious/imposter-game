@@ -186,6 +186,12 @@ export const CodeEditor = () => {
     const handleRequestReview = async () => {
         if (!activeFileId || !problem || code.length < 10) return;
 
+        // Caching: Avoid redundant calls if code hasn't changed
+        if (code === lastReviewedCodeRef.current && greenScore) {
+            setShowGreenScoreModal(true);
+            return;
+        }
+
         setIsReviewing(true);
         setGreenScore(null);
         setAiFeedback(null);
@@ -202,6 +208,7 @@ export const CodeEditor = () => {
 
             if (greenResult.success && greenResult.score) {
                 setGreenScore(greenResult.score);
+                lastReviewedCodeRef.current = code; // Update cache
                 setShowGreenScoreModal(true);
             } else {
                 // Fallback to standard review if Green Coder fails
@@ -212,6 +219,7 @@ export const CodeEditor = () => {
                         feedback: review.feedback,
                         tip: review.tip
                     });
+                    lastReviewedCodeRef.current = code; // Update cache
                     setShowReviewModal(true);
                 }
             }
@@ -226,6 +234,7 @@ export const CodeEditor = () => {
 
     // State for Error Decoder
     const [lastError, setLastError] = useState<string | null>(null);
+    const lastReviewedCodeRef = useRef<string>('');
 
     // Monaco Editor OnMount - Register Eco-Lens
     const handleEditorDidMount = (_editor: any, monaco: any) => {
@@ -363,29 +372,56 @@ export const CodeEditor = () => {
                 {problem && (
                     <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-3 border-b border-gray-700">
                         <div className="flex gap-4 items-start">
-                            <div className="flex-1">
+                            <div className="flex-[1.5]">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-blue-400 text-xs font-bold">🌍 YOUR MISSION:</span>
+                                    <span className="text-blue-400 text-[10px] font-bold tracking-wider underline decoration-blue-500/50">🌍 THE SCENARIO</span>
                                 </div>
-                                <p className="text-gray-300 text-xs leading-relaxed">{problem.storyContext}</p>
+                                <p className="text-gray-300 text-xs leading-relaxed font-medium">{problem.storyContext}</p>
                             </div>
+
                             <div className="flex-1 border-l border-gray-700 pl-4">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-green-400 text-xs font-bold">🎯 LEARNING:</span>
+                                    <span className="text-green-400 text-[10px] font-bold tracking-wider underline decoration-green-500/50">🎯 LEARNING GOALS</span>
                                 </div>
-                                <p className="text-gray-300 text-xs leading-relaxed">{problem.detailedInstructions.split('\n')[0]}</p>
+                                <div className="flex flex-wrap gap-1">
+                                    {problem.concepts.map((concept, i) => (
+                                        <span key={i} className="text-[10px] bg-green-900/30 text-green-300 px-1.5 py-0.5 rounded border border-green-700/50">
+                                            {concept}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex-[1.2] border-l border-gray-700 pl-4">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-yellow-400 text-[10px] font-bold tracking-wider underline decoration-yellow-500/50">📝 YOUR MISSION</span>
+                                </div>
+                                <div className="text-gray-300 text-[10px] leading-tight space-y-1">
+                                    {problem.detailedInstructions.split('\n')
+                                        .filter(line => line.trim() && !line.includes('🎯 Your Mission:') && !line.includes('💡 Think:'))
+                                        .map((line, i) => (
+                                            <div key={i} className="flex gap-1">
+                                                <span>•</span>
+                                                <span>{line.replace(/^\d+\.\s*/, '').trim()}</span>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
                             </div>
                         </div>
-                        <div className="mt-2 bg-green-900/20 rounded px-2 py-1 border-l-2 border-green-500">
-                            <span className="text-green-400 text-[10px] font-bold">💚 IMPACT: </span>
-                            <span className="text-gray-300 text-[10px]">{problem.environmentalImpact}</span>
-                        </div>
-                        {problem.failureConsequence && (
-                            <div className="mt-2 bg-red-900/20 rounded px-2 py-1 border-l-2 border-red-500 flex items-center gap-2">
-                                <span className="text-red-400 text-[10px] font-bold">⚠️ STAKES: </span>
-                                <span className="text-red-200 text-[10px] italic">{problem.failureConsequence}</span>
+
+                        <div className="mt-3 flex gap-2">
+                            <div className="flex-1 bg-teal-900/20 rounded px-2 py-1.5 border-l-2 border-teal-500 flex items-center gap-2">
+                                <span className="text-teal-400 text-[10px] font-bold whitespace-nowrap">✨ IMPACT:</span>
+                                <span className="text-gray-300 text-[10px] italic line-clamp-1">{problem.environmentalImpact}</span>
                             </div>
-                        )}
+                            {problem.failureConsequence && (
+                                <div className="flex-1 bg-red-900/20 rounded px-2 py-1.5 border-l-2 border-red-500 flex items-center gap-2">
+                                    <span className="text-red-400 text-[10px] font-bold whitespace-nowrap">⚠️ STAKES:</span>
+                                    <span className="text-red-200 text-[10px] italic line-clamp-1">{problem.failureConsequence}</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 
