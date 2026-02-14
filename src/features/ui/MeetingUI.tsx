@@ -245,7 +245,7 @@ export const MeetingUI = () => {
         return (
             <button
                 onClick={handleStartMeeting} // NOW REAL TRIGGER
-                className="fixed bottom-4 right-4 bg-red-600 text-white p-4 rounded-full shadow-lg z-50 hover:bg-red-500 transition-all animate-bounce border-2 border-red-400"
+                className="fixed bottom-6 right-6 w-16 h-16 bg-red-600 text-white rounded-full shadow-xl z-50 hover:bg-red-500 transition-all hover:scale-110 border-4 border-red-800 flex items-center justify-center text-3xl"
                 title="EMERGENCY MEETING"
             >
                 🚨

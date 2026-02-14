@@ -39,14 +39,14 @@ export const SabotageMenu = ({ roomCode, playerId, targetFileId, onSabotageCompl
     };
 
     return (
-        <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end pointer-events-auto">
+        <div className="fixed bottom-28 right-6 z-50 flex flex-col items-end pointer-events-auto">
             {/* Floating Sabotage Button */}
             <button
                 className={`
-                    w-20 h-20 rounded-full border-4 shadow-2xl flex items-center justify-center text-4xl transition-all duration-300
+                    w-16 h-16 rounded-full border-4 shadow-xl flex items-center justify-center text-3xl transition-all duration-300
                     ${!canSabotage || isSabotaging
                         ? 'bg-gray-700 border-gray-600 grayscale cursor-not-allowed scale-90'
-                        : 'bg-red-600 border-red-400 hover:bg-red-500 hover:scale-110 hover:shadow-[0_0_30px_rgba(220,38,38,0.6)] animate-pulse'
+                        : 'bg-red-600 border-red-900 hover:bg-red-500 hover:scale-110 hover:shadow-[0_0_30px_rgba(220,38,38,0.6)] animate-pulse'
                     }
                     ${isOpen ? 'rotate-45' : 'rotate-0'}
                 `}
