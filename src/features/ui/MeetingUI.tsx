@@ -26,7 +26,7 @@ declare global {
 
 
 export const MeetingUI = () => {
-    const { status, meetingEndTime, presenterId, highlightedLine, chatMessages, votes, result } = useMeetingStore();
+    const { status, meetingEndTime, presenterId, highlightedLine, chatMessages, votes, result, outcome } = useMeetingStore();
     const { network, playerId, isHost, roomCode } = useGameStore();
     const { players } = usePlayerStore();
 
@@ -126,6 +126,7 @@ export const MeetingUI = () => {
         const fullResultMsg = `${finalResultMsg}\n\nVotes:\n${voteSummary}`;
 
         // 4. Update Firebase
+        console.log('[MeetingUI] Setting status to RESULTS...', outcomeState);
         const globalUpdates: Record<string, unknown> = {};
         if (ejectedPlayer && outcomeState.ejectedId) {
             // JAIL LOGIC (Instead of Eject/Kill)
@@ -175,6 +176,11 @@ export const MeetingUI = () => {
         }
     }, [votes, playerId]);
 
+    // Debug: Trace Status
+    useEffect(() => {
+        console.log(`[MeetingUI] Status changed to: ${status}`, { result, outcome });
+    }, [status, result, outcome]);
+
     // Host Logic: Auto-End when everyone voted
     useEffect(() => {
         if (!isHost || status !== 'DISCUSSION') return;
@@ -182,13 +188,17 @@ export const MeetingUI = () => {
         const alivePlayers = players.filter(p => p.isAlive);
         const voteCount = Object.keys(votes).length;
 
+        // console.log(`[MeetingUI] Vote Check: ${voteCount}/${alivePlayers.length}`);
+
         // If everyone alive has voted (and there's at least one player), end it.
         if (alivePlayers.length > 0 && voteCount >= alivePlayers.length) {
+            console.log('[MeetingUI] All votes in. Ending meeting...');
             handleMeetingEnd();
         }
-    }, [votes, players, isHost, status, handleMeetingEnd]); // Added handleMeetingEnd to deps
+    }, [votes, players, isHost, status, handleMeetingEnd]);
 
     const handleCloseResults = () => {
+        console.log('[MeetingUI] Closing results...');
         if (!roomCode || !isHost) return;
         update(ref(db, `rooms/${roomCode}/meeting`), {
             status: 'IDLE',
