@@ -25,13 +25,17 @@ const PROFESSOR_GAIA_MODELS = [
     'gemma-3-2b-it'    // Fastest/Fallback
 ];
 
-// Green Code Analyzer: Prioritize moderate models for speed
+// Green Code Analyzer: Prioritize 27B for depth/quality as requested
 const GREEN_CODE_MODELS = [
-    'gemma-3-12b-it',  // Good balance of logic and speed
+    'gemma-3-27b-it',  // Highest Quality (User Priority)
+    'gemma-3-12b-it',  // Fallback
     'gemma-3-4b-it',   // Fast
-    'gemma-3-27b-it',  // Highly accurate but slower (fallback)
     'gemma-3-2b-it'    // Fastest
 ];
+
+// ... (existing helper function and other code remains same, skipping lines 36-660)
+
+
 
 const API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
@@ -660,26 +664,27 @@ export async function analyzeGreenCode(request: GreenCoderRequest): Promise<Gree
 /**
  * Build the Green Coder analysis prompt (Pruned for speed)
  */
+/**
+ * Build the Green Coder analysis prompt (Optimized for 27B speed/tokens)
+ */
 function buildGreenCoderPrompt(request: GreenCoderRequest): string {
     const { player_code, solution_code, challenge_description, language } = request;
 
-    return `Analyze code efficiency and environmental impact. 
-Return ONLY JSON. No markdown blocks.
-
-Input:
+    // Concise Prompt for Faster Processing
+    return `Analyze Code Efficiency & Eco-Impact.
 Challenge: ${challenge_description}
-Language: ${language}
+Lang: ${language}
 Optimal: \`${solution_code}\`
 Player: \`${player_code}\`
 
-Requirements:
-1. Compare Big-O complexity (Time/Space).
-2. Calculate Green Score (0-100). (100 = Optimal).
-3. Metric: 1 watt-hour = 1 billion extra operations.
+Tasks:
+1. Big-O Complexity (Time/Space).
+2. Green Score (0-100). (1Wh = 1B ops).
+3. Return JSON ONLY.
 
-JSON Structure:
+JSON Format:
 {
-  "green_coder_score": number,
+  "green_coder_score": number, 
   "player_complexity": "string",
   "optimal_complexity": "string",
   "complexity_comparison": "brief text",
@@ -693,6 +698,6 @@ JSON Structure:
   "professor_gaia_message": "warm closing"
 }
 
-Analyze now:`;
+GENERATE JSON:`;
 }
 
