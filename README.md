@@ -6,7 +6,7 @@
 [![React](https://img.shields.io/badge/React-18.3-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
 [![Firebase](https://img.shields.io/badge/Firebase-Realtime-orange.svg)](https://firebase.google.com/)
-[![Gemini AI](https://img.shields.io/badge/Gemini-AI-purple.svg)](https://ai.google.dev/)
+[![Gemma AI](https://img.shields.io/badge/Google%20Gemma-27b-blueviolet.svg)](https://ai.google.dev/gemma)
 
 ---
 
@@ -40,10 +40,10 @@ This project addresses the urgent need for **Green Software Engineering** skills
 
 ### 🤖 AI-Powered Features
 
-1. **Dynamic Level Generation ("Chaos Engine")**
-   - Gemini AI generates infinite unique coding challenges
+1. **Dynamic Level Generation ("Chaos Engine" - Beta)**
+   - AI generates unique coding challenges (Prototype phase)
+   - Curated story levels for consistent difficulty
    - Each level aligns with specific SDG themes
-   - Adaptive difficulty based on player skill
 
 2. **Green Coder Score Analysis**
    - AI analyzes algorithmic efficiency (Big-O complexity)
@@ -68,16 +68,16 @@ This project addresses the urgent need for **Green Software Engineering** skills
 
 ### **Google Technologies** (Required for KitaHack)
 
-#### 1. Google AI - Gemini Pro API (The Brains)
-*Why Gemini?*
-- **Multimodal Understanding:** Capable of analyzing code syntax, logic, and "intent" simultaneously.
+#### 1. Google AI - Gemma Models (The Brains)
+*Why Gemma?*
+- **Open & Efficient:** We utilize the **Gemma 2 (27b, 12b, 2b)** family of open models for transparency and performance.
 - **Speed & Efficiency:** Essential for real-time gamification where players can't wait 10s for feedback.
 - **Context Window:** Large context allows Professor Gaia to remember the student's entire conversation history.
 
 **Key Features:**
-- **Dynamic Level Generation:** AI creates infinite unique coding puzzles with embedded bugs (`Chaos Engine`).
 - **Code Efficiency Analysis:** Evaluates Big-O complexity and environmental impact (`Green Coder Score`).
 - **Conversational AI Mentor:** Professor Gaia provides contextual, persona-driven help.
+- **Dynamic Level Generation (Prototype):** AI generates infinite unique coding puzzles with embedded bugs (Current gameplay uses curated validation levels).
 
 #### 2. Google Developer Tools - Firebase
 
