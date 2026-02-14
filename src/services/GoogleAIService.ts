@@ -26,10 +26,11 @@ const PROFESSOR_GAIA_MODELS = [
 ];
 
 // Green Code Analyzer: Prioritize 27B for depth/quality as requested
+// Green Code Analyzer: Prioritize speed per user request (10s+ is too long)
 const GREEN_CODE_MODELS = [
-    'gemma-3-27b-it',  // Highest Quality (User Priority)
-    'gemma-3-12b-it',  // Fallback
-    'gemma-3-4b-it',   // Fast
+    'gemma-3-12b-it',  // Good balance (Faster than 27b)
+    'gemma-3-4b-it',   // Very Fast backup
+    'gemma-3-27b-it',  // Slow fallback
     'gemma-3-2b-it'    // Fastest
 ];
 
