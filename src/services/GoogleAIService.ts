@@ -28,11 +28,20 @@ const PROFESSOR_GAIA_MODELS = [
 // Green Code Analyzer: Prioritize 27B for depth/quality as requested
 // Green Code Analyzer: Prioritize speed per user request (10s+ is too long)
 const GREEN_CODE_MODELS = [
-    'gemma-3-12b-it',  // Good balance (Faster than 27b)
+    'gemma-3-2b-it',   // Fastest possible model
     'gemma-3-4b-it',   // Very Fast backup
-    'gemma-3-27b-it',  // Slow fallback
-    'gemma-3-2b-it'    // Fastest
+    'gemma-3-12b-it',  // Good balance
+    'gemma-3-27b-it'   // Slow fallback
 ];
+
+// ... (skipping unchanged code)
+
+// ... (skipping unchanged code)
+
+/**
+ * Build the Green Coder analysis prompt (Optimized for 27B speed/tokens)
+ */
+
 
 // ... (existing helper function and other code remains same, skipping lines 36-660)
 
@@ -645,8 +654,8 @@ export async function analyzeGreenCode(request: GreenCoderRequest): Promise<Gree
         const prompt = buildGreenCoderPrompt(request);
 
         const data = await callGemmaWithModelList(prompt, {
-            temperature: 0.4, // Lower temperature to be more deterministic and concise
-            maxOutputTokens: 1024, // Increased from 400 to prevent truncation
+            temperature: 0.2, // Very low temp for speed/determinism
+            maxOutputTokens: 500, // Reduced to enforce brevity (enough for JSON)
         }, GREEN_CODE_MODELS);
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
@@ -688,40 +697,37 @@ function cleanJson(text: string): string {
 }
 
 /**
- * Build the Green Coder analysis prompt (Pruned for speed)
- */
-/**
- * Build the Green Coder analysis prompt (Optimized for 27B speed/tokens)
+ * Build the Green Coder analysis prompt (Micro-optimized for speed)
  */
 function buildGreenCoderPrompt(request: GreenCoderRequest): string {
     const { player_code, solution_code, challenge_description, language } = request;
 
-    // Concise Prompt for Faster Processing
-    return `Analyze Code Efficiency & Eco-Impact.
-Challenge: ${challenge_description}
-Lang: ${language}
-Optimal: \`${solution_code}\`
+    // Extremely Concise Prompt for Sub-5s Response
+    return `Analyze Code Efficiency.
+Task: ${challenge_description}
+Input: ${language}
+Target: \`${solution_code}\`
 Player: \`${player_code}\`
 
 Tasks:
-1. Big-O Complexity (Time/Space).
-2. Green Score (0-100). (1Wh = 1B ops).
-3. Return JSON ONLY.
+1. Big-O Time.
+2. Green Score (0-100).
+3. JSON ONLY.
 
 JSON Format:
 {
   "green_coder_score": number, 
-  "player_complexity": "string",
-  "optimal_complexity": "string",
-  "complexity_comparison": "very brief comparison",
+  "player_complexity": "O(x)",
+  "optimal_complexity": "O(x)",
+  "complexity_comparison": "max 5 words",
   "energy_impact": {
     "energy_wasted_kwh": number,
-    "real_world_equivalent": "max 5 words",
-    "sdg_message": "max 10 words"
+    "real_world_equivalent": "max 3 words",
+    "sdg_message": "max 5 words"
   },
-  "feedback": "max 10 words",
-  "optimization_tip": "max 10 words",
-  "professor_gaia_message": "max 10 words"
+  "feedback": "max 5 words",
+  "optimization_tip": "max 5 words",
+  "professor_gaia_message": "max 5 words"
 }
 
 GENERATE JSON:`;
