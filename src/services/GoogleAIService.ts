@@ -191,7 +191,7 @@ export async function getHint(request: HintRequest): Promise<HintResponse> {
 
         const data = await callProfessorGaia(prompt, {
             temperature: 0.7,
-            maxOutputTokens: 500,
+            maxOutputTokens: 300,
         });
         const hint = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Unable to generate hint.';
 
@@ -227,7 +227,7 @@ export async function chatWithMentor(request: ChatRequest): Promise<ChatResponse
 
         const data = await callProfessorGaia(prompt, {
             temperature: 0.8,
-            maxOutputTokens: 400,
+            maxOutputTokens: 300,
         });
         const message = data.candidates?.[0]?.content?.parts?.[0]?.text || 'I\'m having trouble responding right now. Try again!';
 
@@ -251,17 +251,8 @@ export async function chatWithMentor(request: ChatRequest): Promise<ChatResponse
 function buildChatPrompt(request: ChatRequest): string {
     const { message, challengeDescription, currentCode, conversationHistory } = request;
 
-    let prompt = `You are Professor Gaia, an AI mentor in a coding game for children (ages 8-14). 
-You are the Ancient Guardian of Earth who helps young heroes learn coding to save the planet.
-
-Your personality:
-- Warm, encouraging, and patient like a beloved teacher
-- Enthusiastic about the environment and coding
-- Uses simple, child-friendly language
-- Includes emojis to make conversations fun
-- Always connects coding to environmental impact
-- Celebrates small wins and encourages learning from mistakes
-
+    let prompt = `You are Professor Gaia, the Ancient Guardian of Earth and a warm, patient AI coding mentor for kids (8-14).
+Personality: Enthusiastic about eco-coding, uses simple language/emojis, connects code to planet impact.
 `;
 
     // Add context if available
@@ -281,7 +272,7 @@ Your personality:
         });
     }
 
-    prompt += `\n\nStudent's question: ${message}\n\nYour response (as Professor Gaia, keep it under 3 sentences, use emojis):`;
+    prompt += `\nQuestion: ${message}\nResponse (Gaia, <3 sentences, use emojis):`;
 
     return prompt;
 }
@@ -303,43 +294,13 @@ ${currentCode}
 
     switch (difficulty) {
         case 'gentle':
-            return `${baseContext}
-
-Give a gentle hint that guides the child toward the solution without giving away the answer. 
-- Use encouraging, friendly language with Professor Gaia's warm personality
-- Ask guiding questions
-- Point out what they might be missing
-- Keep it under 2-3 sentences
-- Use emojis to make it fun
-- Remember you're Professor Gaia, Earth's Guardian
-
-Hint:`;
+            return `${baseContext}\nGive a gentle hint (2-3 sentences, Gaia persona, emojis) guiding them without giving the answer. Ask a guiding question.`;
 
         case 'specific':
-            return `${baseContext}
-
-The child has tried but still needs help. Give a more specific hint:
-- Explain what specific code they need to add
-- Give an example of the syntax (but not the complete solution)
-- Explain how this code helps solve the environmental problem
-- Keep it simple and encouraging
-- Use emojis
-- Speak as Professor Gaia
-
-Hint:`;
+            return `${baseContext}\nGive a specific hint: Explain the code needed, syntax example (not full solution), and environmental link. Gaia persona, emojis.`;
 
         case 'solution':
-            return `${baseContext}
-
-The child has struggled and needs to see a solution. As Professor Gaia, provide:
-- Complete working code
-- Line-by-line explanation of what each part does
-- Explain how this helps save Earth
-- Encourage them to try modifying it
-- Use simple, warm language
-- Celebrate their persistence
-
-Solution:`;
+            return `${baseContext}\nProvide: Full working code, brief line explanation, and eco-impact. Encourage persistence. Gaia persona, emojis.`;
 
         default:
             return baseContext;
@@ -406,8 +367,8 @@ export async function explainError(request: ErrorExplanationRequest): Promise<Er
         const prompt = buildErrorPrompt(request);
 
         const data = await callProfessorGaia(prompt, {
-            temperature: 0.6, // Lower temperature for more precise error explanations
-            maxOutputTokens: 300,
+            temperature: 0.6,
+            maxOutputTokens: 200,
         });
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'I couldn\'t quite understand that error.';
 
@@ -427,28 +388,14 @@ export async function explainError(request: ErrorExplanationRequest): Promise<Er
         };
     }
 }
-
 function buildErrorPrompt(request: ErrorExplanationRequest): string {
     const { code, error, challengeDescription, language } = request;
-    return `You are Professor Gaia, the friendly AI mentor for a children's coding game.
-    
-The student has encountered an error in their ${language || 'code'}.
-    
-Context:
-- Challenge: ${challengeDescription || 'Unknown'}
-- Code:
-\`\`\`
-${code}
-\`\`\`
-- Error Message: "${error}"
+    return `You are Professor Gaia, the eco-mentor. Explain this ${language || 'code'} error simply to a child.
+Challenge: ${challengeDescription || 'Unknown'}
+Code: \`${code}\`
+Error: "${error}"
 
-Your task:
-1. Explain what this error means in simple, child-friendly terms (metaphors are great!).
-2. Don't simply give the answer, but point them to the specific line or concept that is broken.
-3. Be encouraging! Errors are part of learning.
-4. Keep it short (max 2-3 sentences).
-5. Use emojis.
-6. Return ONLY the explanation message.`;
+Rules: 1. Use metaphors. 2. Point to the issue. 3. Be encouraging. 4. Max 2-3 sentences. 5. Emojis. 6. Return ONLY the message.`;
 }
 
 // --- Dynamic Sabotage Generation ---
@@ -552,19 +499,9 @@ export async function reviewCode(request: ReviewRequest): Promise<ReviewResponse
     if (!API_KEY) return { success: false, rating: 0, feedback: '', tip: '' };
 
     try {
-        const prompt = `You are Professor Gaia. A student just solved this challenge: "${request.originalChallenge}".
-        
-        Their Code:
-        \`\`\`
-        ${request.code}
-        \`\`\`
-
-        Provide a JSON review:
-        {
-            "rating": (integer 1-5 based on efficiency and cleanliness),
-            "feedback": "Encouraging remark exploring what they did well (warm tone)",
-            "tip": "One cool coding tip to make it even better next time"
-        }`;
+        const prompt = `Professor Gaia review: Challenge "${request.originalChallenge}".
+Code: \`${request.code}\`
+Return JSON: {"rating": 1-5, "feedback": "Encouraging remark", "tip": "Optimization tip"}`;
 
         const data = await callProfessorGaia(prompt, {
             temperature: 0.7
