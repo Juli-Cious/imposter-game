@@ -25,12 +25,14 @@ Traditional coding education focuses on **"Does it work?"** but ignores **"Is it
 
 This project addresses the urgent need for **Green Software Engineering** skills (SDG 13) by gamifying the abstract concept of algorithmic efficiency.
 
-### Target SDGs
+### Target SDGs & Impact Mechanism
 
-- **SDG 4:** Quality Education - Making computer science accessible and practical
-- **SDG 13:** Climate Action - Teaching energy-aware programming
-- **SDG 12:** Responsible Consumption - Optimizing resource usage through code
-- **SDG 7:** Clean Energy - Reducing computational energy waste
+| Goal | How Imposter Game Contributes |
+|------|-------------------------------|
+| **SDG 4: Quality Education** | **Democratizing CS:** We use gamification and AI mentorship (Professor Gaia) to make complex topics like Big-O complexity accessible to students aged 10-14, ensuring inclusive and equitable quality education. |
+| **SDG 13: Climate Action** | **Mindset Shift:** By grading code on "Green Coder Score" (carbon efficiency) rather than just correctness, we train the next generation of developers to treat software energy efficiency as a climate imperative. |
+| **SDG 12: Responsible Consumption** | **Resource Optimization:** The game teaches that computational power is a finite resource. Players learn to write algorithms that consume fewer CPU cycles and memory, directly modeling sustainable consumption and production patterns. |
+| **SDG 7: Affordable & Clean Energy** | **Energy Efficiency:** Data centers currently consume ~1% of global electricity. By teaching students to write O(n) code instead of O(n²), we are directly targeting the improvement of energy efficiency in the digital sector. |
 
 ---
 
