@@ -185,7 +185,7 @@ export const MeetingUI = () => {
     useEffect(() => {
         if (!isHost || status !== 'DISCUSSION') return;
 
-        const alivePlayers = players.filter(p => p.isAlive);
+        const alivePlayers = players.filter(p => p.isAlive && p.isOnline);
         const voteCount = Object.keys(votes).length;
 
         // console.log(`[MeetingUI] Vote Check: ${voteCount}/${alivePlayers.length}`);
