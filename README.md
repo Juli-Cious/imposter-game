@@ -401,7 +401,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Contact
 
-**Team Leader:** Cha Zi Yu (Universiti Malaya Y2 Software Engineering)  
+**Team Leader:** Cha Zi Yu  
 **Team Members:** Wong Hao Leong, Julius Lim Jun Herng, Low Li Yik  
 **Email:** chaziyu2005@gmail.com | 23120943@siswa.um.edu.my  
 **GitHub:** [@Juli-Cious](https://github.com/Juli-Cious)  
