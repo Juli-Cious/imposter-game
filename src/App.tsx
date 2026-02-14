@@ -60,6 +60,32 @@ function App() {
     }
   }, [initialize]);
 
+  // BACKGROUND PREFETCH: Load heavy UI components silently after game start
+  useEffect(() => {
+    const prefetch = async () => {
+      try {
+        // Wait 3 seconds for intro/loading to settle so we don't slow down startup
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // Trigger the imports so they are in the browser cache
+        const imports = [
+          import("./features/ui/CodeEditor"),
+          import("./features/ui/CentralTerminal"),
+          import("./features/ui/AcademyUI"),
+          import("./features/ui/SabotageMenu")
+        ];
+        await Promise.all(imports);
+        // console.log("[App] Background prefetch complete - Terminals will open instantly now");
+      } catch (e) {
+        console.warn("[App] Prefetch failed", e);
+      }
+    };
+
+    // Only run in production/authenticated mode to save dev bandwidth, 
+    // or just run always. Let's run always so user experience is consistent.
+    prefetch();
+  }, []);
+
   // Subscribe to multiplayer game status (for victory detection)
   useEffect(() => {
     if (!network || gameState !== 'GAME') return;
