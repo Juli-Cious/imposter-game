@@ -340,7 +340,8 @@ for (const model of GEMMA_MODELS) {
 **Timeline:** Q3 2026  
 **Features:**
 
-- Google Classroom integration
+- **Google Classroom integration** (via Classroom API & OAuth Grade Sync)
+  - *Tech:* Uses `measures.studentSubmissions.patch` to sync Green Scores directly to gradebook
 - Curriculum-aligned challenges
 - School leaderboards
 - Teacher analytics and reports
