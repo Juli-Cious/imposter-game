@@ -79,7 +79,7 @@ export const GlobalMentor: React.FC = () => {
     };
 
     return (
-        <div className="fixed bottom-6 right-6 z-[60] pointer-events-none">
+        <div className="fixed bottom-16 left-6 z-[60] pointer-events-none">
             {/* FAB Button */}
             <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -99,10 +99,10 @@ export const GlobalMentor: React.FC = () => {
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 20, scale: 0.95, transformOrigin: 'bottom right' }}
+                        initial={{ opacity: 0, y: 20, scale: 0.95, transformOrigin: 'bottom left' }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        className="pointer-events-auto absolute bottom-20 right-0 w-[350px] sm:w-[400px] h-[500px] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden"
+                        className="pointer-events-auto absolute bottom-20 left-0 w-[350px] sm:w-[400px] h-[500px] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden"
                     >
                         {/* Header */}
                         <div className="p-4 bg-gradient-to-r from-green-600/20 to-emerald-600/20 border-b border-gray-700/50 flex items-center justify-between">
