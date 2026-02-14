@@ -652,13 +652,39 @@ export async function analyzeGreenCode(request: GreenCoderRequest): Promise<Gree
 
         if (!text) throw new Error('No response from AI');
 
-        const jsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        return { success: true, score: JSON.parse(jsonText) };
+        try {
+            const jsonText = cleanJson(text);
+            return { success: true, score: JSON.parse(jsonText) };
+        } catch (parseError) {
+            console.error("FAILED TO PARSE JSON. Raw JSON Text:", text);
+            throw new Error(`JSON Parse Failed: ${parseError}`);
+        }
 
     } catch (error) {
         console.error('Error analyzing green code:', error);
         return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
+}
+
+/**
+ * Helper to clean and extra JSON from AI responses
+ * Handles markdown blocks, whitespace, and potential garbage text
+ */
+function cleanJson(text: string): string {
+    if (!text) return "{}";
+
+    // 1. Remove Markdown code blocks
+    let cleaned = text.replace(/```json/g, '').replace(/```/g, '');
+
+    // 2. Find the first '{' and last '}' to isolate the JSON object
+    const startIndex = cleaned.indexOf('{');
+    const endIndex = cleaned.lastIndexOf('}');
+
+    if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+        cleaned = cleaned.substring(startIndex, endIndex + 1);
+    }
+
+    return cleaned.trim();
 }
 
 /**
