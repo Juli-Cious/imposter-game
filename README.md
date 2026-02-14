@@ -317,23 +317,23 @@ for (const model of GEMMA_MODELS) {
 
 ## 🗺️ Scalability Roadmap
 
-### Phase 1: Current - Web Prototype
-
+### Phase 1: Current - Web Prototype & Multiplayer Beta
 **Timeline:** Completed  
 **Features:**
 
 - Single-player coding challenges
+- **Real-time multiplayer "Code Battles" (Beta)**
 - AI-powered level generation and analysis
 - Basic progress tracking
 
-### Phase 2: Mobile & Multiplayer (3 months)
-
+### Phase 2: Mobile & Polishing (3 months)
 **Timeline:** Q2 2026  
 **Features:**
 
 - Flutter mobile app (iOS/Android)
-- Real-time multiplayer "Code Battles"
+- Ranked Matchmaking System
 - Expanded SDG themes (water, biodiversity)
+- Teacher dashboard for classroom use
 - Teacher dashboard for classroom use
 
 ### Phase 3: Educational Integration (6 months)
