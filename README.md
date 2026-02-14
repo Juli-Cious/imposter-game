@@ -334,7 +334,6 @@ for (const model of GEMMA_MODELS) {
 - Ranked Matchmaking System
 - Expanded SDG themes (water, biodiversity)
 - Teacher dashboard for classroom use
-- Teacher dashboard for classroom use
 
 ### Phase 3: Educational Integration (6 months)
 
