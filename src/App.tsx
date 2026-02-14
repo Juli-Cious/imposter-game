@@ -1,13 +1,13 @@
 import { GameComponent } from "./features/game/GameComponent";
-import { CodeEditor } from "./features/ui/CodeEditor";
-import { CentralTerminal } from "./features/ui/CentralTerminal";
+// import { CodeEditor } from "./features/ui/CodeEditor";   <-- Lazy Loaded
+// import { CentralTerminal } from "./features/ui/CentralTerminal"; <-- Lazy Loaded
 import { useGameStore } from "./stores/useGameStore";
 import { TaskBoard } from "./features/ui/TaskBoard";
 import { LevelManager } from "./features/game/LevelManager";
 import { MeetingUI } from "./features/ui/MeetingUI";
 import { MainMenu } from "./features/ui/MainMenu";
 import { LobbyScreen } from "./features/ui/LobbyScreen";
-import { AcademyUI } from "./features/ui/AcademyUI";
+// import { AcademyUI } from "./features/ui/AcademyUI"; <-- Lazy Loaded
 import { IntroAnimation } from "./features/ui/IntroAnimation";
 import { TutorialOverlay } from "./features/ui/TutorialOverlay";
 import { VictoryAnimation } from "./features/ui/VictoryAnimation";
@@ -17,13 +17,21 @@ import { VictoryScreen } from "./features/ui/VictoryScreen";
 import { CyberBackground } from "./features/ui/CyberBackground";
 import { BootLoader } from "./features/ui/BootLoader";
 import { AnimatePresence, motion } from "framer-motion";
-import { SabotageMenu } from "./features/ui/SabotageMenu";
+// import { SabotageMenu } from "./features/ui/SabotageMenu"; <-- Lazy Loaded
 import { usePlayerRole } from "./hooks/usePlayerRole";
 import toast, { Toaster } from "react-hot-toast";
 import { GameTimer } from "./features/ui/GameTimer";
 import { DeployTerminal } from "./features/ui/DeployTerminal";
 import { JailOverlay } from "./features/ui/JailOverlay";
 import { GlobalMentor } from "./features/ui/GlobalMentor";
+
+// Lazy Load Heavy Components
+import { lazy, Suspense } from 'react';
+const CodeEditor = lazy(() => import("./features/ui/CodeEditor").then(module => ({ default: module.CodeEditor })));
+const CentralTerminal = lazy(() => import("./features/ui/CentralTerminal").then(module => ({ default: module.CentralTerminal })));
+const AcademyUI = lazy(() => import("./features/ui/AcademyUI").then(module => ({ default: module.AcademyUI })));
+const SabotageMenu = lazy(() => import("./features/ui/SabotageMenu").then(module => ({ default: module.SabotageMenu })));
+
 
 import { ChallengeMonitor } from "./features/game/ChallengeMonitor";
 import { usePlayerProgress } from "./stores/usePlayerProgress";
@@ -207,10 +215,12 @@ function App() {
             <MeetingUI />
             <RedemptionScreen />
 
-            {/* The 4 UI Types */}
-            {isTerminalOpen && terminalType === 'editor' && <CodeEditor />}
-            {isTerminalOpen && terminalType === 'hub' && <CentralTerminal />}
-            {isTerminalOpen && terminalType === 'academy' && <AcademyUI />}
+            {/* The 4 UI Types - Wrapped in Suspense */}
+            <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center text-white bg-black/50 z-50">Loading Interface...</div>}>
+              {isTerminalOpen && terminalType === 'editor' && <CodeEditor />}
+              {isTerminalOpen && terminalType === 'hub' && <CentralTerminal />}
+              {isTerminalOpen && terminalType === 'academy' && <AcademyUI />}
+            </Suspense>
 
             {/* Multiplayer Victory Screen */}
             {multiplayerVictoryStatus && (
@@ -252,11 +262,13 @@ function App() {
 
       {/* Global Sabotage Menu for Imposters */}
       {gameState === 'GAME' && playerRole === 'imposter' && roomCode && playerId && (
-        <SabotageMenu
-          roomCode={roomCode}
-          playerId={playerId}
-          targetFileId={activeFileId || undefined}
-        />
+        <Suspense fallback={null}>
+          <SabotageMenu
+            roomCode={roomCode}
+            playerId={playerId}
+            targetFileId={activeFileId || undefined}
+          />
+        </Suspense>
       )}
 
       {/* Global AI Mentor (Professor Gaia) */}

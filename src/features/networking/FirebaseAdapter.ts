@@ -10,6 +10,10 @@ export class FirebaseAdapter implements NetworkService {
   private roomCode: string | null = null;
   private playerName: string | null = null;
 
+  // Throttled move function
+  private lastMoveTime: number = 0;
+  private readonly MOVE_THROTTLE_MS = 100; // Limit to ~10 updates/sec
+
   constructor() {
     this.playerId = uuidv4();
   }
@@ -78,6 +82,13 @@ export class FirebaseAdapter implements NetworkService {
 
   sendPlayerMove(x: number, y: number): void {
     if (!this.roomCode) return;
+
+    const now = Date.now();
+    if (now - this.lastMoveTime < this.MOVE_THROTTLE_MS) {
+      return; // Skip update if too soon
+    }
+
+    this.lastMoveTime = now;
     const myRef = this.getRoomRef(`players/${this.playerId}`);
     update(myRef, { x, y });
   }

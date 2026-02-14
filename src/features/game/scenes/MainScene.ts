@@ -439,11 +439,24 @@ export class MainScene extends Phaser.Scene {
   update(_time: number, delta: number) {
     if (!this.cursors || !this.player) return;
 
+    // PERFORMANCE OPTIMIZATION: Single Store Access
+    const state = useGameStore.getState();
+    const {
+      activeFileId,
+      openEditor,
+      openAcademy,
+      closeTerminal,
+      playerSkin,
+      roomCode,
+      gameState,
+      isHost,
+      terminalType
+    } = state;
+
     const speed = 160;
     const body = this.player.body as Phaser.Physics.Arcade.Body;
 
     // Prevent movement if Editor is open or typing
-    const { activeFileId } = useGameStore.getState();
     if (activeFileId || (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA'))) {
       body.setVelocity(0);
       this.player.play('doux-idle', true);
@@ -499,7 +512,6 @@ export class MainScene extends Phaser.Scene {
     }
 
     // Animation Logic
-    const { playerSkin } = useGameStore.getState();
     const mySkin = playerSkin || 'doux';
 
     if (isMoving) {
@@ -526,7 +538,6 @@ export class MainScene extends Phaser.Scene {
     }
 
     // Zone Interaction
-    const { openEditor, openAcademy, closeTerminal } = useGameStore.getState();
     const inDbZone = this.physics.overlap(this.player, this.dbZone);
     const inLogicZone = this.physics.overlap(this.player, this.logicZone);
     const inHubZone = this.physics.overlap(this.player, this.hubZone);
@@ -572,7 +583,7 @@ export class MainScene extends Phaser.Scene {
       }
     }
     // 2. If we are in an academy zone
-    else if (acadType && useGameStore.getState().terminalType !== 'academy') {
+    else if (acadType && terminalType !== 'academy') {
       if (this.pendingZoneId !== acadType) {
         this.pendingZoneId = acadType;
         this.zoneTimer = 0;
@@ -602,7 +613,7 @@ export class MainScene extends Phaser.Scene {
     else {
       // If we walked out of a zone that was open, close it (optional, maybe keep it open?)
       // Current design: Close if we walk out of ANY zone
-      if (!activeZoneId && !acadType && (this.currentZone || useGameStore.getState().terminalType)) {
+      if (!activeZoneId && !acadType && (this.currentZone || terminalType)) {
         closeTerminal();
         this.currentZone = null;
       }
@@ -610,7 +621,7 @@ export class MainScene extends Phaser.Scene {
       // Reset progress if we are not in ANY zone or if we are in the zone that is ALREADY active (currentZone)
       // For Academy, it stays as terminalType === 'academy'.
       const isAlreadyActive = (activeZoneId && activeZoneId === this.currentZone) ||
-        (acadType && useGameStore.getState().terminalType === 'academy');
+        (acadType && terminalType === 'academy');
 
       if (!activeZoneId && !acadType || isAlreadyActive) {
         this.zoneTimer = 0;
@@ -646,7 +657,6 @@ export class MainScene extends Phaser.Scene {
 
       if (this.powerFixTimer >= 5000) {
         // Restore Power
-        const { roomCode } = useGameStore.getState();
         if (roomCode) {
           set(ref(db, `rooms/${roomCode}/gamestate/power`), {
             status: 'ON',
@@ -675,7 +685,6 @@ export class MainScene extends Phaser.Scene {
 
       // Check for failure (Only HOST triggers victory to prevent race conditions)
       if (remaining === 0) {
-        const { roomCode, gameState, isHost } = useGameStore.getState();
         if (isHost && roomCode && gameState === 'GAME') {
           set(ref(db, `rooms/${roomCode}/status`), 'VICTORY_IMPOSTER');
         }
